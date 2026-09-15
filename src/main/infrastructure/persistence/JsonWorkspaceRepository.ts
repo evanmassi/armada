@@ -3,7 +3,7 @@ import { dirname } from 'node:path';
 import { workspaceSchema, type Workspace } from '@shared/workspace/workspaceSchemas';
 import type { WorkspaceRepository } from '@main/domain/repositories/WorkspaceRepository';
 
-const EMPTY_WORKSPACE: Workspace = { boards: [], projectColors: {} };
+const EMPTY_WORKSPACE: Workspace = workspaceSchema.parse({ boards: [], projectColors: {} });
 
 const isMissingFile = (error: unknown): boolean =>
   error instanceof Error && 'code' in error && error.code === 'ENOENT';

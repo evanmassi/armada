@@ -7,15 +7,25 @@ interface SessionServiceDeps {
   terminalHost: TerminalHost;
 }
 
+interface Launch {
+  command: string;
+  args: string[];
+}
+
 const CLAUDE_COMMAND = process.platform === 'win32' ? 'claude.exe' : 'claude';
+const SHELL_COMMAND = process.platform === 'win32' ? 'pwsh.exe' : (process.env['SHELL'] ?? 'bash');
 
 export class SessionService {
   constructor(private deps: SessionServiceDeps) {}
 
-  async open({ sessionId, cwd, cols, rows }: OpenSessionRequest): Promise<TerminalRef> {
-    const isExistingConversation = await this.deps.conversationRepository.hasConversation(sessionId);
-    const args = isExistingConversation ? ['--resume', sessionId] : ['--session-id', sessionId];
-    const terminalId = this.deps.terminalHost.spawn({ command: CLAUDE_COMMAND, args, cwd, cols, rows });
+  async open(request: OpenSessionRequest): Promise<TerminalRef> {
+    const { command, args } = request.kind === 'claude' ? await this.claudeLaunch(request.sessionId) : { command: SHELL_COMMAND, args: [] };
+    const terminalId = this.deps.terminalHost.spawn({ command, args, cwd: request.cwd, cols: request.cols, rows: request.rows });
     return { terminalId };
+  }
+
+  private async claudeLaunch(sessionId: string): Promise<Launch> {
+    const isExistingConversation = await this.deps.conversationRepository.hasConversation(sessionId);
+    return { command: CLAUDE_COMMAND, args: isExistingConversation ? ['--resume', sessionId] : ['--session-id', sessionId] };
   }
 }

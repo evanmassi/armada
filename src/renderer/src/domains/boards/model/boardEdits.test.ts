@@ -3,6 +3,7 @@ import type { Tile, Workspace } from '@shared/workspace/workspaceSchemas';
 import {
   addTile,
   applyLayouts,
+  createBoard,
   findFreePosition,
   GRID_COLUMNS,
   hasLayoutChanged,
@@ -10,14 +11,16 @@ import {
   nudgeTile,
   reflowFreeLayout,
   scaleTileWeight,
+  setNotesText,
   setTileWeights,
   swapTiles,
 } from './boardEdits';
 
-const tile = (id: string, x: number, y: number, w: number, h: number, weight = 1): Tile => ({
+const tile = (id: string, x: number, y: number, w: number, h: number, weight = 1, cwd = 'C:\\dev'): Tile => ({
+  kind: 'claude',
   id,
   sessionId: id,
-  cwd: 'C:\\dev',
+  cwd,
   layout: { x, y, w, h },
   weight,
 });
@@ -25,6 +28,8 @@ const tile = (id: string, x: number, y: number, w: number, h: number, weight = 1
 const workspaceWith = (...tiles: Tile[]): Workspace => ({
   boards: [{ id: 'board', name: 'Board', layoutMode: 'auto', rowWeights: [], tiles }],
   projectColors: { 'C:\\dev': 'red' },
+  pinnedSessionIds: [],
+  preferences: { terminalFontSize: 13 },
 });
 
 const tileIds = (workspace: Workspace): string[] => workspace.boards[0]!.tiles.map((item) => item.id);
@@ -38,11 +43,48 @@ describe('findFreePosition', () => {
 
 describe('addTile', () => {
   it('appends a unit-weight tile at a free position and leaves project colors untouched', () => {
-    const workspace = addTile(workspaceWith(tile('a', 0, 0, 6, 14)), 'board', { sessionId: 'new', cwd: 'C:\\dev' });
+    const workspace = addTile(workspaceWith(tile('a', 0, 0, 6, 14)), 'board', { kind: 'claude', sessionId: 'new', cwd: 'C:\\dev' });
     const added = workspace.boards[0]!.tiles[1]!;
     expect(added.layout).toEqual({ x: 6, y: 0, w: 6, h: 14 });
     expect(added.weight).toBe(1);
     expect(workspace.projectColors).toEqual({ 'C:\\dev': 'red' });
+  });
+
+  it('places a tile after the last tile from the same project', () => {
+    const start = workspaceWith(tile('a', 0, 0, 4, 6, 1, 'C:\\one'), tile('b', 4, 0, 4, 6, 1, 'C:\\two'), tile('c', 8, 0, 4, 6, 1, 'C:\\one'));
+    const withShell = addTile(start, 'board', { kind: 'shell', cwd: 'C:\\one' });
+    expect(withShell.boards[0]!.tiles.map((item) => item.kind)).toEqual(['claude', 'claude', 'claude', 'shell']);
+    const withTwo = addTile(start, 'board', { kind: 'claude', sessionId: 'd', cwd: 'C:\\two' });
+    expect(tileIds(withTwo)).toEqual(['a', 'b', withTwo.boards[0]!.tiles[2]!.id, 'c']);
+  });
+
+  it('places a tile directly after an anchor tile when asked', () => {
+    const workspace = addTile(workspaceWith(tile('a', 0, 0, 4, 6), tile('b', 4, 0, 4, 6)), 'board', { kind: 'notes', text: '' }, 'a');
+    expect(workspace.boards[0]!.tiles.map((item) => item.kind)).toEqual(['claude', 'notes', 'claude']);
+  });
+});
+
+describe('createBoard', () => {
+  it('seeds a project board with tiles in order', () => {
+    const board = createBoard({
+      name: 'armada',
+      projectCwd: 'C:\\dev',
+      tiles: [
+        { kind: 'claude', sessionId: 'x', cwd: 'C:\\dev' },
+        { kind: 'claude', sessionId: 'y', cwd: 'C:\\dev' },
+      ],
+    });
+    expect(board.projectCwd).toBe('C:\\dev');
+    expect(board.tiles.map((item) => (item.kind === 'claude' ? item.sessionId : ''))).toEqual(['x', 'y']);
+  });
+});
+
+describe('setNotesText', () => {
+  it('updates notes tiles only', () => {
+    const notes: Tile = { kind: 'notes', id: 'n', text: '', layout: { x: 0, y: 0, w: 3, h: 6 }, weight: 1 };
+    const workspace = setNotesText(workspaceWith(tile('a', 0, 0, 3, 6), notes), 'board', 'n', 'hello');
+    expect(workspace.boards[0]!.tiles[1]).toMatchObject({ kind: 'notes', text: 'hello' });
+    expect(setNotesText(workspace, 'board', 'a', 'x').boards[0]!.tiles[0]).toEqual(tile('a', 0, 0, 3, 6));
   });
 });
 

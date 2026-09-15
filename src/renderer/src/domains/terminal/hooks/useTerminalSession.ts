@@ -1,8 +1,13 @@
-import { useEffect, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, type RefObject } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import type { Unsubscribe } from '@shared/armadaApi';
+import type { OpenSessionRequest, SessionLaunch } from '@shared/sessions/sessionSchemas';
+import { isGlobalShortcut } from '@renderer/app/keyboardShortcuts';
+import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useNotificationStore } from '@renderer/app/stores/notificationStore';
+import { useSessionActivityStore, type ActivityState } from '@renderer/app/stores/sessionActivityStore';
+import { useTerminalFontSize } from '@renderer/domains/workspace';
 import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
 import { getErrorMessage } from '@renderer/shared/utils/getErrorMessage';
 
@@ -10,29 +15,70 @@ const TERMINAL_THEME = { background: '#0d0f12', foreground: '#d6d8dc', cursor: '
 const TERMINAL_FONT = '"Cascadia Code", Consolas, monospace';
 const SESSION_ENDED_BANNER = '\r\n[session ended]\r\n';
 const REFIT_DEBOUNCE_MS = 80;
+const WORKING_WINDOW_MS = 1500;
+const WORKING_MIN_CHUNKS = 3;
+const BELL = '\x07';
 
 interface TerminalSessionOptions {
-  sessionId: string;
-  cwd: string;
+  tileId: string;
+  launch: SessionLaunch;
 }
 
-export function useTerminalSession(containerRef: RefObject<HTMLDivElement | null>, { sessionId, cwd }: TerminalSessionOptions): void {
+interface TerminalInstance {
+  terminal: Terminal;
+  fit: FitAddon;
+}
+
+export function useTerminalSession(containerRef: RefObject<HTMLDivElement | null>, { tileId, launch }: TerminalSessionOptions) {
+  const fontSize = useTerminalFontSize();
+  const initialFontSizeRef = useRef(fontSize);
+  initialFontSizeRef.current = fontSize;
+  const instanceRef = useRef<TerminalInstance | undefined>(undefined);
+  const claudeSessionId = launch.kind === 'claude' ? launch.sessionId : undefined;
+  const { cwd } = launch;
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const terminal = new Terminal({ theme: TERMINAL_THEME, fontFamily: TERMINAL_FONT, fontSize: 13, cursorBlink: true });
+    const terminal = new Terminal({ theme: TERMINAL_THEME, fontFamily: TERMINAL_FONT, fontSize: initialFontSizeRef.current, cursorBlink: true });
     const fit = new FitAddon();
     terminal.loadAddon(fit);
+    terminal.attachCustomKeyEventHandler((event) => !isGlobalShortcut(event));
     terminal.open(container);
     fit.fit();
+    instanceRef.current = { terminal, fit };
+    terminal.textarea?.addEventListener('focus', () => useBoardSelectionStore.getState().setFocusedTile(tileId));
+
+    const { setActivity, clearActivity } = useSessionActivityStore.getState();
+    let activity: ActivityState = 'idle';
+    let recentOutputTimes: number[] = [];
+    let settleTimer: number | undefined;
+    const updateActivity = (next: ActivityState): void => {
+      activity = next;
+      setActivity(tileId, claudeSessionId, next);
+    };
+    const recordOutput = (data: string): void => {
+      const now = Date.now();
+      recentOutputTimes = [...recentOutputTimes.filter((time) => now - time < WORKING_WINDOW_MS), now];
+      if (data.includes(BELL)) updateActivity('waiting');
+      else if (recentOutputTimes.length >= WORKING_MIN_CHUNKS) updateActivity('working');
+      window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(() => {
+        if (activity === 'working') updateActivity('waiting');
+      }, WORKING_WINDOW_MS);
+    };
+    updateActivity('idle');
 
     let isDisposed = false;
     let terminalId: string | undefined;
     const subscriptions: Unsubscribe[] = [];
+    const size = { cols: terminal.cols, rows: terminal.rows };
+    const request: OpenSessionRequest =
+      claudeSessionId !== undefined ? { kind: 'claude', sessionId: claudeSessionId, cwd, ...size } : { kind: 'shell', cwd, ...size };
 
     armadaClient.sessions
-      .open({ sessionId, cwd, cols: terminal.cols, rows: terminal.rows })
+      .open(request)
       .then((ref) => {
         if (isDisposed) {
           armadaClient.sessions.close(ref);
@@ -41,13 +87,18 @@ export function useTerminalSession(containerRef: RefObject<HTMLDivElement | null
         terminalId = ref.terminalId;
         subscriptions.push(
           armadaClient.sessions.onOutput((event) => {
-            if (event.terminalId === terminalId) terminal.write(event.data);
+            if (event.terminalId !== terminalId) return;
+            terminal.write(event.data);
+            recordOutput(event.data);
           }),
           armadaClient.sessions.onExit((event) => {
             if (event.terminalId === terminalId) terminal.write(SESSION_ENDED_BANNER);
           }),
         );
-        terminal.onData((data) => armadaClient.sessions.write({ terminalId: ref.terminalId, data }));
+        terminal.onData((data) => {
+          armadaClient.sessions.write({ terminalId: ref.terminalId, data });
+          updateActivity('idle');
+        });
         terminal.onResize(({ cols, rows }) => armadaClient.sessions.resize({ terminalId: ref.terminalId, cols, rows }));
         terminal.focus();
       })
@@ -64,10 +115,22 @@ export function useTerminalSession(containerRef: RefObject<HTMLDivElement | null
     return () => {
       isDisposed = true;
       window.clearTimeout(refitTimer);
+      window.clearTimeout(settleTimer);
       resizeObserver.disconnect();
       subscriptions.forEach((unsubscribe) => unsubscribe());
       if (terminalId) armadaClient.sessions.close({ terminalId });
+      clearActivity(tileId);
       terminal.dispose();
+      instanceRef.current = undefined;
     };
-  }, [containerRef, sessionId, cwd]);
+  }, [containerRef, tileId, claudeSessionId, cwd]);
+
+  useEffect(() => {
+    const instance = instanceRef.current;
+    if (!instance) return;
+    instance.terminal.options.fontSize = fontSize;
+    instance.fit.fit();
+  }, [fontSize]);
+
+  return useCallback(() => instanceRef.current?.terminal.focus(), []);
 }

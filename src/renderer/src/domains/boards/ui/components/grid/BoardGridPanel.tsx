@@ -1,11 +1,10 @@
 import { GridLayout, useContainerWidth, type Layout } from 'react-grid-layout';
 import type { Board, TileLayout } from '@shared/workspace/workspaceSchemas';
-import { useConversationTitles, useProjectAccents } from '@renderer/domains/conversations';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
+import { useTilePresentation } from '../../../hooks/useTilePresentation';
 import { GRID_COLUMNS, GRID_MARGIN_PX, GRID_ROW_HEIGHT_PX, hasLayoutChanged } from '../../../model/boardEdits';
 import { BoardTileFrame, TILE_DRAG_HANDLE_CLASS, type ArrowDirection } from './BoardTileFrame';
 
-const NEW_SESSION_TITLE = 'New session';
 const KEYBOARD_HINT = 'Arrow keys move, shift and arrow keys resize.';
 
 const MOVE_DELTAS: Record<ArrowDirection, Partial<TileLayout>> = {
@@ -25,12 +24,12 @@ const RESIZE_DELTAS: Record<ArrowDirection, Partial<TileLayout>> = {
 interface BoardGridPanelProps {
   board: Board;
   shouldMountTerminals: boolean;
+  onOpenShell(cwd: string, afterTileId: string): void;
 }
 
-export function BoardGridPanel({ board, shouldMountTerminals }: BoardGridPanelProps) {
+export function BoardGridPanel({ board, shouldMountTerminals, onOpenShell }: BoardGridPanelProps) {
   const { width, containerRef, mounted } = useContainerWidth();
-  const titles = useConversationTitles();
-  const accentFor = useProjectAccents();
+  const presentationOf = useTilePresentation();
   const editor = useBoardsEditor();
 
   const layout: Layout = board.tiles.map((tile) => ({ i: tile.id, ...tile.layout }));
@@ -54,12 +53,13 @@ export function BoardGridPanel({ board, shouldMountTerminals }: BoardGridPanelPr
           {board.tiles.map((tile) => (
             <div key={tile.id}>
               <BoardTileFrame
+                boardId={board.id}
                 tile={tile}
-                title={titles.get(tile.sessionId) ?? NEW_SESSION_TITLE}
-                accentColor={accentFor(tile.cwd)}
+                {...presentationOf(tile)}
                 shouldMountTerminal={shouldMountTerminals}
                 keyboardHint={KEYBOARD_HINT}
                 onClose={() => editor.removeTile(board.id, tile.id)}
+                onOpenShell={() => tile.kind !== 'notes' && onOpenShell(tile.cwd, tile.id)}
                 onArrow={(direction, isShift) =>
                   editor.nudgeTile(board.id, tile.id, (isShift ? RESIZE_DELTAS : MOVE_DELTAS)[direction])
                 }

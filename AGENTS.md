@@ -107,7 +107,9 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   path: it applies a pure edit function, writes the result to the query cache optimistically, and saves the whole
   workspace. Board edits live in `domains/boards/model/boardEdits.ts`, color edits in
   `domains/conversations/model/projectColorEdits.ts`.
-- **UI state** (active board, which boards have been opened, notices): Zustand.
+- **UI state**: Zustand. `boardSelectionStore` (active board, opened boards, focused tile), `sessionActivityStore`
+  (per-tile working / waiting / idle, inferred in the terminal hook from output rate, a BEL byte, and user input),
+  `notificationStore`.
 - Never store main-owned data in Zustand.
 - **Terminal stream** is neither. Pty output arrives on a per-session IPC channel and is written straight into the
   xterm instance. It is never held in React state.
@@ -116,12 +118,15 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
 - `workspace` owns the persisted document and how it is saved. It knows nothing about what is inside.
 - `conversations` knows how to list and open conversations and color a project. Color belongs to the project
   (keyed by cwd), not the tile, so every tile from one project wears the same color. It does not know about grids.
-- `boards` owns Tile placement, size, and order. A Tile references a session by id and nothing else; it asks
-  `conversations` for its title and accent. Two layout modes per board: `auto` tiles the visible area from tile
+- `boards` owns Tile placement, size, and order. Tiles come in three kinds (`claude`, `shell`, `notes`), a
+  discriminated union in the schema; files written before kinds existed default to `claude`. A Claude tile references
+  a session by id and nothing else; it asks `conversations` for its title and accent. New tiles insert after the
+  last tile from the same project. Two layout modes per board: `auto` tiles the visible area from tile
   order plus weights (`model/tiling.ts`, rows of 1/2/3 columns by count, drag-to-swap, splitters adjust weights) and
   `free` is a scrolling grid with explicit x/y/w/h (`react-grid-layout`). Reflow in free mode rewrites grid
   positions from the tiling. New tiles append; the tiling decides where they land.
-- `terminal` renders one session. It does not know which board it sits on.
+- `terminal` renders one pty session, Claude or plain shell. It does not know which board it sits on. It owns the
+  activity heuristic and lets global shortcuts (`app/keyboardShortcuts.ts`) bubble past xterm.
 
 ---
 

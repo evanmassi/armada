@@ -1,18 +1,23 @@
 import { useEffect, useRef } from 'react';
-import type { Conversation } from '@shared/conversations/conversationTypes';
+import type { Conversation, Project } from '@shared/conversations/conversationTypes';
+import { GLOBAL_SHORTCUTS, isGlobalShortcut } from '@renderer/app/keyboardShortcuts';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
-import { BoardLayoutModeControls, BoardPanel, BoardSwitcherBar, useBoardsEditor } from '@renderer/domains/boards';
-import { ConversationSidebarPanel } from '@renderer/domains/conversations';
-import { useWorkspaceQuery } from '@renderer/domains/workspace';
+import { BoardLayoutModeControls, BoardPanel, BoardSwitcherBar, findClaudeTile, tileCwd, useBoardsEditor } from '@renderer/domains/boards';
+import { ConversationSidebarPanel, projectDisplayName, useProjectColors } from '@renderer/domains/conversations';
+import { adjustTerminalFontSize, resetTerminalFontSize, useWorkspaceEditor, useWorkspaceQuery } from '@renderer/domains/workspace';
+import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
 import { NotificationBar } from '@renderer/shared/ui/components/NotificationBar';
 import { getErrorMessage } from '@renderer/shared/utils/getErrorMessage';
 
 const DEFAULT_BOARD_NAME = 'Board';
+const PROJECT_BOARD_TILE_COUNT = 3;
 
 export function App() {
   const { data: workspace, isPending, isError, error } = useWorkspaceQuery();
+  const { edit } = useWorkspaceEditor();
   const editor = useBoardsEditor();
-  const { activeBoardId, openedBoardIds, selectBoard } = useBoardSelectionStore();
+  const { ensureColor } = useProjectColors();
+  const { activeBoardId, openedBoardIds, focusedTileId, selectBoard, focusTile } = useBoardSelectionStore();
   const boardAreaRef = useRef<HTMLDivElement>(null);
 
   const boards = workspace?.boards ?? [];
@@ -23,18 +28,70 @@ export function App() {
     if (resolvedActiveBoardId && resolvedActiveBoardId !== activeBoardId) selectBoard(resolvedActiveBoardId);
   }, [resolvedActiveBoardId, activeBoardId, selectBoard]);
 
-  const ensureActiveBoard = (): string => resolvedActiveBoardId ?? editor.createBoard(DEFAULT_BOARD_NAME);
+  const ensureActiveBoard = (): string => resolvedActiveBoardId ?? editor.createBoard({ name: DEFAULT_BOARD_NAME });
 
-  const openConversation = (conversation: Conversation): void =>
-    editor.addTile(ensureActiveBoard(), { sessionId: conversation.sessionId, cwd: conversation.cwd });
+  const openConversation = (conversation: Conversation): void => {
+    const existing = workspace && findClaudeTile(workspace, conversation.sessionId);
+    if (existing) {
+      focusTile(existing.boardId, existing.tile.id);
+      return;
+    }
+    ensureColor(conversation.cwd);
+    editor.addTile(ensureActiveBoard(), { kind: 'claude', sessionId: conversation.sessionId, cwd: conversation.cwd });
+  };
 
-  const startSession = (cwd: string): void => editor.addTile(ensureActiveBoard(), { sessionId: crypto.randomUUID(), cwd });
+  const startSession = (cwd: string, afterTileId?: string): void => {
+    ensureColor(cwd);
+    editor.addTile(ensureActiveBoard(), { kind: 'claude', sessionId: crypto.randomUUID(), cwd }, afterTileId);
+  };
 
-  const createBoard = (): void => selectBoard(editor.createBoard(`${DEFAULT_BOARD_NAME} ${boards.length + 1}`));
+  const openShell = (cwd: string, afterTileId: string): void =>
+    editor.addTile(ensureActiveBoard(), { kind: 'shell', cwd }, afterTileId);
+
+  const openProjectBoard = (project: Project): void => {
+    const existing = boards.find((board) => board.projectCwd === project.cwd);
+    if (existing) {
+      selectBoard(existing.id);
+      return;
+    }
+    ensureColor(project.cwd);
+    const tiles = project.conversations
+      .slice(0, PROJECT_BOARD_TILE_COUNT)
+      .map((conversation) => ({ kind: 'claude' as const, sessionId: conversation.sessionId, cwd: conversation.cwd }));
+    selectBoard(editor.createBoard({ name: projectDisplayName(project.cwd), projectCwd: project.cwd, tiles }));
+  };
+
+  const createBoard = (): void => selectBoard(editor.createBoard({ name: `${DEFAULT_BOARD_NAME} ${boards.length + 1}` }));
+
+  const addNotes = (): void => editor.addTile(ensureActiveBoard(), { kind: 'notes', text: '' });
+
+  const startSessionNearFocus = async (): Promise<void> => {
+    const focusedTile = activeBoard?.tiles.find((tile) => tile.id === focusedTileId);
+    const cwd = (focusedTile && tileCwd(focusedTile)) ?? activeBoard?.projectCwd ?? activeBoard?.tiles.map(tileCwd).find(Boolean);
+    if (cwd) {
+      startSession(cwd, focusedTile?.id);
+      return;
+    }
+    const picked = await armadaClient.projects.pickFolder();
+    if (picked) startSession(picked);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (!isGlobalShortcut(event)) return;
+      event.preventDefault();
+      if (event.key === GLOBAL_SHORTCUTS.newSession) void startSessionNearFocus();
+      else if (event.key === GLOBAL_SHORTCUTS.fontSmaller) edit((current) => adjustTerminalFontSize(current, -1));
+      else if (event.key === GLOBAL_SHORTCUTS.fontReset) edit(resetTerminalFontSize);
+      else edit((current) => adjustTerminalFontSize(current, 1));
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  });
 
   return (
     <div className="flex h-full">
-      <ConversationSidebarPanel onOpenConversation={openConversation} onStartSession={startSession} />
+      <ConversationSidebarPanel onOpenConversation={openConversation} onOpenProjectBoard={openProjectBoard} onStartSession={startSession} />
       <main className="flex min-w-0 flex-1 flex-col">
         <BoardSwitcherBar
           boards={boards}
@@ -45,11 +102,16 @@ export function App() {
           onRemove={editor.removeBoard}
         >
           {activeBoard && (
-            <BoardLayoutModeControls
-              layoutMode={activeBoard.layoutMode}
-              onChange={(layoutMode) => editor.setLayoutMode(activeBoard.id, layoutMode)}
-              onReflow={() => editor.reflowFreeLayout(activeBoard.id, boardAreaRef.current?.clientHeight ?? 0)}
-            />
+            <>
+              <button type="button" className="ml-auto rounded px-2 py-0.5 text-[11px] text-muted hover:bg-edge hover:text-fg" onClick={addNotes}>
+                + notes
+              </button>
+              <BoardLayoutModeControls
+                layoutMode={activeBoard.layoutMode}
+                onChange={(layoutMode) => editor.setLayoutMode(activeBoard.id, layoutMode)}
+                onReflow={() => editor.reflowFreeLayout(activeBoard.id, boardAreaRef.current?.clientHeight ?? 0)}
+              />
+            </>
           )}
         </BoardSwitcherBar>
         <div ref={boardAreaRef} className="relative min-h-0 flex-1">
@@ -61,6 +123,7 @@ export function App() {
               board={board}
               isActive={board.id === resolvedActiveBoardId}
               shouldMountTerminals={openedBoardIds.includes(board.id)}
+              onOpenShell={openShell}
             />
           ))}
         </div>

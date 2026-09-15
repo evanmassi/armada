@@ -1,13 +1,21 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { SessionLaunch } from '@shared/sessions/sessionSchemas';
+import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useTerminalSession } from '../../hooks/useTerminalSession';
 
 interface TerminalSessionTileProps {
-  sessionId: string;
-  cwd: string;
+  tileId: string;
+  launch: SessionLaunch;
 }
 
-export function TerminalSessionTile({ sessionId, cwd }: TerminalSessionTileProps) {
+export function TerminalSessionTile({ tileId, launch }: TerminalSessionTileProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  useTerminalSession(containerRef, { sessionId, cwd });
+  const focusTerminal = useTerminalSession(containerRef, { tileId, launch });
+  const isFocusRequested = useBoardSelectionStore((state) => state.focusedTileId === tileId);
+
+  useEffect(() => {
+    if (isFocusRequested) focusTerminal();
+  }, [isFocusRequested, focusTerminal]);
+
   return <div ref={containerRef} className="h-full w-full" />;
 }

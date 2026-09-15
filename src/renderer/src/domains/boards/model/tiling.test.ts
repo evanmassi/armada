@@ -3,6 +3,7 @@ import type { Board, Tile } from '@shared/workspace/workspaceSchemas';
 import { columnsFor, computeTiling, tilingToCells } from './tiling';
 
 const tile = (id: string, weight = 1): Tile => ({
+  kind: 'claude',
   id,
   sessionId: id,
   cwd: 'C:\\dev',

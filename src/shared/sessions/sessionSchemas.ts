@@ -5,14 +5,25 @@ const terminalSizeSchema = z.object({
   rows: z.number().int().positive(),
 });
 
+const claudeLaunchSchema = z.object({
+  kind: z.literal('claude'),
+  sessionId: z.string().uuid(),
+  cwd: z.string().min(1),
+});
+
+const shellLaunchSchema = z.object({
+  kind: z.literal('shell'),
+  cwd: z.string().min(1),
+});
+
 export const terminalRefSchema = z.object({
   terminalId: z.string().uuid(),
 });
 
-export const openSessionRequestSchema = terminalSizeSchema.extend({
-  sessionId: z.string().uuid(),
-  cwd: z.string().min(1),
-});
+export const openSessionRequestSchema = z.discriminatedUnion('kind', [
+  claudeLaunchSchema.merge(terminalSizeSchema),
+  shellLaunchSchema.merge(terminalSizeSchema),
+]);
 
 export const terminalWriteRequestSchema = terminalRefSchema.extend({
   data: z.string(),
@@ -20,6 +31,7 @@ export const terminalWriteRequestSchema = terminalRefSchema.extend({
 
 export const terminalResizeRequestSchema = terminalRefSchema.merge(terminalSizeSchema);
 
+export type SessionLaunch = z.infer<typeof claudeLaunchSchema> | z.infer<typeof shellLaunchSchema>;
 export type TerminalRef = z.infer<typeof terminalRefSchema>;
 export type OpenSessionRequest = z.infer<typeof openSessionRequestSchema>;
 export type TerminalWriteRequest = z.infer<typeof terminalWriteRequestSchema>;

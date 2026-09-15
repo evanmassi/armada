@@ -1,6 +1,6 @@
 import type { ProjectColor } from '@shared/workspace/workspaceSchemas';
 import { useWorkspaceEditor, useWorkspaceQuery } from '@renderer/domains/workspace';
-import { setProjectColor } from '../model/projectColorEdits';
+import { ensureProjectColor, setProjectColor } from '../model/projectColorEdits';
 import { PROJECT_COLOR_VALUES, UNCOLORED_ACCENT } from '../ui/projectColorValues';
 
 export function useProjectColors() {
@@ -10,13 +10,14 @@ export function useProjectColors() {
   return {
     colorOf: (cwd: string): ProjectColor | undefined => colors[cwd],
     setColor: (cwd: string, color: ProjectColor | undefined) => edit((current) => setProjectColor(current, cwd, color)),
+    ensureColor: (cwd: string) => edit((current) => ensureProjectColor(current, cwd)),
   };
 }
 
-export function useProjectAccents(): (cwd: string) => string {
+export function useProjectAccents(): (cwd: string | undefined) => string {
   const { colorOf } = useProjectColors();
   return (cwd) => {
-    const color = colorOf(cwd);
+    const color = cwd ? colorOf(cwd) : undefined;
     return color ? PROJECT_COLOR_VALUES[color] : UNCOLORED_ACCENT;
   };
 }

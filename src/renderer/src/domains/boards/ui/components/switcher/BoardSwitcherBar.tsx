@@ -1,5 +1,6 @@
 import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { Board } from '@shared/workspace/workspaceSchemas';
+import { useProjectAccents } from '@renderer/domains/conversations';
 
 interface BoardSwitcherBarProps {
   boards: Board[];
@@ -14,6 +15,7 @@ interface BoardSwitcherBarProps {
 export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, onRename, onRemove, children }: BoardSwitcherBarProps) {
   const [editingBoardId, setEditingBoardId] = useState<string>();
   const [draftName, setDraftName] = useState('');
+  const accentFor = useProjectAccents();
 
   const beginRename = (board: Board): void => {
     setEditingBoardId(board.id);
@@ -43,7 +45,8 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
         return (
           <div
             key={board.id}
-            className={`flex items-center gap-1 rounded px-2 py-0.5 ${isActive ? 'bg-edge text-white' : 'text-muted hover:text-fg'}`}
+            className={`flex items-center gap-1 rounded border-l-2 px-2 py-0.5 ${isActive ? 'bg-edge text-white' : 'text-muted hover:text-fg'}`}
+            style={{ borderLeftColor: accentFor(board.projectCwd) }}
           >
             {editingBoardId === board.id ? (
               <input

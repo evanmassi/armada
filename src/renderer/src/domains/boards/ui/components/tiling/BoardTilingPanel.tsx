@@ -1,12 +1,11 @@
 import { useRef, useState, type DragEvent } from 'react';
 import type { Board, Tile } from '@shared/workspace/workspaceSchemas';
-import { useConversationTitles, useProjectAccents } from '@renderer/domains/conversations';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
+import { useTilePresentation } from '../../../hooks/useTilePresentation';
 import { computeTiling } from '../../../model/tiling';
 import { BoardTileFrame, type ArrowDirection } from '../grid/BoardTileFrame';
 import { BoardSplitter } from './BoardSplitter';
 
-const NEW_SESSION_TITLE = 'New session';
 const KEYBOARD_HINT = 'Arrow keys reorder, shift with left or right resizes.';
 const MIN_SHARE = 0.15;
 const WEIGHT_STEP = 1.15;
@@ -15,6 +14,7 @@ const DRAG_MIME = 'application/x-armada-tile';
 interface BoardTilingPanelProps {
   board: Board;
   shouldMountTerminals: boolean;
+  onOpenShell(cwd: string, afterTileId: string): void;
 }
 
 interface SeamDrag {
@@ -27,9 +27,8 @@ interface SeamDrag {
 
 const clampShare = (share: number): number => Math.min(1 - MIN_SHARE, Math.max(MIN_SHARE, share));
 
-export function BoardTilingPanel({ board, shouldMountTerminals }: BoardTilingPanelProps) {
-  const titles = useConversationTitles();
-  const accentFor = useProjectAccents();
+export function BoardTilingPanel({ board, shouldMountTerminals, onOpenShell }: BoardTilingPanelProps) {
+  const presentationOf = useTilePresentation();
   const editor = useBoardsEditor();
   const tileElements = useRef(new Map<string, HTMLDivElement>());
   const rowElements = useRef(new Map<number, HTMLDivElement>());
@@ -155,12 +154,13 @@ export function BoardTilingPanel({ board, shouldMountTerminals }: BoardTilingPan
                   onDrop={(event) => handleDrop(tile, event)}
                 >
                   <BoardTileFrame
+                    boardId={board.id}
                     tile={tile}
-                    title={titles.get(tile.sessionId) ?? NEW_SESSION_TITLE}
-                    accentColor={accentFor(tile.cwd)}
+                    {...presentationOf(tile)}
                     shouldMountTerminal={shouldMountTerminals}
                     keyboardHint={KEYBOARD_HINT}
                     onClose={() => editor.removeTile(board.id, tile.id)}
+                    onOpenShell={() => tile.kind !== 'notes' && onOpenShell(tile.cwd, tile.id)}
                     onArrow={(direction, isShift) => handleArrow(tile, direction, isShift)}
                     onDragStart={(event) => handleDragStart(tile, event)}
                   />
