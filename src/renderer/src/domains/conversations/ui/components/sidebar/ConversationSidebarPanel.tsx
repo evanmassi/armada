@@ -56,7 +56,7 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
   };
 
   const sortMenuItems = [
-    { label: 'Sort A to Z', onSelect: () => editor.sortProjects((a, b) => nameOf(a).localeCompare(nameOf(b), undefined, { sensitivity: 'base' }), otherOrder) },
+    { label: 'Sort A-Z', onSelect: () => editor.sortProjects((a, b) => nameOf(a).localeCompare(nameOf(b), undefined, { sensitivity: 'base' }), otherOrder) },
     {
       label: 'Sort by recent',
       onSelect: () =>
@@ -66,8 +66,9 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
           return left && right ? byMostRecentProject(left, right) : 0;
         }, otherOrder),
     },
-    { label: 'New group', onSelect: () => editor.createGroup(`${DEFAULT_GROUP_NAME} ${(sidebar?.groups.length ?? 0) + 1}`) },
   ];
+
+  const createGroup = (): void => editor.createGroup(`${DEFAULT_GROUP_NAME} ${(sidebar?.groups.length ?? 0) + 1}`);
 
   const groups = sidebar?.groups ?? [];
 
@@ -158,10 +159,13 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center gap-1 border-b border-edge px-3 py-2">
           <strong className="flex-1 text-[11px] tracking-[0.12em] text-muted uppercase">Armada</strong>
-          <button type="button" className="rounded bg-edge px-2 py-0.5 hover:text-white" onClick={() => void startSessionInPickedFolder()}>
+          <button type="button" className="rounded bg-edge px-2 py-0.5 hover:text-white" onClick={() => void startSessionInPickedFolder()} title="Start a session in a folder">
             + folder
           </button>
-          <ActionMenu label="Sidebar actions" items={sortMenuItems} />
+          <button type="button" className="rounded bg-edge px-2 py-0.5 hover:text-white" onClick={createGroup} title="New group">
+            + group
+          </button>
+          <ActionMenu label="Sort projects" items={sortMenuItems} />
         </header>
         <input
           type="search"
