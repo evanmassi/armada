@@ -1,0 +1,38 @@
+@import 'tailwindcss';
+@import '@xterm/xterm/css/xterm.css';
+@import 'react-grid-layout/css/styles.css';
+
+@theme {
+  --color-ink: #0d0f12;
+  --color-panel: #15181d;
+  --color-edge: #262a31;
+  --color-fg: #d6d8dc;
+  --color-muted: #7c828c;
+  --font-mono: 'Cascadia Code', Consolas, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: var(--color-ink);
+  color: var(--color-fg);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: var(--color-muted);
+  opacity: 0.2;
+  border-radius: 6px;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  border-color: var(--color-muted);
+}
+
+.xterm {
+  height: 100%;
+  padding: 4px;
+}

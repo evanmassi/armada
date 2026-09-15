@@ -1,0 +1,376 @@
+# Armada - Agent Development Guide
+
+Armada is a desktop dashboard for Claude Code conversations. Boards of grid-snapped terminal tiles, each tile a live
+`claude` session, grouped around a project or a problem instead of scattered across windows.
+
+## Architecture Overview
+
+Single-package Electron app. The main process plays the server role (spawning sessions, reading the Claude
+conversation store, persisting boards). The renderer plays the client role. Zod schemas in `src/shared` are the
+single source of truth for every shape that crosses the process boundary.
+
+```
+armada/
+├── src/
+│   ├── main/        # Electron main process (Clean Architecture)
+│   ├── preload/     # contextBridge: the only door between main and renderer
+│   ├── renderer/    # React + Vite + TypeScript (domain-driven)
+│   └── shared/      # Zod schemas + IPC channel names (no runtime deps on either side)
+├── docs/
+│   ├── audit-prompt.txt
+│   └── odysseus-agents-reference.md
+└── AGENTS.md
+```
+
+## Tech Stack
+
+| Layer | Technologies |
+|-------|-------------|
+| Shell | Electron, electron-vite |
+| Renderer | React 19, TanStack Query, Zustand, Tailwind v4, react-grid-layout v2 |
+| Terminal | @xterm/xterm + @xterm/addon-fit (renderer), node-pty (main) |
+| Shared | Zod schemas via `@shared/*` |
+| Testing | Vitest |
+
+Sessions are spawned as `claude` for a new conversation or `claude --resume <sessionId>` to continue one, always
+with an argv array, never a shell string.
+
+---
+
+## Main Process Architecture (Clean Architecture)
+
+```
+src/main/
+├── domain/           # No Electron, no Node built-ins.
+│   ├── repositories/ # ConversationRepository, BoardRepository (interfaces only)
+│   └── terminals/    # TerminalHost (interface only)
+├── application/
+│   └── services/     # ConversationCatalogService, SessionService
+├── infrastructure/
+│   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser
+│   ├── persistence/  # JsonBoardRepository (userData/boards.json)
+│   ├── pty/          # PtySessionHost wraps node-pty
+│   ├── di/           # ServiceContainer
+│   └── paths.ts      # The only place userData and ~/.claude paths are built
+└── ipc/              # One register*Handlers file per concern
+```
+
+**Path Aliases**: `@main/*`, `@shared/*`
+
+A layer directory exists only once it has a real file in it. Entities and domain errors do not exist yet because
+nothing needs them; the shared schema types are the entities. A handler calls a repository directly when there is
+no use-case logic between them (boards); it goes through a service when there is (session resume decision,
+conversation grouping). A service that only forwards is dead weight.
+
+### Conversation store facts
+
+Verified against the on-disk format. Re-verify before relying on anything not listed here.
+
+- One folder per project under `~/.claude/projects/`, folder name is the cwd with separators replaced by `-`.
+- One `<sessionId>.jsonl` per conversation. The real cwd is the `cwd` field on the first `user` or `attachment`
+  record; never reconstruct it from the folder name.
+- Title comes from the latest `ai-title` record. Fall back to the first user prompt when absent.
+- Last activity is the file mtime.
+- `~/.claude/history.jsonl` is append-only prompt history keyed by `sessionId` and `project`. Not needed for the
+  catalog; do not read it speculatively.
+
+---
+
+## Renderer Architecture (Domain-Driven)
+
+```
+src/renderer/src/
+├── app/              # App shell
+│   ├── stores/       # Global Zustand stores (board selection, notifications)
+│   ├── styles/       # Tailwind entry and design tokens
+│   ├── App.tsx
+│   ├── queryClient.ts
+│   └── queryKeys.ts  # Centralized query keys
+├── domains/          # Feature modules, each with an index.ts public surface
+│   ├── conversations/ # Sidebar: projects and their conversations, open/resume
+│   ├── boards/        # Board list, grid layout, tile placement, color, persistence
+│   └── terminal/      # xterm tile bound to one pty session
+├── shared/           # Cross-cutting
+│   ├── ui/
+│   └── utils/
+└── infrastructure/
+    └── ipc/          # armadaClient: the typed window.armada bridge
+```
+
+**Path Aliases**: `@renderer/*` (renderer root), `@shared/*` (cross-process, `src/shared`). One alias per root, on
+purpose: a second `@shared` for renderer-local code would collide with the cross-process one.
+
+**State Management**:
+- **Main-owned state** (conversation catalog, boards): TanStack Query over IPC. Reads are queries, saves are
+  mutations, query keys from `@renderer/app/queryKeys`. Board edits are pure functions in
+  `domains/boards/model/boardDocumentEdits.ts`; `useBoardsEditor` applies one, writes the result to the query cache
+  optimistically, and saves the whole document.
+- **UI state** (active board, which boards have been opened, notices): Zustand.
+- Never store main-owned data in Zustand.
+- **Terminal stream** is neither. Pty output arrives on a per-session IPC channel and is written straight into the
+  xterm instance. It is never held in React state.
+
+**Domain boundaries**:
+- `conversations` knows how to list and open. It does not know about grids.
+- `boards` owns Tile placement, size, order, color. A Tile references a session by id and nothing else.
+- `terminal` renders one session. It does not know which board it sits on.
+
+---
+
+## Process Boundary
+
+The renderer never touches the filesystem, `child_process`, or Node. `contextIsolation: true`, `nodeIntegration:
+false`, `sandbox: true`. The preload exposes exactly the calls the renderer consumes today, under `window.armada`.
+
+**Channel names live in `src/shared/ipcChannels.ts`** as constants. A string literal channel name in either process
+is a bug.
+
+**Every inbound payload is parsed in the main handler** with its shared schema before reaching a service. Renderer
+side trust is zero, same as an HTTP server.
+
+**Error text**: main owns it. A handler rejects with a message that is already user-ready. The renderer shows it
+verbatim through the single resolver `getErrorMessage` in `shared/utils/getErrorMessage.ts` and never rewrites it.
+One toaster in `queryClient.ts`: `MutationCache.onError` for every failed mutation. A failed query stays silent and
+the component renders its own error state from `isError`. A mutation hook's own `onError` never toasts; it does
+cache reactions only. Session-open failures inside the terminal hook notify through the same store.
+
+---
+
+## Shared Schemas
+
+All shapes that cross the boundary are defined in `src/shared` and imported from `@shared/*` on both sides.
+Never define a boundary type inline in main or renderer.
+
+- **Zod schema** for anything main must validate: inbound IPC payloads and files read from disk. Derive the
+  TypeScript type with `z.infer`. A schema nothing calls `.parse()` on is dead.
+- **Plain type** for main-to-renderer results and events. Validating in-process output is theater.
+
+**Modules**: `boards/boardSchemas`, `sessions/sessionSchemas`, `conversations/conversationTypes`, `ipcChannels`,
+`armadaApi` (the preload contract both sides implement against)
+
+---
+
+## Persistence
+
+Boards persist to one JSON file in Electron's `userData` directory, validated on read and write with the boards
+schema. A file that fails validation is an error shown to the user, not silently replaced. There is no migration
+system until a second schema version exists.
+
+---
+
+## Exemplar Reference Files
+
+Pattern new code after these. None has been through an audit pass yet; the first audit replaces this line.
+
+| Layer | Exemplar |
+|-------|----------|
+| Main IPC handler | `src/main/ipc/registerSessionHandlers.ts` |
+| Main application service | `src/main/application/services/SessionService.ts` |
+| Main repository interface | `src/main/domain/repositories/ConversationRepository.ts` |
+| Main repository implementation | `src/main/infrastructure/persistence/JsonBoardRepository.ts` |
+| Pure logic with a test | `src/main/infrastructure/claude/conversationJsonlParser.ts` |
+| Renderer TanStack Query hook | `src/renderer/src/domains/conversations/hooks/useProjectsQuery.ts` |
+| Renderer editor hook (mutations) | `src/renderer/src/domains/boards/hooks/useBoardsEditor.ts` |
+| Renderer feature component | `src/renderer/src/domains/boards/ui/components/grid/BoardTileFrame.tsx` |
+| Renderer Zustand store | `src/renderer/src/app/stores/boardSelectionStore.ts` |
+| Shared schema module | `src/shared/boards/boardSchemas.ts` |
+
+---
+
+## Naming Conventions
+
+| Category | Convention | Example |
+|----------|------------|---------|
+| Components | PascalCase | `BoardGridPanel.tsx` |
+| Hooks | camelCase + use | `useConversationsQuery.ts` |
+| Services | PascalCase + Service | `BoardService.ts` |
+| Stores | camelCase + Store | `boardSelectionStore.ts` |
+| Type files | camelCase + Types | `tileDragTypes.ts` |
+| Directories | kebab-case | `ui/components/` |
+| Constants | UPPER_CASE | `GRID_COLUMNS` |
+| Booleans | is/has/should prefix | `isDragging`, `hasUnsavedLayout` |
+
+- Named exports only (no default exports)
+- Query keys from `@renderer/app/queryKeys`
+
+### Component Naming (Entity-First)
+
+Pattern: **Domain prefix, entity, specifics, suffix**.
+
+Examples: `ConversationSidebarPanel`, `BoardTileColorSelector`, `TerminalSessionTile`.
+
+**Established suffixes.** Reach for one of these before coining a new one:
+
+| Common | `Modal`, `Panel`, `Tab`, `Page`, `Form`, `Row`, `Field`, `Button` |
+|--------|---|
+| Also in use | `Dialog`, `Section`, `List`, `Bar`, `Selector`, `Indicator`, `Controls`, `Shell`, `Tile` |
+
+`Tile` earned its place: it names the grid-snapped window that no other suffix describes. A new suffix outside
+both rows needs the same kind of reason.
+
+### `ui/components/` Subdirectories
+
+Feature-named and unprefixed. The domain path already provides context.
+
+- ✅ `domains/boards/ui/components/grid/`
+- ✅ `domains/conversations/ui/components/sidebar/`
+- ❌ `domains/boards/ui/components/modals/` (UI pattern, not a feature)
+
+### File Organization Rules
+
+- **Generic filenames are banned**: no `utils.ts`, `helpers.ts`, `misc.ts`, or a barrel-only `index.ts` that
+  re-exports nothing meaningful. Name the file after what it contains.
+- **Loose files**: if every sibling entry in a directory is a subdirectory, do not drop a loose file alongside them.
+  The only exception is `index.ts` barrels.
+- **Sibling consistency**: follow the convention already established by sibling files.
+- **One file, one concern**: a React component and an IPC helper never share a file.
+
+---
+
+## Agent Instructions
+
+### Mandatory Rules
+
+- **No bandaid solutions.** All fixes must be architecturally sound.
+- **No zombie code.** Delete unused code immediately.
+- **No redundant systems.** One way to do each thing.
+- **No breaking changes.** Typecheck, lint, and test before committing.
+- **All code must be simple and pragmatic.**
+- **Never delete files without explicit confirmation.**
+- **Never execute, create, or modify anything until told to proceed.** Findings and plans first.
+
+### Pre-Implementation Checklist
+
+1. **Read the schema** in `src/shared` before writing code.
+2. **Verify exact field names.** It is `sessionId`, not `id`, on a Conversation.
+3. **All IDs are strings.**
+4. **Use existing patterns.** Search the codebase before creating a new approach.
+5. **Import from shared schemas.** Never define boundary types locally.
+
+### Write-Time Discipline
+
+**1. End-to-end field trace.** When adding a field to a request, tile, or board, trace it from the renderer call
+through the preload, the handler, the service, to its final consumer (spawn argv, JSON on disk, rendered output) in
+the same change. If no layer reads it at the bottom, do not add it.
+
+**2. Overwrite vs intersect.** `{ ...userInput, field: systemValue }` silently discards the user's value. Decide
+explicitly: preserve, intersect, or replace. Replacement needs a PITFALL line saying why.
+
+**3. One shape per concept.** Never hand-roll an interface that overlaps a shared schema type. Derive with `z.infer`.
+
+**4. Caller-first: no speculative exports.** No schema, type, channel, handler, query key, or method without a real
+caller wired up in the same change.
+
+**5. No unused parameters.** Every declared parameter must be read by at least one caller.
+
+---
+
+## Code Quality Rules
+
+| Rule | Do | Don't |
+|------|-----|-------|
+| Type Safety | Define types centrally, use `import type` | Use `any`, define inline |
+| Promises | Always `await` or `.catch()` | Leave floating promises |
+| Imports | Delete unused immediately | Leave "for later" |
+| Architecture | Domain uses interfaces only | Domain importing Electron or node-pty |
+| Null handling | Use `undefined` and optional params | Use `null` for optional values |
+| Dead code | Delete immediately | Leave "just in case" |
+
+### Accessibility
+
+Every interactive element has keyboard support. Tiles are focusable, reorderable, and closable from the keyboard,
+not only by mouse.
+
+---
+
+## Comment Standards
+
+**Zero comments.** No file headers, no JSDoc, no docstrings, no section banners, no line narration, no TODOs.
+The code documents itself through naming. If a comment feels needed, rename something.
+
+**Sole exception**: one line containing `PITFALL:` for something a reader genuinely cannot infer from the code
+(a workaround, a spec quirk, a silent failure, an intentional overwrite).
+
+This overrides section 1 of `docs/audit-prompt.txt`. When auditing Armada, treat any comment other than a `PITFALL:`
+line as a finding for removal, and never flag a missing file header.
+
+---
+
+## Anti-Patterns
+
+### No Speculative Code
+
+Only implement what a real caller needs right now. No stubs, no placeholder methods, no "future use" code, no query
+keys for handlers that do not exist yet.
+
+### No Parallel Systems
+
+| Concern | Use this | Not this |
+|---------|----------|----------|
+| Channel names | `@shared/ipcChannels` | String literals |
+| Paths (userData, claude projects dir) | `main/infrastructure/paths.ts` | Inline `app.getPath` or `os.homedir()` calls |
+| Payload validation | Shared schema `.parse()` in the handler | Manual `typeof` checks |
+| Error text to user | `getErrorMessage` | Per-call-site `error.message` fallbacks |
+| Session spawning | `PtySessionHost` | Direct `pty.spawn` anywhere else |
+
+### No Convenience Wrappers
+
+Do not add getters or helpers that only forward to a sub-object. Callers reach into `tile.position.column` directly.
+
+### Constructor Deps Pattern
+
+`constructor(private deps: ServiceDeps) {}`. Access via `this.deps.boardRepository`. Never copy fields one by one.
+
+### DRY
+
+Before writing something familiar, search for the existing home. Before extracting, confirm at least two real
+callers. A helper with one caller gets inlined. Repeated literals (channel names, query keys, colors, grid constants)
+get one named home.
+
+### Cross-Layer Imports
+
+| Rule | Example of violation |
+|------|---------------------|
+| Domain never imports infrastructure, Electron, or Node | `domain/entities/Board.ts` importing `fs` |
+| Renderer never imports from `src/main` | `domains/boards/...` importing `BoardService` |
+| Sibling renderer domains never reach into each other's internals | `domains/boards/...` importing `domains/terminal/hooks/internal/...` |
+| Barrels only re-export what is consumed externally | a barrel re-exporting an internal hook |
+
+---
+
+## Security
+
+- `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`
+- Validate every IPC payload in main with Zod
+- Spawn with argv arrays, never shell strings; cwd is normalized and must exist
+- The preload exposes named calls only, never a generic `invoke(channel, ...)`
+
+---
+
+## Windows Environment
+
+- Shell is PowerShell. Quote paths or use forward slashes.
+- **Never use `2>nul`** in Bash. It creates a literal file named `nul`.
+- Prefer dedicated tools: Read, Glob, Grep. Use Bash for npm, node, git, builds, tests.
+- node-pty is a native module and must be rebuilt for Electron's Node version after every install
+  (`electron-rebuild` on `postinstall`). A "module was compiled against a different Node version" error means this
+  step was skipped.
+
+---
+
+## Audit Workflow
+
+`docs/audit-prompt.txt` is the audit standard. Findings first, approval, then fix, verify, commit on request.
+Commits: `audit: <directory scope> — <specific changes, comma-separated>`, no co-author footer.
+
+---
+
+## Commands
+
+```bash
+npm run dev           # Electron with hot reload
+npm run build         # Production build
+npm run typecheck     # Type check main, preload, renderer
+npm run lint          # Lint
+npm test              # Vitest
+```
