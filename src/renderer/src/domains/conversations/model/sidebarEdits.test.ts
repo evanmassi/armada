@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Workspace } from '@shared/workspace/workspaceSchemas';
-import { moveProject, removeSidebarGroup, setProjectAlias, setProjectArchived, setProjectExpanded, sortSidebarProjects } from './sidebarEdits';
+import { moveGroup, moveProject, removeSidebarGroup, setProjectAlias, setProjectArchived, setProjectExpanded, sortSidebarProjects } from './sidebarEdits';
 
 const workspace = (): Workspace => ({
   boards: [],
@@ -35,6 +35,14 @@ describe('moveProject', () => {
 
   it('appends when there is no sibling to insert before', () => {
     expect(moveProject(workspace(), 'd', { groupId: 'g2' }, ['d']).sidebar.groups[1]!.projectCwds).toEqual(['c', 'd']);
+  });
+});
+
+describe('moveGroup', () => {
+  it('places a group before another and appends without a target', () => {
+    expect(moveGroup(workspace(), 'g2', 'g1').sidebar.groups.map((group) => group.id)).toEqual(['g2', 'g1']);
+    expect(moveGroup(workspace(), 'g1', undefined).sidebar.groups.map((group) => group.id)).toEqual(['g2', 'g1']);
+    expect(moveGroup(workspace(), 'missing', 'g1').sidebar.groups.map((group) => group.id)).toEqual(['g1', 'g2']);
   });
 });
 

@@ -1,17 +1,17 @@
-import { PROJECT_COLORS, type ProjectColor, type Workspace } from '@shared/workspace/workspaceSchemas';
+import type { Workspace } from '@shared/workspace/workspaceSchemas';
+import { AUTO_ASSIGN_ORDER } from '../ui/projectColorPalette';
 
-const GREYS: ProjectColor[] = ['slate', 'stone'];
-const AUTO_COLOR_ORDER: ProjectColor[] = [...PROJECT_COLORS.filter((color) => !GREYS.includes(color)), ...GREYS];
+const normalize = (color: string): string => color.toLowerCase();
 
-export const setProjectColor = (workspace: Workspace, cwd: string, color: ProjectColor | undefined): Workspace => {
+export const setProjectColor = (workspace: Workspace, cwd: string, color: string | undefined): Workspace => {
   const projectColors = Object.fromEntries(Object.entries(workspace.projectColors).filter(([existingCwd]) => existingCwd !== cwd));
-  if (color) projectColors[cwd] = color;
+  if (color) projectColors[cwd] = normalize(color);
   return { ...workspace, projectColors };
 };
 
-export const pickUnusedProjectColor = (usedColors: ProjectColor[]): ProjectColor => {
-  const unused = AUTO_COLOR_ORDER.find((color) => !usedColors.includes(color));
-  return unused ?? AUTO_COLOR_ORDER[usedColors.length % AUTO_COLOR_ORDER.length]!;
+export const pickUnusedProjectColor = (usedColors: string[]): string => {
+  const used = new Set(usedColors.map(normalize));
+  return AUTO_ASSIGN_ORDER.find((color) => !used.has(color)) ?? AUTO_ASSIGN_ORDER[usedColors.length % AUTO_ASSIGN_ORDER.length]!;
 };
 
 export const ensureProjectColor = (workspace: Workspace, cwd: string): Workspace =>

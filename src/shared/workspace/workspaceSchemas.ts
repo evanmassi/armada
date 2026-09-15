@@ -1,32 +1,36 @@
 import { z } from 'zod';
 
-export const PROJECT_COLORS = [
-  'slate',
-  'stone',
-  'red',
-  'rose',
-  'pink',
-  'fuchsia',
-  'purple',
-  'violet',
-  'indigo',
-  'blue',
-  'sky',
-  'cyan',
-  'teal',
-  'emerald',
-  'green',
-  'lime',
-  'yellow',
-  'amber',
-  'orange',
-] as const;
+const LEGACY_PROJECT_COLOR_VALUES: Record<string, string> = {
+  slate: '#64748b',
+  stone: '#78716c',
+  red: '#ef4444',
+  rose: '#f43f5e',
+  pink: '#ec4899',
+  fuchsia: '#d946ef',
+  purple: '#a855f7',
+  violet: '#8b5cf6',
+  indigo: '#6366f1',
+  blue: '#3b82f6',
+  sky: '#0ea5e9',
+  cyan: '#06b6d4',
+  teal: '#14b8a6',
+  emerald: '#10b981',
+  green: '#22c55e',
+  lime: '#84cc16',
+  yellow: '#eab308',
+  amber: '#f59e0b',
+  orange: '#f97316',
+};
 
 export const LAYOUT_MODES = ['auto', 'free'] as const;
 
 export const DEFAULT_TERMINAL_FONT_SIZE = 13;
 
-export const projectColorSchema = z.enum(PROJECT_COLORS);
+// PITFALL: workspace files from before free colors store Tailwind hue names; they map to their old hex here.
+const legacyColorNameToHex = (value: unknown): unknown =>
+  typeof value === 'string' ? (LEGACY_PROJECT_COLOR_VALUES[value] ?? value) : value;
+
+export const projectColorSchema = z.preprocess(legacyColorNameToHex, z.string().regex(/^#[0-9a-f]{6}$/i));
 
 export const layoutModeSchema = z.enum(LAYOUT_MODES);
 

@@ -1,9 +1,11 @@
-import { useState, type DragEvent } from 'react';
+import { useState, type DragEvent, type KeyboardEvent } from 'react';
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
 import type { ActivityState } from '@renderer/app/stores/sessionActivityStore';
-import { ActionMenu } from '@renderer/shared/ui/components/ActionMenu';
+import { selectIsSidebarDragging, useSidebarDragStore } from '@renderer/app/stores/sidebarDragStore';
+import { ActionMenu, type ActionMenuItem } from '@renderer/shared/ui/components/ActionMenu';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
-import { useProjectColors } from '../../../hooks/useProjectColors';
+import { applyDragGhost, placementFromPointer, PLACEMENT_LINE_CLASS, type DropPlacement } from '@renderer/shared/utils/dragGhost';
+import { useProjectAccents, useProjectColors } from '../../../hooks/useProjectColors';
 import { splitArchivedConversations } from '../../../model/conversationSearch';
 import { ConversationRow } from './ConversationRow';
 import { ProjectColorSelector } from './ProjectColorSelector';
@@ -18,6 +20,7 @@ interface ConversationProjectSectionProps {
   isForcedOpen: boolean;
   activityBySession: Map<string, ActivityState>;
   archivedSessionIds: string[];
+  moveTargets: ActionMenuItem[];
   isPinned(sessionId: string): boolean;
   onOpenConversation(conversation: Conversation): void;
   onOpenProjectBoard(project: Project): void;
@@ -27,7 +30,8 @@ interface ConversationProjectSectionProps {
   onRename(cwd: string, alias: string | undefined): void;
   onSetArchived(cwd: string, isArchived: boolean): void;
   onToggleExpanded(cwd: string, isExpanded: boolean): void;
-  onDropProject(draggedCwd: string, beforeCwd: string): void;
+  onDropProject(draggedCwd: string, placement: DropPlacement): void;
+  onNudge(step: -1 | 1): void;
 }
 
 export function ConversationProjectSection({
@@ -38,6 +42,7 @@ export function ConversationProjectSection({
   isForcedOpen,
   activityBySession,
   archivedSessionIds,
+  moveTargets,
   isPinned,
   onOpenConversation,
   onOpenProjectBoard,
@@ -48,37 +53,57 @@ export function ConversationProjectSection({
   onSetArchived,
   onToggleExpanded,
   onDropProject,
+  onNudge,
 }: ConversationProjectSectionProps) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [isShowingArchived, setIsShowingArchived] = useState(false);
-  const [isDropTarget, setIsDropTarget] = useState(false);
+  const [dropPlacement, setDropPlacement] = useState<DropPlacement>();
   const { colorOf, setColor } = useProjectColors();
-  const isOpen = isForcedOpen || isExpanded;
+  const accentFor = useProjectAccents();
+  const isAnyDragging = useSidebarDragStore(selectIsSidebarDragging);
+  const isBeingDragged = useSidebarDragStore((state) => state.draggingCwd === project.cwd);
+  const { beginProjectDrag, endDrag } = useSidebarDragStore.getState();
+  const isOpen = !isAnyDragging && (isForcedOpen || isExpanded);
   const { active, archived } = splitArchivedConversations(project, archivedSessionIds);
 
   const handleDragStart = (event: DragEvent<HTMLElement>): void => {
     event.dataTransfer.setData(PROJECT_DRAG_MIME, project.cwd);
     event.dataTransfer.effectAllowed = 'move';
+    applyDragGhost(event, displayName, accentFor(project.cwd));
+    // PITFALL: collapsing or dimming the source inside dragstart makes Chromium cancel the drag; defer one tick.
+    window.setTimeout(() => beginProjectDrag(project.cwd));
   };
 
   const handleDragOver = (event: DragEvent<HTMLElement>): void => {
-    if (!event.dataTransfer.types.includes(PROJECT_DRAG_MIME)) return;
+    if (!event.dataTransfer.types.includes(PROJECT_DRAG_MIME) || isBeingDragged) return;
     event.preventDefault();
     event.stopPropagation();
     event.dataTransfer.dropEffect = 'move';
-    setIsDropTarget(true);
+    const placement = placementFromPointer(event);
+    if (placement !== dropPlacement) setDropPlacement(placement);
   };
 
   const handleDrop = (event: DragEvent<HTMLElement>): void => {
     event.preventDefault();
     event.stopPropagation();
-    setIsDropTarget(false);
+    const placement = dropPlacement ?? placementFromPointer(event);
+    setDropPlacement(undefined);
     const draggedCwd = event.dataTransfer.getData(PROJECT_DRAG_MIME);
-    if (draggedCwd && draggedCwd !== project.cwd) onDropProject(draggedCwd, project.cwd);
+    if (draggedCwd && draggedCwd !== project.cwd) onDropProject(draggedCwd, placement);
   };
 
-  const menuItems = [
+  const handleNameKeyDown = (event: KeyboardEvent<HTMLButtonElement>): void => {
+    if (event.key === 'F2') setIsRenaming(true);
+    if (!event.ctrlKey) return;
+    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      onNudge(event.key === 'ArrowUp' ? -1 : 1);
+    }
+  };
+
+  const menuItems: ActionMenuItem[] = [
     { label: 'Rename', onSelect: () => setIsRenaming(true) },
+    ...moveTargets,
     { label: isArchived ? 'Restore' : 'Archive', onSelect: () => onSetArchived(project.cwd, !isArchived) },
   ];
 
@@ -97,12 +122,17 @@ export function ConversationProjectSection({
 
   return (
     <section
-      className={`border-b border-edge ${isDropTarget ? 'border-t-2 border-t-white/70' : ''}`}
+      className={`border-b border-edge transition-opacity ${dropPlacement ? PLACEMENT_LINE_CLASS[dropPlacement] : ''} ${isBeingDragged ? 'opacity-40' : ''}`}
       onDragOver={handleDragOver}
-      onDragLeave={() => setIsDropTarget(false)}
+      onDragLeave={() => setDropPlacement(undefined)}
       onDrop={handleDrop}
     >
-      <header className="flex cursor-grab items-center gap-1 px-2 py-1 active:cursor-grabbing" draggable onDragStart={handleDragStart}>
+      <header
+        className="flex cursor-grab items-center gap-1 px-2 py-1 active:cursor-grabbing"
+        draggable
+        onDragStart={handleDragStart}
+        onDragEnd={endDrag}
+      >
         <ProjectColorSelector color={colorOf(project.cwd)} onChange={(color) => setColor(project.cwd, color)} />
         <button
           type="button"
@@ -128,8 +158,8 @@ export function ConversationProjectSection({
             type="button"
             className="flex min-w-0 flex-1 items-center gap-2 text-left hover:text-white"
             onClick={() => onOpenProjectBoard(project)}
-            onKeyDown={(event) => event.key === 'F2' && setIsRenaming(true)}
-            title={`${project.cwd}\nOpen as board. F2 renames.`}
+            onKeyDown={handleNameKeyDown}
+            title={`${project.cwd}\nOpen as board. F2 renames. Ctrl+Up/Down moves.`}
           >
             <span className="truncate font-semibold">{displayName}</span>
             <span className="text-[11px] text-muted">{active.length}</span>

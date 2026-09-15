@@ -11,16 +11,16 @@ const workspace = (projectColors: Workspace['projectColors']): Workspace => ({
 });
 
 describe('pickUnusedProjectColor', () => {
-  it('skips greys and colors already in use', () => {
-    expect(pickUnusedProjectColor([])).toBe('red');
-    expect(pickUnusedProjectColor(['red', 'rose'])).toBe('pink');
+  it('walks the palette skipping colors already in use, ignoring case', () => {
+    expect(pickUnusedProjectColor([])).toBe('#ef4444');
+    expect(pickUnusedProjectColor(['#EF4444', '#f97316'])).toBe('#f59e0b');
   });
 });
 
 describe('ensureProjectColor', () => {
   it('assigns a color only when the project has none', () => {
-    const assigned = ensureProjectColor(workspace({ 'C:\\a': 'red' }), 'C:\\b');
-    expect(assigned.projectColors).toEqual({ 'C:\\a': 'red', 'C:\\b': 'rose' });
+    const assigned = ensureProjectColor(workspace({ 'C:\\a': '#ef4444' }), 'C:\\b');
+    expect(assigned.projectColors).toEqual({ 'C:\\a': '#ef4444', 'C:\\b': '#f97316' });
     expect(ensureProjectColor(assigned, 'C:\\a')).toBe(assigned);
   });
 });

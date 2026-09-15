@@ -3,8 +3,9 @@ import type { Conversation, Project } from '@shared/conversations/conversationTy
 import { selectActivityBySession, useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
 import { useWorkspaceQuery } from '@renderer/domains/workspace';
 import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
-import { ActionMenu } from '@renderer/shared/ui/components/ActionMenu';
+import { ActionMenu, type ActionMenuItem } from '@renderer/shared/ui/components/ActionMenu';
 import { DragSplitter } from '@renderer/shared/ui/components/DragSplitter';
+import type { DropPlacement } from '@renderer/shared/utils/dragGhost';
 import { getErrorMessage } from '@renderer/shared/utils/getErrorMessage';
 import { usePinnedSessions } from '../../../hooks/usePinnedSessions';
 import { useProjectNames } from '../../../hooks/useProjectNames';
@@ -68,6 +69,41 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
     { label: 'New group', onSelect: () => editor.createGroup(`${DEFAULT_GROUP_NAME} ${(sidebar?.groups.length ?? 0) + 1}`) },
   ];
 
+  const groups = sidebar?.groups ?? [];
+
+  const placeProject = (draggedCwd: string, section: SidebarSection, anchorCwd: string, placement: DropPlacement): void => {
+    const groupId = section.group?.id;
+    if (section.kind === 'archived') {
+      editor.setProjectArchived(draggedCwd, true);
+      return;
+    }
+    const order = section.projects.map((project) => project.cwd).filter((cwd) => cwd !== draggedCwd);
+    const anchorIndex = order.indexOf(anchorCwd);
+    const beforeCwd = placement === 'before' ? anchorCwd : order[anchorIndex + 1];
+    editor.moveProject(draggedCwd, { groupId, beforeCwd }, otherOrder);
+  };
+
+  const nudgeProject = (section: SidebarSection, cwd: string, step: -1 | 1): void => {
+    const order = section.projects.map((project) => project.cwd);
+    const index = order.indexOf(cwd);
+    const neighbor = order[index + step];
+    if (neighbor === undefined || section.kind === 'archived') return;
+    placeProject(cwd, section, neighbor, step === -1 ? 'before' : 'after');
+  };
+
+  const placeGroup = (draggedGroupId: string, anchorGroupId: string, placement: DropPlacement): void => {
+    const order = groups.map((group) => group.id).filter((id) => id !== draggedGroupId);
+    const anchorIndex = order.indexOf(anchorGroupId);
+    editor.moveGroup(draggedGroupId, placement === 'before' ? anchorGroupId : order[anchorIndex + 1]);
+  };
+
+  const moveTargetsFor = (section: SidebarSection, cwd: string): ActionMenuItem[] => [
+    ...groups
+      .filter((group) => group.id !== section.group?.id)
+      .map((group) => ({ label: `Move to ${group.name}`, onSelect: () => editor.moveProject(cwd, { groupId: group.id }, otherOrder) })),
+    ...(section.kind === 'other' ? [] : [{ label: 'Move to Other', onSelect: () => editor.moveProject(cwd, { groupId: undefined }, otherOrder) }]),
+  ];
+
   const renderSection = (section: SidebarSection) => {
     const isArchivedSection = section.kind === 'archived';
     const isCollapsed = section.group ? section.group.isCollapsed : isArchivedSection ? !isArchivedOpen : false;
@@ -79,11 +115,13 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
             name={section.group?.name ?? (isArchivedSection ? 'Archived' : 'Other')}
             projectCount={section.projects.length}
             isCollapsed={isCollapsed}
-            canRename={section.group !== undefined}
+            groupId={groupId}
+            projectDropLabel={isArchivedSection ? 'Archive here' : undefined}
             onToggleCollapsed={() => (section.group ? editor.toggleGroupCollapsed(section.group.id) : setIsArchivedOpen((value) => !value))}
             onRename={section.group ? (name) => editor.renameGroup(section.group!.id, name) : undefined}
             onRemove={section.group ? () => editor.removeGroup(section.group!.id) : undefined}
-            onDropProject={isArchivedSection ? undefined : (cwd) => editor.moveProject(cwd, { groupId }, otherOrder)}
+            onDropProject={isArchivedSection ? (cwd) => editor.setProjectArchived(cwd, true) : (cwd) => editor.moveProject(cwd, { groupId }, otherOrder)}
+            onDropGroup={groupId ? (draggedGroupId, placement) => placeGroup(draggedGroupId, groupId, placement) : undefined}
           />
         ) : null}
         {!isCollapsed &&
@@ -97,6 +135,7 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
               isForcedOpen={isSearching}
               activityBySession={activityBySession}
               archivedSessionIds={sidebar?.archivedSessionIds ?? []}
+              moveTargets={moveTargetsFor(section, project.cwd)}
               isPinned={isPinned}
               onOpenConversation={onOpenConversation}
               onOpenProjectBoard={onOpenProjectBoard}
@@ -106,9 +145,8 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
               onRename={editor.setProjectAlias}
               onSetArchived={editor.setProjectArchived}
               onToggleExpanded={editor.setProjectExpanded}
-              onDropProject={(draggedCwd, beforeCwd) =>
-                editor.moveProject(draggedCwd, { groupId, beforeCwd }, isArchivedSection ? [...otherOrder, draggedCwd] : otherOrder)
-              }
+              onDropProject={(draggedCwd, placement) => placeProject(draggedCwd, section, project.cwd, placement)}
+              onNudge={(step) => nudgeProject(section, project.cwd, step)}
             />
           ))}
       </section>

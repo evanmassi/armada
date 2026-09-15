@@ -120,7 +120,8 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   aliases, user groups, manual order, archive state, pins, width. All of it keyed by cwd and persisted under
   `workspace.sidebar`; `model/sidebarLayout.ts` turns projects plus that state into sections (groups, Other,
   Archived) and `model/sidebarEdits.ts` holds the pure edits. Color belongs to the project, not the tile, so every
-  tile from one project wears the same color. It does not know about grids.
+  tile from one project wears the same color. Colors are free hex; the swatch grid in `ui/projectColorPalette.ts` is
+  a suggestion list, and legacy hue names convert at parse time. It does not know about grids.
 - `boards` owns Tile placement, size, and order. Tiles come in three kinds (`claude`, `shell`, `notes`), a
   discriminated union in the schema; files written before kinds existed default to `claude`. A Claude tile references
   a session by id and nothing else; it asks `conversations` for its title and accent. New tiles insert after the

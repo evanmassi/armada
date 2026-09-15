@@ -39,6 +39,16 @@ export const moveProject = (workspace: Workspace, cwd: string, target: ProjectDr
     };
   });
 
+export const moveGroup = (workspace: Workspace, groupId: string, beforeGroupId: string | undefined): Workspace =>
+  updateSidebar(workspace, (sidebar) => {
+    const moving = sidebar.groups.find((group) => group.id === groupId);
+    if (!moving) return sidebar;
+    const remaining = sidebar.groups.filter((group) => group.id !== groupId);
+    const index = remaining.findIndex((group) => group.id === beforeGroupId);
+    remaining.splice(index >= 0 ? index : remaining.length, 0, moving);
+    return { ...sidebar, groups: remaining };
+  });
+
 export const sortSidebarProjects = (workspace: Workspace, compare: (a: string, b: string) => number, otherCwds: string[]): Workspace =>
   updateSidebar(workspace, (sidebar) => ({
     ...sidebar,

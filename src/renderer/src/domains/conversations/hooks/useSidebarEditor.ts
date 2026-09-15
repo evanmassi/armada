@@ -1,6 +1,7 @@
 import { useWorkspaceEditor } from '@renderer/domains/workspace';
 import {
   createSidebarGroup,
+  moveGroup,
   moveProject,
   removeSidebarGroup,
   renameSidebarGroup,
@@ -19,6 +20,7 @@ export function useSidebarEditor() {
   return {
     moveProject: (cwd: string, target: ProjectDropTarget, otherOrder: string[]) =>
       edit((workspace) => moveProject(workspace, cwd, target, otherOrder)),
+    moveGroup: (groupId: string, beforeGroupId: string | undefined) => edit((workspace) => moveGroup(workspace, groupId, beforeGroupId)),
     sortProjects: (compare: (a: string, b: string) => number, otherCwds: string[]) =>
       edit((workspace) => sortSidebarProjects(workspace, compare, otherCwds)),
     createGroup: (name: string) => edit((workspace) => createSidebarGroup(workspace, name)),
