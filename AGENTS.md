@@ -369,7 +369,8 @@ Commits: `audit: <directory scope> — <specific changes, comma-separated>`, no 
 
 ```bash
 npm run dev           # Electron with hot reload
-npm run build         # Production build
+npm run build         # Production build (what the Start Menu shortcut launches)
+npm run shortcut      # Write the Start Menu shortcut (pin it to the taskbar from there)
 npm run typecheck     # Type check main, preload, renderer
 npm run lint          # Lint
 npm test              # Vitest
