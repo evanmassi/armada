@@ -14,7 +14,7 @@ interface ConversationProjectSectionProps {
   project: Project;
   displayName: string;
   isArchived: boolean;
-  isExpandedByDefault: boolean;
+  isExpanded: boolean;
   isForcedOpen: boolean;
   activityBySession: Map<string, ActivityState>;
   archivedSessionIds: string[];
@@ -26,6 +26,7 @@ interface ConversationProjectSectionProps {
   onSetConversationArchived(sessionId: string, isArchived: boolean): void;
   onRename(cwd: string, alias: string | undefined): void;
   onSetArchived(cwd: string, isArchived: boolean): void;
+  onToggleExpanded(cwd: string, isExpanded: boolean): void;
   onDropProject(draggedCwd: string, beforeCwd: string): void;
 }
 
@@ -33,7 +34,7 @@ export function ConversationProjectSection({
   project,
   displayName,
   isArchived,
-  isExpandedByDefault,
+  isExpanded,
   isForcedOpen,
   activityBySession,
   archivedSessionIds,
@@ -45,9 +46,9 @@ export function ConversationProjectSection({
   onSetConversationArchived,
   onRename,
   onSetArchived,
+  onToggleExpanded,
   onDropProject,
 }: ConversationProjectSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(isExpandedByDefault);
   const [isRenaming, setIsRenaming] = useState(false);
   const [isShowingArchived, setIsShowingArchived] = useState(false);
   const [isDropTarget, setIsDropTarget] = useState(false);
@@ -106,7 +107,7 @@ export function ConversationProjectSection({
         <button
           type="button"
           className="px-1 text-muted hover:text-fg"
-          onClick={() => setIsExpanded((value) => !value)}
+          onClick={() => onToggleExpanded(project.cwd, !isOpen)}
           aria-expanded={isOpen}
           aria-label={isOpen ? 'Collapse project' : 'Expand project'}
         >

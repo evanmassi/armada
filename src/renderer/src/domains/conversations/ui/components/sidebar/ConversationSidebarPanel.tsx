@@ -93,7 +93,7 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
               project={project}
               displayName={nameOf(project.cwd)}
               isArchived={isArchivedSection}
-              isExpandedByDefault={!isArchivedSection && isRecentlyActive(project, openedAt.current)}
+              isExpanded={sidebar?.projectExpansion[project.cwd] ?? (!isArchivedSection && isRecentlyActive(project, openedAt.current))}
               isForcedOpen={isSearching}
               activityBySession={activityBySession}
               archivedSessionIds={sidebar?.archivedSessionIds ?? []}
@@ -105,6 +105,7 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
               onSetConversationArchived={editor.setConversationArchived}
               onRename={editor.setProjectAlias}
               onSetArchived={editor.setProjectArchived}
+              onToggleExpanded={editor.setProjectExpanded}
               onDropProject={(draggedCwd, beforeCwd) =>
                 editor.moveProject(draggedCwd, { groupId, beforeCwd }, isArchivedSection ? [...otherOrder, draggedCwd] : otherOrder)
               }

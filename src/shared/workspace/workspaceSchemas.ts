@@ -95,6 +95,7 @@ export const sidebarSchema = z.object({
   archivedProjectCwds: z.array(z.string().min(1)).default([]),
   archivedSessionIds: z.array(z.string().uuid()).default([]),
   projectAliases: z.record(z.string().min(1), z.string().min(1)).default({}),
+  projectExpansion: z.record(z.string().min(1), z.boolean()).default({}),
 });
 
 export const workspaceSchema = z.object({

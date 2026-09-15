@@ -17,6 +17,7 @@ const sidebar = (overrides: Partial<Sidebar>): Sidebar => ({
   archivedProjectCwds: [],
   archivedSessionIds: [],
   projectAliases: {},
+  projectExpansion: {},
   ...overrides,
 });
 

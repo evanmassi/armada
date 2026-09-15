@@ -87,5 +87,8 @@ export const setProjectAlias = (workspace: Workspace, cwd: string, alias: string
     return { ...sidebar, projectAliases };
   });
 
+export const setProjectExpanded = (workspace: Workspace, cwd: string, isExpanded: boolean): Workspace =>
+  updateSidebar(workspace, (sidebar) => ({ ...sidebar, projectExpansion: { ...sidebar.projectExpansion, [cwd]: isExpanded } }));
+
 export const setSidebarWidth = (workspace: Workspace, width: number): Workspace =>
   updateSidebar(workspace, (sidebar) => ({ ...sidebar, width: Math.round(width) }));

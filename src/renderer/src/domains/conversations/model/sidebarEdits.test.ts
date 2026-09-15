@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Workspace } from '@shared/workspace/workspaceSchemas';
-import { moveProject, removeSidebarGroup, setProjectAlias, setProjectArchived, sortSidebarProjects } from './sidebarEdits';
+import { moveProject, removeSidebarGroup, setProjectAlias, setProjectArchived, setProjectExpanded, sortSidebarProjects } from './sidebarEdits';
 
 const workspace = (): Workspace => ({
   boards: [],
@@ -17,6 +17,7 @@ const workspace = (): Workspace => ({
     archivedProjectCwds: ['e'],
     archivedSessionIds: [],
     projectAliases: {},
+    projectExpansion: {},
   },
 });
 
@@ -50,6 +51,13 @@ describe('removeSidebarGroup', () => {
     const { sidebar } = removeSidebarGroup(workspace(), 'g1');
     expect(sidebar.groups.map((group) => group.id)).toEqual(['g2']);
     expect(sidebar.projectOrder).toEqual(['d', 'a', 'b']);
+  });
+});
+
+describe('setProjectExpanded', () => {
+  it('remembers each project toggle independently', () => {
+    const expanded = setProjectExpanded(setProjectExpanded(workspace(), 'a', false), 'b', true);
+    expect(expanded.sidebar.projectExpansion).toEqual({ a: false, b: true });
   });
 });
 

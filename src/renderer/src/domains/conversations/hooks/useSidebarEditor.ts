@@ -7,6 +7,7 @@ import {
   setConversationArchived,
   setProjectAlias,
   setProjectArchived,
+  setProjectExpanded,
   setSidebarWidth,
   sortSidebarProjects,
   toggleSidebarGroupCollapsed,
@@ -28,6 +29,7 @@ export function useSidebarEditor() {
     setConversationArchived: (sessionId: string, isArchived: boolean) =>
       edit((workspace) => setConversationArchived(workspace, sessionId, isArchived)),
     setProjectAlias: (cwd: string, alias: string | undefined) => edit((workspace) => setProjectAlias(workspace, cwd, alias)),
+    setProjectExpanded: (cwd: string, isExpanded: boolean) => edit((workspace) => setProjectExpanded(workspace, cwd, isExpanded)),
     setWidth: (width: number) => edit((workspace) => setSidebarWidth(workspace, width)),
   };
 }
