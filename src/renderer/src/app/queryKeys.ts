@@ -1,4 +1,4 @@
 export const queryKeys = {
   projects: ['projects'] as const,
-  boards: ['boards'] as const,
+  workspace: ['workspace'] as const,
 };

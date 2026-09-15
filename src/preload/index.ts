@@ -15,9 +15,9 @@ const armadaApi: ArmadaApi = {
   projects: {
     pickFolder: () => ipcRenderer.invoke(IPC_CHANNELS.projectsPickFolder),
   },
-  boards: {
-    load: () => ipcRenderer.invoke(IPC_CHANNELS.boardsLoad),
-    save: (document) => ipcRenderer.invoke(IPC_CHANNELS.boardsSave, document),
+  workspace: {
+    load: () => ipcRenderer.invoke(IPC_CHANNELS.workspaceLoad),
+    save: (workspace) => ipcRenderer.invoke(IPC_CHANNELS.workspaceSave, workspace),
   },
   sessions: {
     open: (request) => ipcRenderer.invoke(IPC_CHANNELS.sessionsOpen, request),

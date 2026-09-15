@@ -1,4 +1,3 @@
-import type { BoardsDocument } from './boards/boardSchemas';
 import type { Project } from './conversations/conversationTypes';
 import type {
   OpenSessionRequest,
@@ -8,6 +7,7 @@ import type {
   TerminalResizeRequest,
   TerminalWriteRequest,
 } from './sessions/sessionSchemas';
+import type { Workspace } from './workspace/workspaceSchemas';
 
 export type Unsubscribe = () => void;
 
@@ -18,9 +18,9 @@ export interface ArmadaApi {
   projects: {
     pickFolder(): Promise<string | undefined>;
   };
-  boards: {
-    load(): Promise<BoardsDocument>;
-    save(document: BoardsDocument): Promise<void>;
+  workspace: {
+    load(): Promise<Workspace>;
+    save(workspace: Workspace): Promise<void>;
   };
   sessions: {
     open(request: OpenSessionRequest): Promise<TerminalRef>;

@@ -12,7 +12,7 @@ export function ConversationRow({ conversation, onOpen }: ConversationRowProps) 
   return (
     <button
       type="button"
-      className="flex w-full flex-col items-start gap-0.5 rounded px-2 py-1 text-left hover:bg-edge focus:bg-edge focus:outline-none"
+      className="flex w-full flex-col items-start gap-0.5 rounded py-1 pr-2 pl-6 text-left hover:bg-edge focus:bg-edge focus:outline-none"
       onClick={() => onOpen(conversation)}
     >
       <span className="w-full truncate">{conversation.title}</span>

@@ -4,4 +4,4 @@ import { app } from 'electron';
 
 export const getClaudeProjectsDir = (): string => join(homedir(), '.claude', 'projects');
 
-export const getBoardsFilePath = (): string => join(app.getPath('userData'), 'boards.json');
+export const getWorkspaceFilePath = (): string => join(app.getPath('userData'), 'workspace.json');

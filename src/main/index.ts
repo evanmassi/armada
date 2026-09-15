@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { app, BrowserWindow } from 'electron';
 import { createServiceContainer } from '@main/infrastructure/di/ServiceContainer';
-import { registerBoardHandlers } from '@main/ipc/registerBoardHandlers';
 import { registerConversationHandlers } from '@main/ipc/registerConversationHandlers';
 import { registerProjectHandlers } from '@main/ipc/registerProjectHandlers';
 import { registerSessionHandlers } from '@main/ipc/registerSessionHandlers';
+import { registerWorkspaceHandlers } from '@main/ipc/registerWorkspaceHandlers';
 import appIdentity from '../../build/appIdentity.json';
 
 const WINDOW_BACKGROUND = '#0d0f12';
@@ -48,12 +48,12 @@ app.whenReady().then(() => {
 
   registerConversationHandlers(container);
   registerProjectHandlers(mainWindow);
-  registerBoardHandlers(container);
+  registerWorkspaceHandlers(container);
   registerSessionHandlers(container, mainWindow.webContents);
 
-  const killAllTerminalsOnRendererReload = (): void => container.terminalHost.killAll();
-  mainWindow.webContents.on('did-start-navigation', killAllTerminalsOnRendererReload);
-  app.on('before-quit', () => container.terminalHost.killAll());
+  const killAllTerminals = (): void => container.terminalHost.killAll();
+  mainWindow.webContents.on('did-start-navigation', killAllTerminals);
+  mainWindow.on('close', killAllTerminals);
 });
 
 app.on('window-all-closed', () => app.quit());

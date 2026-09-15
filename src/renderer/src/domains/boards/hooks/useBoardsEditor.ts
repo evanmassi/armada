@@ -1,50 +1,51 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { BoardsDocument, TileColor, TileLayout } from '@shared/boards/boardSchemas';
-import { queryKeys } from '@renderer/app/queryKeys';
-import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
+import type { LayoutMode, TileLayout } from '@shared/workspace/workspaceSchemas';
+import { useWorkspaceEditor } from '@renderer/domains/workspace';
 import {
   addBoard,
   addTile,
   applyLayouts,
   createBoard,
+  moveTile,
   nudgeTile,
+  reflowFreeLayout,
   removeBoard,
   removeTile,
   renameBoard,
-  setTileColor,
+  scaleTileWeight,
+  setLayoutMode,
+  setRowWeights,
+  setTileWeights,
+  swapTiles,
   type PositionedLayout,
   type TileSeed,
-} from '../model/boardDocumentEdits';
-
-type DocumentEdit = (document: BoardsDocument) => BoardsDocument;
+} from '../model/boardEdits';
 
 export function useBoardsEditor() {
-  const queryClient = useQueryClient();
-  const { mutate } = useMutation({
-    mutationFn: (document: BoardsDocument) => armadaClient.boards.save(document),
-    onMutate: (document) => queryClient.setQueryData(queryKeys.boards, document),
-    onError: () => queryClient.invalidateQueries({ queryKey: queryKeys.boards }),
-  });
-
-  const edit = (transform: DocumentEdit): void => {
-    const current = queryClient.getQueryData<BoardsDocument>(queryKeys.boards);
-    if (current) mutate(transform(current));
-  };
+  const { edit } = useWorkspaceEditor();
 
   return {
     createBoard: (name: string): string => {
       const board = createBoard(name);
-      edit((document) => addBoard(document, board));
+      edit((workspace) => addBoard(workspace, board));
       return board.id;
     },
-    renameBoard: (boardId: string, name: string) => edit((document) => renameBoard(document, boardId, name)),
-    removeBoard: (boardId: string) => edit((document) => removeBoard(document, boardId)),
-    addTile: (boardId: string, seed: TileSeed) => edit((document) => addTile(document, boardId, seed)),
-    removeTile: (boardId: string, tileId: string) => edit((document) => removeTile(document, boardId, tileId)),
-    setTileColor: (boardId: string, tileId: string, color: TileColor) =>
-      edit((document) => setTileColor(document, boardId, tileId, color)),
-    applyLayouts: (boardId: string, layouts: PositionedLayout[]) => edit((document) => applyLayouts(document, boardId, layouts)),
+    renameBoard: (boardId: string, name: string) => edit((workspace) => renameBoard(workspace, boardId, name)),
+    removeBoard: (boardId: string) => edit((workspace) => removeBoard(workspace, boardId)),
+    setLayoutMode: (boardId: string, layoutMode: LayoutMode) => edit((workspace) => setLayoutMode(workspace, boardId, layoutMode)),
+    addTile: (boardId: string, seed: TileSeed) => edit((workspace) => addTile(workspace, boardId, seed)),
+    removeTile: (boardId: string, tileId: string) => edit((workspace) => removeTile(workspace, boardId, tileId)),
+    swapTiles: (boardId: string, tileIdA: string, tileIdB: string) =>
+      edit((workspace) => swapTiles(workspace, boardId, tileIdA, tileIdB)),
+    moveTile: (boardId: string, tileId: string, step: -1 | 1) => edit((workspace) => moveTile(workspace, boardId, tileId, step)),
+    setTileWeights: (boardId: string, weights: Record<string, number>) =>
+      edit((workspace) => setTileWeights(workspace, boardId, weights)),
+    scaleTileWeight: (boardId: string, tileId: string, factor: number) =>
+      edit((workspace) => scaleTileWeight(workspace, boardId, tileId, factor)),
+    setRowWeights: (boardId: string, rowWeights: number[]) => edit((workspace) => setRowWeights(workspace, boardId, rowWeights)),
+    applyLayouts: (boardId: string, layouts: PositionedLayout[]) => edit((workspace) => applyLayouts(workspace, boardId, layouts)),
+    reflowFreeLayout: (boardId: string, containerHeightPx: number) =>
+      edit((workspace) => reflowFreeLayout(workspace, boardId, containerHeightPx)),
     nudgeTile: (boardId: string, tileId: string, delta: Partial<TileLayout>) =>
-      edit((document) => nudgeTile(document, boardId, tileId, delta)),
+      edit((workspace) => nudgeTile(workspace, boardId, tileId, delta)),
   };
 }

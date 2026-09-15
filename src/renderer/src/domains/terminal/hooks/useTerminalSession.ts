@@ -9,6 +9,7 @@ import { getErrorMessage } from '@renderer/shared/utils/getErrorMessage';
 const TERMINAL_THEME = { background: '#0d0f12', foreground: '#d6d8dc', cursor: '#d6d8dc' };
 const TERMINAL_FONT = '"Cascadia Code", Consolas, monospace';
 const SESSION_ENDED_BANNER = '\r\n[session ended]\r\n';
+const REFIT_DEBOUNCE_MS = 80;
 
 interface TerminalSessionOptions {
   sessionId: string;
@@ -52,11 +53,17 @@ export function useTerminalSession(containerRef: RefObject<HTMLDivElement | null
       })
       .catch((error: unknown) => useNotificationStore.getState().notify(getErrorMessage(error)));
 
-    const resizeObserver = new ResizeObserver(() => fit.fit());
+    let refitTimer: number | undefined;
+    const scheduleRefit = (): void => {
+      window.clearTimeout(refitTimer);
+      refitTimer = window.setTimeout(() => fit.fit(), REFIT_DEBOUNCE_MS);
+    };
+    const resizeObserver = new ResizeObserver(scheduleRefit);
     resizeObserver.observe(container);
 
     return () => {
       isDisposed = true;
+      window.clearTimeout(refitTimer);
       resizeObserver.disconnect();
       subscriptions.forEach((unsubscribe) => unsubscribe());
       if (terminalId) armadaClient.sessions.close({ terminalId });

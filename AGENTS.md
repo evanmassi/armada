@@ -42,13 +42,13 @@ with an argv array, never a shell string.
 ```
 src/main/
 ├── domain/           # No Electron, no Node built-ins.
-│   ├── repositories/ # ConversationRepository, BoardRepository (interfaces only)
+│   ├── repositories/ # ConversationRepository, WorkspaceRepository (interfaces only)
 │   └── terminals/    # TerminalHost (interface only)
 ├── application/
 │   └── services/     # ConversationCatalogService, SessionService
 ├── infrastructure/
 │   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser
-│   ├── persistence/  # JsonBoardRepository (userData/boards.json)
+│   ├── persistence/  # JsonWorkspaceRepository (userData/workspace.json)
 │   ├── pty/          # PtySessionHost wraps node-pty
 │   ├── di/           # ServiceContainer
 │   └── paths.ts      # The only place userData and ~/.claude paths are built
@@ -59,7 +59,7 @@ src/main/
 
 A layer directory exists only once it has a real file in it. Entities and domain errors do not exist yet because
 nothing needs them; the shared schema types are the entities. A handler calls a repository directly when there is
-no use-case logic between them (boards); it goes through a service when there is (session resume decision,
+no use-case logic between them (workspace); it goes through a service when there is (session resume decision,
 conversation grouping). A service that only forwards is dead weight.
 
 ### Conversation store facts
@@ -70,7 +70,7 @@ Verified against the on-disk format. Re-verify before relying on anything not li
 - One `<sessionId>.jsonl` per conversation. The real cwd is the `cwd` field on the first `user` or `attachment`
   record; never reconstruct it from the folder name.
 - Title comes from the latest `ai-title` record. Fall back to the first user prompt when absent.
-- Last activity is the file mtime.
+- Last activity is the file mtime. Projects list alphabetically by folder name; conversations inside by most recent.
 - `~/.claude/history.jsonl` is append-only prompt history keyed by `sessionId` and `project`. Not needed for the
   catalog; do not read it speculatively.
 
@@ -87,8 +87,9 @@ src/renderer/src/
 │   ├── queryClient.ts
 │   └── queryKeys.ts  # Centralized query keys
 ├── domains/          # Feature modules, each with an index.ts public surface
-│   ├── conversations/ # Sidebar: projects and their conversations, open/resume
-│   ├── boards/        # Board list, grid layout, tile placement, color, persistence
+│   ├── workspace/     # The persisted document: query + the single edit/save path
+│   ├── conversations/ # Sidebar: projects and conversations, open/resume, project colors
+│   ├── boards/        # Board list, grid layout, tile placement
 │   └── terminal/      # xterm tile bound to one pty session
 ├── shared/           # Cross-cutting
 │   ├── ui/
@@ -101,18 +102,25 @@ src/renderer/src/
 purpose: a second `@shared` for renderer-local code would collide with the cross-process one.
 
 **State Management**:
-- **Main-owned state** (conversation catalog, boards): TanStack Query over IPC. Reads are queries, saves are
-  mutations, query keys from `@renderer/app/queryKeys`. Board edits are pure functions in
-  `domains/boards/model/boardDocumentEdits.ts`; `useBoardsEditor` applies one, writes the result to the query cache
-  optimistically, and saves the whole document.
+- **Main-owned state** (conversation catalog, workspace): TanStack Query over IPC. Reads are queries, saves are
+  mutations, query keys from `@renderer/app/queryKeys`. `useWorkspaceEditor().edit(transform)` is the only save
+  path: it applies a pure edit function, writes the result to the query cache optimistically, and saves the whole
+  workspace. Board edits live in `domains/boards/model/boardEdits.ts`, color edits in
+  `domains/conversations/model/projectColorEdits.ts`.
 - **UI state** (active board, which boards have been opened, notices): Zustand.
 - Never store main-owned data in Zustand.
 - **Terminal stream** is neither. Pty output arrives on a per-session IPC channel and is written straight into the
   xterm instance. It is never held in React state.
 
 **Domain boundaries**:
-- `conversations` knows how to list and open. It does not know about grids.
-- `boards` owns Tile placement, size, order, color. A Tile references a session by id and nothing else.
+- `workspace` owns the persisted document and how it is saved. It knows nothing about what is inside.
+- `conversations` knows how to list and open conversations and color a project. Color belongs to the project
+  (keyed by cwd), not the tile, so every tile from one project wears the same color. It does not know about grids.
+- `boards` owns Tile placement, size, and order. A Tile references a session by id and nothing else; it asks
+  `conversations` for its title and accent. Two layout modes per board: `auto` tiles the visible area from tile
+  order plus weights (`model/tiling.ts`, rows of 1/2/3 columns by count, drag-to-swap, splitters adjust weights) and
+  `free` is a scrolling grid with explicit x/y/w/h (`react-grid-layout`). Reflow in free mode rewrites grid
+  positions from the tiling. New tiles append; the tiling decides where they land.
 - `terminal` renders one session. It does not know which board it sits on.
 
 ---
@@ -145,16 +153,16 @@ Never define a boundary type inline in main or renderer.
   TypeScript type with `z.infer`. A schema nothing calls `.parse()` on is dead.
 - **Plain type** for main-to-renderer results and events. Validating in-process output is theater.
 
-**Modules**: `boards/boardSchemas`, `sessions/sessionSchemas`, `conversations/conversationTypes`, `ipcChannels`,
+**Modules**: `workspace/workspaceSchemas`, `sessions/sessionSchemas`, `conversations/conversationTypes`, `ipcChannels`,
 `armadaApi` (the preload contract both sides implement against)
 
 ---
 
 ## Persistence
 
-Boards persist to one JSON file in Electron's `userData` directory, validated on read and write with the boards
-schema. A file that fails validation is an error shown to the user, not silently replaced. There is no migration
-system until a second schema version exists.
+The workspace (boards, tiles, project colors) persists to one JSON file in Electron's `userData` directory,
+validated on read and write with the workspace schema. A file that fails validation is an error shown to the user,
+not silently replaced. There is no migration system until a second schema version exists.
 
 ---
 
@@ -167,13 +175,13 @@ Pattern new code after these. None has been through an audit pass yet; the first
 | Main IPC handler | `src/main/ipc/registerSessionHandlers.ts` |
 | Main application service | `src/main/application/services/SessionService.ts` |
 | Main repository interface | `src/main/domain/repositories/ConversationRepository.ts` |
-| Main repository implementation | `src/main/infrastructure/persistence/JsonBoardRepository.ts` |
+| Main repository implementation | `src/main/infrastructure/persistence/JsonWorkspaceRepository.ts` |
 | Pure logic with a test | `src/main/infrastructure/claude/conversationJsonlParser.ts` |
 | Renderer TanStack Query hook | `src/renderer/src/domains/conversations/hooks/useProjectsQuery.ts` |
 | Renderer editor hook (mutations) | `src/renderer/src/domains/boards/hooks/useBoardsEditor.ts` |
 | Renderer feature component | `src/renderer/src/domains/boards/ui/components/grid/BoardTileFrame.tsx` |
 | Renderer Zustand store | `src/renderer/src/app/stores/boardSelectionStore.ts` |
-| Shared schema module | `src/shared/boards/boardSchemas.ts` |
+| Shared schema module | `src/shared/workspace/workspaceSchemas.ts` |
 
 ---
 

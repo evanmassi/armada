@@ -1,5 +1,5 @@
-import { useState, type KeyboardEvent } from 'react';
-import type { Board } from '@shared/boards/boardSchemas';
+import { useState, type KeyboardEvent, type ReactNode } from 'react';
+import type { Board } from '@shared/workspace/workspaceSchemas';
 
 interface BoardSwitcherBarProps {
   boards: Board[];
@@ -8,9 +8,10 @@ interface BoardSwitcherBarProps {
   onCreate(): void;
   onRename(boardId: string, name: string): void;
   onRemove(boardId: string): void;
+  children?: ReactNode;
 }
 
-export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, onRename, onRemove }: BoardSwitcherBarProps) {
+export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, onRename, onRemove, children }: BoardSwitcherBarProps) {
   const [editingBoardId, setEditingBoardId] = useState<string>();
   const [draftName, setDraftName] = useState('');
 
@@ -77,6 +78,7 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
       <button type="button" className="rounded px-2 py-0.5 text-muted hover:bg-edge hover:text-fg" onClick={onCreate} aria-label="New board">
         + board
       </button>
+      {children}
     </nav>
   );
 }

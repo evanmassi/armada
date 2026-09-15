@@ -5,8 +5,13 @@ interface ConversationCatalogServiceDeps {
   conversationRepository: ConversationRepository;
 }
 
-const byMostRecent = (a: { lastActiveAt: string }, b: { lastActiveAt: string }): number =>
-  b.lastActiveAt.localeCompare(a.lastActiveAt);
+const byMostRecent = (a: Conversation, b: Conversation): number => b.lastActiveAt.localeCompare(a.lastActiveAt);
+
+const projectDisplayName = (cwd: string): string => cwd.split(/[\\/]/).filter(Boolean).at(-1) ?? cwd;
+
+const byDisplayNameThenPath = (a: Project, b: Project): number =>
+  projectDisplayName(a.cwd).localeCompare(projectDisplayName(b.cwd), undefined, { sensitivity: 'base' }) ||
+  a.cwd.localeCompare(b.cwd);
 
 export function groupConversationsIntoProjects(conversations: Conversation[]): Project[] {
   const byCwd = new Map<string, Conversation[]>();
@@ -17,7 +22,7 @@ export function groupConversationsIntoProjects(conversations: Conversation[]): P
   }
   return [...byCwd.entries()]
     .map(([cwd, projectConversations]) => ({ cwd, conversations: projectConversations.sort(byMostRecent) }))
-    .sort((a, b) => byMostRecent(a.conversations[0]!, b.conversations[0]!));
+    .sort(byDisplayNameThenPath);
 }
 
 export class ConversationCatalogService {

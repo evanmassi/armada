@@ -27,10 +27,12 @@ export function registerSessionHandlers({ sessionService, terminalHost }: Servic
   });
 
   terminalHost.onOutput((terminalId, data) => {
+    if (renderer.isDestroyed()) return;
     const event: TerminalOutputEvent = { terminalId, data };
     renderer.send(IPC_CHANNELS.sessionsOutput, event);
   });
   terminalHost.onExit((terminalId, exitCode) => {
+    if (renderer.isDestroyed()) return;
     const event: TerminalExitEvent = { terminalId, exitCode };
     renderer.send(IPC_CHANNELS.sessionsExit, event);
   });

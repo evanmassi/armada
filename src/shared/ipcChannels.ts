@@ -1,8 +1,8 @@
 export const IPC_CHANNELS = {
   conversationsListProjects: 'conversations:listProjects',
   projectsPickFolder: 'projects:pickFolder',
-  boardsLoad: 'boards:load',
-  boardsSave: 'boards:save',
+  workspaceLoad: 'workspace:load',
+  workspaceSave: 'workspace:save',
   sessionsOpen: 'sessions:open',
   sessionsWrite: 'sessions:write',
   sessionsResize: 'sessions:resize',

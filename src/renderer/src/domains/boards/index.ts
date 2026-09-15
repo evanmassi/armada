@@ -1,4 +1,4 @@
-export { BoardGridPanel } from './ui/components/grid/BoardGridPanel';
+export { BoardPanel } from './ui/components/panel/BoardPanel';
 export { BoardSwitcherBar } from './ui/components/switcher/BoardSwitcherBar';
-export { useBoardsQuery } from './hooks/useBoardsQuery';
+export { BoardLayoutModeControls } from './ui/components/switcher/BoardLayoutModeControls';
 export { useBoardsEditor } from './hooks/useBoardsEditor';
