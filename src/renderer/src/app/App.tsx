@@ -3,7 +3,7 @@ import type { Conversation, Project } from '@shared/conversations/conversationTy
 import { GLOBAL_SHORTCUTS, isGlobalShortcut } from '@renderer/app/keyboardShortcuts';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { BoardLayoutModeControls, BoardPanel, BoardSwitcherBar, findClaudeTile, tileCwd, useBoardsEditor } from '@renderer/domains/boards';
-import { ConversationSidebarPanel, projectDisplayName, useProjectColors } from '@renderer/domains/conversations';
+import { ConversationSidebarPanel, useProjectColors, useProjectNames } from '@renderer/domains/conversations';
 import { adjustTerminalFontSize, resetTerminalFontSize, useWorkspaceEditor, useWorkspaceQuery } from '@renderer/domains/workspace';
 import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
 import { NotificationBar } from '@renderer/shared/ui/components/NotificationBar';
@@ -17,6 +17,7 @@ export function App() {
   const { edit } = useWorkspaceEditor();
   const editor = useBoardsEditor();
   const { ensureColor } = useProjectColors();
+  const nameOf = useProjectNames();
   const { activeBoardId, openedBoardIds, focusedTileId, selectBoard, focusTile } = useBoardSelectionStore();
   const boardAreaRef = useRef<HTMLDivElement>(null);
 
@@ -58,7 +59,7 @@ export function App() {
     const tiles = project.conversations
       .slice(0, PROJECT_BOARD_TILE_COUNT)
       .map((conversation) => ({ kind: 'claude' as const, sessionId: conversation.sessionId, cwd: conversation.cwd }));
-    selectBoard(editor.createBoard({ name: projectDisplayName(project.cwd), projectCwd: project.cwd, tiles }));
+    selectBoard(editor.createBoard({ name: nameOf(project.cwd), projectCwd: project.cwd, tiles }));
   };
 
   const createBoard = (): void => selectBoard(editor.createBoard({ name: `${DEFAULT_BOARD_NAME} ${boards.length + 1}` }));

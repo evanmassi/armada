@@ -81,11 +81,28 @@ export const preferencesSchema = z.object({
   terminalFontSize: z.number().int().min(8).max(32).default(DEFAULT_TERMINAL_FONT_SIZE),
 });
 
+export const sidebarGroupSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1),
+  projectCwds: z.array(z.string().min(1)),
+  isCollapsed: z.boolean().default(false),
+});
+
+export const sidebarSchema = z.object({
+  width: z.number().int().min(200).max(640).default(288),
+  groups: z.array(sidebarGroupSchema).default([]),
+  projectOrder: z.array(z.string().min(1)).default([]),
+  archivedProjectCwds: z.array(z.string().min(1)).default([]),
+  archivedSessionIds: z.array(z.string().uuid()).default([]),
+  projectAliases: z.record(z.string().min(1), z.string().min(1)).default({}),
+});
+
 export const workspaceSchema = z.object({
   boards: z.array(boardSchema),
   projectColors: z.record(z.string().min(1), projectColorSchema),
   pinnedSessionIds: z.array(z.string().uuid()).default([]),
   preferences: preferencesSchema.default({}),
+  sidebar: sidebarSchema.default({}),
 });
 
 export type ProjectColor = z.infer<typeof projectColorSchema>;
@@ -98,4 +115,6 @@ export type Tile = z.infer<typeof tileSchema>;
 export type TileKind = Tile['kind'];
 export type Board = z.infer<typeof boardSchema>;
 export type Preferences = z.infer<typeof preferencesSchema>;
+export type SidebarGroup = z.infer<typeof sidebarGroupSchema>;
+export type Sidebar = z.infer<typeof sidebarSchema>;
 export type Workspace = z.infer<typeof workspaceSchema>;

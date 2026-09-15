@@ -30,6 +30,7 @@ const workspaceWith = (...tiles: Tile[]): Workspace => ({
   projectColors: { 'C:\\dev': 'red' },
   pinnedSessionIds: [],
   preferences: { terminalFontSize: 13 },
+  sidebar: { width: 288, groups: [], projectOrder: [], archivedProjectCwds: [], archivedSessionIds: [], projectAliases: {} },
 });
 
 const tileIds = (workspace: Workspace): string[] => workspace.boards[0]!.tiles.map((item) => item.id);

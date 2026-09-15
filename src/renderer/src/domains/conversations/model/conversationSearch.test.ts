@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Project } from '@shared/conversations/conversationTypes';
-import { filterProjects, findPinnedConversations, isRecentlyActive } from './conversationSearch';
+import { filterProjects, findPinnedConversations, folderName, isRecentlyActive, splitArchivedConversations } from './conversationSearch';
 
 const projects: Project[] = [
   {
@@ -18,13 +18,14 @@ const projects: Project[] = [
 
 describe('filterProjects', () => {
   it('returns everything for a blank query', () => {
-    expect(filterProjects(projects, '  ')).toBe(projects);
+    expect(filterProjects(projects, '  ', folderName)).toBe(projects);
   });
 
-  it('keeps whole projects whose name matches and trims others to matching conversations', () => {
-    expect(filterProjects(projects, 'ARMADA').map((project) => project.conversations.length)).toEqual([2]);
-    expect(filterProjects(projects, 'crash')[0]!.conversations.map((item) => item.sessionId)).toEqual(['b']);
-    expect(filterProjects(projects, 'nothing')).toEqual([]);
+  it('keeps whole projects whose display name matches and trims others to matching conversations', () => {
+    expect(filterProjects(projects, 'ARMADA', folderName).map((project) => project.conversations.length)).toEqual([2]);
+    expect(filterProjects(projects, 'crash', folderName)[0]!.conversations.map((item) => item.sessionId)).toEqual(['b']);
+    expect(filterProjects(projects, 'nothing', folderName)).toEqual([]);
+    expect(filterProjects(projects, 'tetris', (cwd) => (cwd.endsWith('blockfall') ? 'tetris' : folderName(cwd))).map((p) => p.cwd)).toEqual(['C:\\dev\\blockfall']);
   });
 });
 
@@ -39,5 +40,13 @@ describe('isRecentlyActive', () => {
 describe('findPinnedConversations', () => {
   it('returns pinned conversations in pin order and drops unknown ids', () => {
     expect(findPinnedConversations(projects, ['c', 'zzz', 'a']).map((item) => item.sessionId)).toEqual(['c', 'a']);
+  });
+});
+
+describe('splitArchivedConversations', () => {
+  it('separates archived conversations from active ones', () => {
+    const { active, archived } = splitArchivedConversations(projects[0]!, ['b']);
+    expect(active.map((item) => item.sessionId)).toEqual(['a']);
+    expect(archived.map((item) => item.sessionId)).toEqual(['b']);
   });
 });

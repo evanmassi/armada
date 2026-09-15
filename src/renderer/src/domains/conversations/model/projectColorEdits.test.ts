@@ -7,6 +7,7 @@ const workspace = (projectColors: Workspace['projectColors']): Workspace => ({
   projectColors,
   pinnedSessionIds: [],
   preferences: { terminalFontSize: 13 },
+  sidebar: { width: 288, groups: [], projectOrder: [], archivedProjectCwds: [], archivedSessionIds: [], projectAliases: {} },
 });
 
 describe('pickUnusedProjectColor', () => {

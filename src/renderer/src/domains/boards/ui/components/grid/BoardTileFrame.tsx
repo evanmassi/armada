@@ -2,7 +2,7 @@ import type { DragEvent, KeyboardEvent } from 'react';
 import type { Tile } from '@shared/workspace/workspaceSchemas';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
-import { projectDisplayName } from '@renderer/domains/conversations';
+import { useProjectNames } from '@renderer/domains/conversations';
 import { TerminalSessionTile } from '@renderer/domains/terminal';
 import { ActivityDot } from '@renderer/shared/ui/components/ActivityDot';
 import { BoardNotesTile } from '../notes/BoardNotesTile';
@@ -53,6 +53,7 @@ export function BoardTileFrame({
   const isDimmed = useBoardSelectionStore((state) => state.focusedTileId !== undefined && state.focusedTileId !== tile.id);
   const setFocusedTile = useBoardSelectionStore((state) => state.setFocusedTile);
   const activity = useSessionActivityStore((state) => state.byTileId[tile.id]?.state);
+  const nameOf = useProjectNames();
 
   const handleHeaderKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const direction = ARROW_KEYS[event.key];
@@ -80,7 +81,7 @@ export function BoardTileFrame({
         {activity ? <ActivityDot state={activity} /> : <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: accentColor }} />}
         <span className="min-w-0 flex-1 truncate" title={tile.kind === 'notes' ? undefined : tile.cwd}>
           <span className="text-fg">{title}</span>
-          {tile.kind !== 'notes' && <span className="text-muted"> · {projectDisplayName(tile.cwd)}</span>}
+          {tile.kind !== 'notes' && <span className="text-muted"> · {nameOf(tile.cwd)}</span>}
         </span>
         {tile.kind === 'claude' && (
           <button type="button" className="px-1 font-bold text-muted hover:text-fg" onClick={onOpenShell} title="Open a shell in this folder" aria-label="Open a shell in this folder">

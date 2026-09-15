@@ -1,13 +1,13 @@
 import type { PointerEvent } from 'react';
 
-interface BoardSplitterProps {
+interface DragSplitterProps {
   orientation: 'vertical' | 'horizontal';
   onDragStart(): void;
   onDragMove(deltaPx: number): void;
   onDragEnd(): void;
 }
 
-export function BoardSplitter({ orientation, onDragStart, onDragMove, onDragEnd }: BoardSplitterProps) {
+export function DragSplitter({ orientation, onDragStart, onDragMove, onDragEnd }: DragSplitterProps) {
   const isVertical = orientation === 'vertical';
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>): void => {

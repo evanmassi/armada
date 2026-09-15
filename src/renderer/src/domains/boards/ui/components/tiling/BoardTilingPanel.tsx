@@ -4,7 +4,7 @@ import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
 import { useTilePresentation } from '../../../hooks/useTilePresentation';
 import { computeTiling } from '../../../model/tiling';
 import { BoardTileFrame, type ArrowDirection } from '../grid/BoardTileFrame';
-import { BoardSplitter } from './BoardSplitter';
+import { DragSplitter } from '@renderer/shared/ui/components/DragSplitter';
 
 const KEYBOARD_HINT = 'Arrow keys reorder, shift with left or right resizes.';
 const MIN_SHARE = 0.15;
@@ -122,7 +122,7 @@ export function BoardTilingPanel({ board, shouldMountTerminals, onOpenShell }: B
       {rows.map((row, rowIndex) => (
         <div key={rowIndex} className="contents">
           {rowIndex > 0 && (
-            <BoardSplitter orientation="horizontal" onDragStart={() => beginRowSeam(rowIndex - 1)} onDragMove={moveSeam} onDragEnd={endSeamDrag} />
+            <DragSplitter orientation="horizontal" onDragStart={() => beginRowSeam(rowIndex - 1)} onDragMove={moveSeam} onDragEnd={endSeamDrag} />
           )}
           <div
             ref={(element) => {
@@ -135,7 +135,7 @@ export function BoardTilingPanel({ board, shouldMountTerminals, onOpenShell }: B
             {row.tiles.map((tile, tileIndex) => (
               <div key={tile.id} className="contents">
                 {tileIndex > 0 && (
-                  <BoardSplitter
+                  <DragSplitter
                     orientation="vertical"
                     onDragStart={() => beginTileSeam(row.tiles[tileIndex - 1]!, tile)}
                     onDragMove={moveSeam}
