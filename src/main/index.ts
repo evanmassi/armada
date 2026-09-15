@@ -7,7 +7,7 @@ import { registerSessionHandlers } from '@main/ipc/registerSessionHandlers';
 import { registerWorkspaceHandlers } from '@main/ipc/registerWorkspaceHandlers';
 import appIdentity from '../../build/appIdentity.json';
 
-const WINDOW_BACKGROUND = '#0d0f12';
+const WINDOW_BACKGROUND = '#07090d';
 const APP_ICON_PATH = join(__dirname, '../../build/armada.ico');
 
 function createMainWindow(): BrowserWindow {

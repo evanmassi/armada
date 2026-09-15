@@ -155,21 +155,21 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
   };
 
   return (
-    <aside className="flex shrink-0 border-r border-edge bg-panel" style={{ width }}>
+    <aside className="flex shrink-0 border-r border-edge bg-ink" style={{ width }}>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-1 border-b border-edge px-3 py-2">
-          <strong className="flex-1 text-[11px] tracking-[0.12em] text-muted uppercase">Armada</strong>
-          <button type="button" className="rounded bg-edge px-2 py-0.5 hover:text-white" onClick={() => void startSessionInPickedFolder()} title="Start a session in a folder">
+        <header className="flex items-center gap-1 border-b border-edge bg-panel/80 px-3 py-2 backdrop-blur">
+          <strong className="readout flex-1 text-accent">Armada</strong>
+          <button type="button" className="readout border border-edge-strong px-2 py-0.5 text-muted hover:border-accent hover:text-accent" onClick={() => void startSessionInPickedFolder()} title="Start a session in a folder">
             + folder
           </button>
-          <button type="button" className="rounded bg-edge px-2 py-0.5 hover:text-white" onClick={createGroup} title="New group">
+          <button type="button" className="readout border border-edge-strong px-2 py-0.5 text-muted hover:border-accent hover:text-accent" onClick={createGroup} title="New group">
             + group
           </button>
           <ActionMenu label="Sort projects" items={sortMenuItems} />
         </header>
         <input
           type="search"
-          className="mx-2 my-2 rounded border border-edge bg-ink px-2 py-1 text-fg placeholder:text-muted focus:border-muted focus:outline-none"
+          className="mx-2 my-2 border-b border-edge-strong bg-transparent px-1 py-1 text-fg placeholder:text-muted focus:border-accent focus:outline-none"
           placeholder="Search conversations"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -180,7 +180,7 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
           {isError && <p className="px-3 py-2 text-red-400">{getErrorMessage(error)}</p>}
           {!isSearching && pinnedConversations.length > 0 && (
             <section className="border-b border-edge pb-1">
-              <h2 className="px-3 py-1 text-[11px] tracking-[0.12em] text-muted uppercase">Pinned</h2>
+              <h2 className="readout rule-label px-3 py-1.5 text-muted">Pinned</h2>
               {pinnedConversations.map((conversation) => (
                 <ConversationRow
                   key={conversation.sessionId}

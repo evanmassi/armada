@@ -39,7 +39,7 @@ export function ProjectColorSelector({ color, onChange }: ProjectColorSelectorPr
         aria-expanded={isOpen}
       />
       {isOpen && (
-        <div className="absolute top-5 left-0 z-10 flex w-max flex-col gap-1.5 rounded border border-edge bg-panel p-2">
+        <div className="absolute top-5 left-0 z-10 flex w-max flex-col gap-1.5 border border-edge-strong bg-panel/95 p-2 backdrop-blur">
           <div className="grid grid-cols-9 gap-1.5">{VIVID_PROJECT_COLORS.map(renderSwatch)}</div>
           <div className="grid grid-cols-9 gap-1.5">{SOFT_PROJECT_COLORS.map(renderSwatch)}</div>
           <div className="flex items-center gap-2 pt-1 text-[11px] text-muted">

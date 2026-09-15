@@ -11,7 +11,7 @@ import { useTerminalFontSize } from '@renderer/domains/workspace';
 import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
 import { getErrorMessage } from '@renderer/shared/utils/getErrorMessage';
 
-const TERMINAL_THEME = { background: '#0d0f12', foreground: '#d6d8dc', cursor: '#d6d8dc' };
+const TERMINAL_THEME = { background: '#080a0f', foreground: '#d7dbe2', cursor: '#8fd3e8', selectionBackground: '#8fd3e844' };
 const TERMINAL_FONT = '"Cascadia Code", Consolas, monospace';
 const SESSION_ENDED_BANNER = '\r\n[session ended]\r\n';
 const REFIT_DEBOUNCE_MS = 80;

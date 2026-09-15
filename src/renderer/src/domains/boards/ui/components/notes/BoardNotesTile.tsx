@@ -26,7 +26,7 @@ export function BoardNotesTile({ boardId, tile }: BoardNotesTileProps) {
 
   return (
     <textarea
-      className="h-full w-full resize-none bg-ink p-3 text-fg placeholder:text-muted focus:outline-none"
+      className="h-full w-full resize-none bg-tile p-3 font-ui text-[14px] text-fg placeholder:text-muted focus:outline-none"
       placeholder="What am I doing here, and what's next?"
       value={draft}
       spellCheck={false}

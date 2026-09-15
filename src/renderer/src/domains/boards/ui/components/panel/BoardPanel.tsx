@@ -13,7 +13,7 @@ export function BoardPanel({ board, isActive, shouldMountTerminals, onOpenShell 
   return (
     <div className={`h-full ${isActive ? '' : 'hidden'}`}>
       {board.tiles.length === 0 ? (
-        <p className="p-6 text-muted">Pick a conversation on the left, or press + on a project to start a new one.</p>
+        <p className="readout p-8 text-muted">Pick a conversation on the left, or press + on a project to start a new one.</p>
       ) : board.layoutMode === 'auto' ? (
         <BoardTilingPanel board={board} shouldMountTerminals={shouldMountTerminals} onOpenShell={onOpenShell} />
       ) : (

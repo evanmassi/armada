@@ -36,13 +36,13 @@ export function ActionMenu({ label, items }: ActionMenuProps) {
         …
       </button>
       {isOpen && (
-        <div role="menu" className="absolute top-5 right-0 z-20 flex min-w-28 flex-col rounded border border-edge bg-panel py-1 shadow-lg">
+        <div role="menu" className="absolute top-5 right-0 z-20 flex min-w-28 flex-col border border-edge-strong bg-panel/95 py-1 shadow-lg backdrop-blur">
           {items.map((item) => (
             <button
               key={item.label}
               type="button"
               role="menuitem"
-              className="px-3 py-1 text-left text-fg hover:bg-edge"
+              className="px-3 py-1 text-left text-fg hover:bg-accent/15 hover:text-accent"
               onClick={() => {
                 setIsOpen(false);
                 item.onSelect();

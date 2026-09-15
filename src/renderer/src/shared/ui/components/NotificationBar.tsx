@@ -7,7 +7,7 @@ export function NotificationBar() {
   return (
     <div className="fixed right-4 bottom-4 flex flex-col gap-2">
       {notices.map((notice) => (
-        <div key={notice.id} className="flex items-center gap-3 rounded border border-red-500/60 bg-panel px-3 py-2 text-fg">
+        <div key={notice.id} className="flex items-center gap-3 border border-alert/60 bg-panel/90 px-3 py-2 text-fg backdrop-blur">
           <span>{notice.message}</span>
           <button type="button" className="text-muted hover:text-fg" onClick={() => dismiss(notice.id)} aria-label="Dismiss">
             ×

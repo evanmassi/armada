@@ -39,14 +39,14 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
   };
 
   return (
-    <nav className="flex items-center gap-1 border-b border-edge bg-panel px-2 py-1" aria-label="Boards">
+    <nav className="flex items-center gap-1 border-b border-edge bg-panel/80 px-2 py-1 backdrop-blur" aria-label="Boards">
       {boards.map((board) => {
         const isActive = board.id === activeBoardId;
         return (
           <div
             key={board.id}
-            className={`flex items-center gap-1 rounded border-l-2 px-2 py-0.5 ${isActive ? 'bg-edge text-white' : 'text-muted hover:text-fg'}`}
-            style={{ borderLeftColor: accentFor(board.projectCwd) }}
+            className={`readout flex items-center gap-1 border-b-2 border-l-2 px-2 py-1 ${isActive ? 'text-accent' : 'border-b-transparent text-muted hover:text-fg'}`}
+            style={{ borderLeftColor: accentFor(board.projectCwd), borderBottomColor: isActive ? 'var(--color-accent)' : undefined }}
           >
             {editingBoardId === board.id ? (
               <input
@@ -78,7 +78,7 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
           </div>
         );
       })}
-      <button type="button" className="rounded px-2 py-0.5 text-muted hover:bg-edge hover:text-fg" onClick={onCreate} aria-label="New board">
+      <button type="button" className="readout px-2 py-1 text-muted hover:text-accent" onClick={onCreate} aria-label="New board">
         + board
       </button>
       {children}

@@ -128,7 +128,8 @@ export function ConversationProjectSection({
       onDrop={handleDrop}
     >
       <header
-        className="flex cursor-grab items-center gap-1 px-2 py-1 active:cursor-grabbing"
+        className="flex cursor-grab items-center gap-1 border-l-2 px-2 py-1 active:cursor-grabbing"
+        style={{ borderLeftColor: accentFor(project.cwd) }}
         draggable
         onDragStart={handleDragStart}
         onDragEnd={endDrag}
@@ -161,8 +162,8 @@ export function ConversationProjectSection({
             onKeyDown={handleNameKeyDown}
             title={`${project.cwd}\nOpen as board. F2 renames. Ctrl+Up/Down moves.`}
           >
-            <span className="truncate font-semibold">{displayName}</span>
-            <span className="text-[11px] text-muted">{active.length}</span>
+            <span className="truncate font-ui text-[15px] font-semibold tracking-wide">{displayName}</span>
+            <span className="readout text-[10px] text-edge-strong">{active.length}</span>
           </button>
         )}
         <button

@@ -104,7 +104,7 @@ export function App() {
         >
           {activeBoard && (
             <>
-              <button type="button" className="ml-auto rounded px-2 py-0.5 text-[11px] text-muted hover:bg-edge hover:text-fg" onClick={addNotes}>
+              <button type="button" className="readout ml-auto px-2 py-0.5 text-muted hover:text-accent" onClick={addNotes}>
                 + notes
               </button>
               <BoardLayoutModeControls
@@ -115,7 +115,7 @@ export function App() {
             </>
           )}
         </BoardSwitcherBar>
-        <div ref={boardAreaRef} className="relative min-h-0 flex-1">
+        <div ref={boardAreaRef} className="surface-field relative min-h-0 flex-1">
           {isPending && <p className="p-6 text-muted">Loading workspace…</p>}
           {isError && <p className="p-6 text-red-400">{getErrorMessage(error)}</p>}
           {boards.map((board) => (

@@ -80,9 +80,9 @@ export function SidebarGroupHeader({
 
   return (
     <header
-      className={`flex items-center gap-1 px-2 py-1 text-[11px] tracking-[0.12em] uppercase transition-colors ${
-        isProjectTarget ? 'bg-edge text-white' : 'bg-ink text-muted'
-      } ${groupId ? 'cursor-grab active:cursor-grabbing' : ''} ${isBeingDragged ? 'opacity-40' : ''} ${groupLine}`}
+      className={`readout flex items-center gap-1 px-2 py-1.5 transition-colors ${
+        isProjectTarget ? 'bg-accent/15 text-accent' : 'text-muted'
+      } ${projectDropLabel ? 'surface-hatched' : ''} ${groupId ? 'cursor-grab active:cursor-grabbing' : ''} ${isBeingDragged ? 'opacity-40' : ''} ${groupLine}`}
       draggable={groupId !== undefined}
       onDragStart={handleDragStart}
       onDragEnd={endDrag}
@@ -106,14 +106,16 @@ export function SidebarGroupHeader({
       ) : (
         <button
           type="button"
-          className="min-w-0 flex-1 truncate text-left hover:text-fg"
+          className="rule-label min-w-0 flex-1 truncate text-left hover:text-fg"
           onDoubleClick={() => canRename && setIsRenaming(true)}
           onKeyDown={(event) => event.key === 'F2' && canRename && setIsRenaming(true)}
           onClick={onToggleCollapsed}
           title={canRename ? 'Double-click or F2 to rename. Drag to reorder.' : undefined}
         >
-          {isProjectTarget ? (projectDropLabel ?? `Move to ${name}`) : name}{' '}
-          {!isProjectTarget && <span className="normal-case tracking-normal">{projectCount}</span>}
+          <span>
+            {isProjectTarget ? (projectDropLabel ?? `Move to ${name}`) : name}
+            {!isProjectTarget && <span className="ml-2 text-edge-strong">{projectCount}</span>}
+          </span>
         </button>
       )}
       {onRemove && (
