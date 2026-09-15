@@ -65,11 +65,11 @@ export function BoardTileFrame({
 
   return (
     <div
-      className={`relative flex h-full flex-col overflow-hidden rounded-sm border border-edge border-l-2 bg-tile transition-[opacity,box-shadow] duration-200 ${isDimmed ? 'opacity-70' : ''} ${isFocused ? 'tile-focused' : ''}`}
-      style={{ borderLeftColor: accentColor, '--tile-accent': accentColor } as CSSProperties}
+      className={`tile-frame relative flex h-full flex-col overflow-hidden bg-tile transition-[opacity,box-shadow,border-color] duration-200 ${isDimmed ? 'opacity-70' : ''} ${isFocused ? 'tile-focused' : ''}`}
+      style={{ '--tile-accent': accentColor } as CSSProperties}
     >
       <div
-        className={`${TILE_DRAG_HANDLE_CLASS} flex cursor-move items-center gap-2 border-b border-edge bg-panel/70 px-2 py-0.5 text-[11px] backdrop-blur focus:outline-none focus:ring-1 focus:ring-accent/60`}
+        className={`${TILE_DRAG_HANDLE_CLASS} tile-titlebar flex cursor-move items-center gap-2 border-b border-edge px-2 py-1 text-[11px] focus:outline-none focus:ring-1 focus:ring-accent/60`}
         tabIndex={0}
         role="group"
         aria-label={`${title} tile. ${keyboardHint}`}
@@ -79,10 +79,12 @@ export function BoardTileFrame({
         onMouseDown={() => setFocusedTile(tile.id)}
       >
         {activity ? <ActivityDot state={activity} /> : <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: accentColor }} />}
-        <span className="min-w-0 flex-1 truncate" title={tile.kind === 'notes' ? undefined : tile.cwd}>
-          <span className="font-ui text-[13px] font-semibold tracking-wide text-fg">{title}</span>
-          {tile.kind !== 'notes' && <span className="readout ml-2 text-[10px] text-muted">{nameOf(tile.cwd)}</span>}
-        </span>
+        <span className="min-w-0 flex-1 truncate font-ui text-[13px] font-semibold tracking-wide text-fg">{title}</span>
+        {tile.kind !== 'notes' && (
+          <span className="tile-project-plate readout shrink-0 text-[12px]" style={{ color: accentColor }} title={tile.cwd}>
+            {nameOf(tile.cwd)}
+          </span>
+        )}
         {tile.kind === 'claude' && (
           <button type="button" className="px-1 font-bold text-muted hover:text-fg" onClick={onOpenShell} title="Open a shell in this folder" aria-label="Open a shell in this folder">
             {'>_'}

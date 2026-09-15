@@ -64,33 +64,54 @@ body,
   background: var(--color-edge);
 }
 
-.tile-focused {
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--tile-accent) 55%, transparent),
-    0 0 22px color-mix(in srgb, var(--tile-accent) 22%, transparent);
+.tile-frame {
+  border: 1px solid color-mix(in srgb, var(--tile-accent) 35%, transparent);
+  border-left: 4px solid var(--tile-accent);
 }
 
-.tile-focused::before,
-.tile-focused::after {
+.tile-frame.tile-focused {
+  border-color: color-mix(in srgb, var(--tile-accent) 80%, transparent);
+  border-left-color: var(--tile-accent);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--tile-accent) 25%, transparent);
+}
+
+.tile-titlebar {
+  --bar-accent-soft: color-mix(in srgb, var(--tile-accent) 26%, transparent);
+  --bar-accent-hatch: color-mix(in srgb, var(--tile-accent) 22%, transparent);
+  --bar-accent-glint: color-mix(in srgb, var(--tile-accent) 55%, transparent);
+  background-color: var(--color-panel);
+  background-image:
+    linear-gradient(90deg, var(--bar-accent-glint), transparent 60%),
+    repeating-linear-gradient(-60deg, var(--bar-accent-hatch) 0 1px, transparent 1px 7px),
+    linear-gradient(90deg, var(--bar-accent-soft), color-mix(in srgb, var(--tile-accent) 8%, transparent) 30%, transparent 55%);
+  background-repeat: no-repeat;
+  background-size:
+    100% 1px,
+    32% 100%,
+    100% 100%;
+  background-position: top left;
+  transition: filter 200ms;
+}
+
+.tile-focused .tile-titlebar {
+  filter: saturate(1.25) brightness(1.15);
+}
+
+.tile-project-plate {
+  position: relative;
+  padding: 1px 10px 1px 12px;
+  isolation: isolate;
+}
+
+.tile-project-plate::before {
   content: '';
   position: absolute;
-  width: 14px;
-  height: 14px;
-  border-color: var(--tile-accent);
-  border-style: solid;
-  pointer-events: none;
-}
-
-.tile-focused::before {
-  top: -1px;
-  left: -1px;
-  border-width: 2px 0 0 2px;
-}
-
-.tile-focused::after {
-  right: -1px;
-  bottom: -1px;
-  border-width: 0 2px 2px 0;
+  inset: 0;
+  z-index: -1;
+  transform: skewX(-18deg);
+  background: color-mix(in srgb, var(--tile-accent) 16%, transparent);
+  border-left: 1px solid var(--tile-accent);
+  border-right: 1px solid color-mix(in srgb, var(--tile-accent) 40%, transparent);
 }
 
 .react-grid-item.react-grid-placeholder {

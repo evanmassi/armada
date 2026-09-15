@@ -7,13 +7,14 @@ import type {
   TerminalSpawnOptions,
 } from '@main/domain/terminals/TerminalHost';
 
-const NESTED_CLAUDE_MARKERS = ['CLAUDECODE', 'CLAUDE_CODE_CHILD_SESSION'];
+const INHERITED_LAUNCHER_NOISE = ['CLAUDECODE', 'CLAUDE_CODE_CHILD_SESSION', 'NO_COLOR', 'FORCE_COLOR', 'CI'];
+const TERMINAL_CAPABILITIES = { TERM: 'xterm-256color', COLORTERM: 'truecolor' };
 
 function hostEnvironment(): NodeJS.ProcessEnv {
   const env = { ...process.env };
-  // PITFALL: claude refuses to launch inside another claude session; Armada started from a Claude terminal inherits these markers.
-  for (const marker of NESTED_CLAUDE_MARKERS) delete env[marker];
-  return env;
+  // PITFALL: a launcher's environment leaks into every tile: nested-claude markers block launch, NO_COLOR strips colors.
+  for (const name of INHERITED_LAUNCHER_NOISE) delete env[name];
+  return { ...env, ...TERMINAL_CAPABILITIES };
 }
 
 export class PtySessionHost implements TerminalHost {
