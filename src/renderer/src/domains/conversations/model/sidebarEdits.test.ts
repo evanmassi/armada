@@ -36,6 +36,13 @@ describe('moveProject', () => {
   it('appends when there is no sibling to insert before', () => {
     expect(moveProject(workspace(), 'd', { groupId: 'g2' }, ['d']).sidebar.groups[1]!.projectCwds).toEqual(['c', 'd']);
   });
+
+  it('keeps persisted slots of projects missing from the displayed order', () => {
+    const start = workspace();
+    start.sidebar.projectOrder = ['d', 'hidden', 'e'];
+    const { sidebar } = moveProject(start, 'c', { groupId: undefined, beforeCwd: 'd' }, ['d']);
+    expect(sidebar.projectOrder).toEqual(['c', 'd', 'hidden', 'e']);
+  });
 });
 
 describe('moveGroup', () => {
@@ -51,6 +58,12 @@ describe('sortSidebarProjects', () => {
     const { sidebar } = sortSidebarProjects(workspace(), (a, b) => b.localeCompare(a), ['d', 'f']);
     expect(sidebar.groups[0]!.projectCwds).toEqual(['b', 'a']);
     expect(sidebar.projectOrder).toEqual(['f', 'd']);
+  });
+
+  it('keeps archived projects in their persisted slot after a sort', () => {
+    const start = workspace();
+    start.sidebar.projectOrder = ['d', 'e', 'f'];
+    expect(sortSidebarProjects(start, (a, b) => b.localeCompare(a), ['d', 'f']).sidebar.projectOrder).toEqual(['f', 'd', 'e']);
   });
 });
 

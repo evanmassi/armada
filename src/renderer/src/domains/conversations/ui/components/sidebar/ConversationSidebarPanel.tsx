@@ -38,6 +38,7 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
   const [query, setQuery] = useState('');
   const [draftWidth, setDraftWidth] = useState<number>();
   const [isArchivedOpen, setIsArchivedOpen] = useState(false);
+  const [isOtherOpen, setIsOtherOpen] = useState(true);
   const openedAt = useRef(new Date());
   const widthAtDragStart = useRef(0);
   const liveWidth = useRef<number>(undefined);
@@ -49,7 +50,11 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
   const isSearching = query.trim().length > 0;
   const width = draftWidth ?? sidebar?.width ?? 288;
 
-  const otherOrder = sections.find((section) => section.kind === 'other')?.projects.map((project) => project.cwd) ?? [];
+  // PITFALL: the persisted order comes from every project, not the search-filtered ones, or a move while searching would drop the hidden ones.
+  const otherOrder = useMemo(
+    () => (sidebar ? (arrangeSidebar(projects, sidebar).find((section) => section.kind === 'other')?.projects.map((project) => project.cwd) ?? []) : []),
+    [projects, sidebar],
+  );
   const projectByCwd = new Map(projects.map((project) => [project.cwd, project]));
 
   const startSessionInPickedFolder = async (): Promise<void> => {
@@ -109,7 +114,12 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
 
   const renderSection = (section: SidebarSection) => {
     const isArchivedSection = section.kind === 'archived';
-    const isCollapsed = section.group ? section.group.isCollapsed : isArchivedSection ? !isArchivedOpen : false;
+    const isCollapsed = section.group ? section.group.isCollapsed : isArchivedSection ? !isArchivedOpen : !isOtherOpen;
+    const toggleCollapsed = (): void => {
+      if (section.group) editor.toggleGroupCollapsed(section.group.id);
+      else if (isArchivedSection) setIsArchivedOpen((value) => !value);
+      else setIsOtherOpen((value) => !value);
+    };
     const groupId = section.group?.id;
     return (
       <section key={section.key}>
@@ -120,7 +130,7 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
             isCollapsed={isCollapsed}
             groupId={groupId}
             projectDropLabel={isArchivedSection ? 'Archive here' : undefined}
-            onToggleCollapsed={() => (section.group ? editor.toggleGroupCollapsed(section.group.id) : setIsArchivedOpen((value) => !value))}
+            onToggleCollapsed={toggleCollapsed}
             onRename={section.group ? (name) => editor.renameGroup(section.group!.id, name) : undefined}
             onRemove={section.group ? () => editor.removeGroup(section.group!.id) : undefined}
             onDropProject={isArchivedSection ? (cwd) => editor.setProjectArchived(cwd, true) : (cwd) => editor.moveProject(cwd, { groupId }, otherOrder)}
@@ -190,7 +200,7 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
                   conversation={conversation}
                   activity={activityBySession.get(conversation.sessionId)}
                   isPinned
-                  isArchived={false}
+                  isArchived={sidebar?.archivedSessionIds.includes(conversation.sessionId) ?? false}
                   onOpen={onOpenConversation}
                   onTogglePin={togglePin}
                   onSetArchived={editor.setConversationArchived}

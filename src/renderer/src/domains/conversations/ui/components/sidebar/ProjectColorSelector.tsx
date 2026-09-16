@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SOFT_PROJECT_COLORS, VIVID_PROJECT_COLORS } from '../../projectColorPalette';
 
 interface ProjectColorSelectorProps {
@@ -6,16 +6,34 @@ interface ProjectColorSelectorProps {
   onChange(color: string | undefined): void;
 }
 
+const DEFAULT_CUSTOM_COLOR = '#3b82f6';
+
 const isSameColor = (a: string | undefined, b: string): boolean => a?.toLowerCase() === b.toLowerCase();
 
 export function ProjectColorSelector({ color, onChange }: ProjectColorSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [customDraft, setCustomDraft] = useState<string>();
   const customInputRef = useRef<HTMLInputElement>(null);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
   const choose = (next: string | undefined): void => {
     onChange(next);
     setIsOpen(false);
   };
+
+  // PITFALL: React's onChange on a color input fires on every live picker movement; only the native change event marks the final pick.
+  useEffect(() => {
+    const input = customInputRef.current;
+    if (!input) return;
+    const commit = (): void => {
+      onChangeRef.current(input.value);
+      setCustomDraft(undefined);
+      setIsOpen(false);
+    };
+    input.addEventListener('change', commit);
+    return () => input.removeEventListener('change', commit);
+  }, [isOpen]);
 
   const renderSwatch = (option: string) => (
     <button
@@ -50,8 +68,8 @@ export function ProjectColorSelector({ color, onChange }: ProjectColorSelectorPr
               ref={customInputRef}
               type="color"
               className="sr-only"
-              value={color ?? '#3b82f6'}
-              onChange={(event) => choose(event.target.value)}
+              value={customDraft ?? color ?? DEFAULT_CUSTOM_COLOR}
+              onChange={(event) => setCustomDraft(event.target.value)}
               aria-label="Custom color"
             />
             <button type="button" className="rounded border border-muted px-1.5 hover:text-fg" onClick={() => choose(undefined)}>

@@ -25,10 +25,16 @@ const insertBefore = (list: string[], value: string, beforeValue: string | undef
   return next;
 };
 
+// PITFALL: the displayed Other order lacks archived projects; their persisted slots are kept so a restore lands where it was.
+const withHiddenOrder = (displayedOrder: string[], persistedOrder: string[]): string[] => [
+  ...displayedOrder,
+  ...persistedOrder.filter((cwd) => !displayedOrder.includes(cwd)),
+];
+
 export const moveProject = (workspace: Workspace, cwd: string, target: ProjectDropTarget, otherOrder: string[]): Workspace =>
   updateSidebar(workspace, (sidebar) => {
     const groups = sidebar.groups.map((group) => ({ ...group, projectCwds: without(group.projectCwds, cwd) }));
-    const projectOrder = without(otherOrder, cwd);
+    const projectOrder = without(withHiddenOrder(otherOrder, sidebar.projectOrder), cwd);
     return {
       ...sidebar,
       archivedProjectCwds: without(sidebar.archivedProjectCwds, cwd),
@@ -53,7 +59,7 @@ export const sortSidebarProjects = (workspace: Workspace, compare: (a: string, b
   updateSidebar(workspace, (sidebar) => ({
     ...sidebar,
     groups: sidebar.groups.map((group) => ({ ...group, projectCwds: [...group.projectCwds].sort(compare) })),
-    projectOrder: [...otherCwds].sort(compare),
+    projectOrder: withHiddenOrder([...otherCwds].sort(compare), sidebar.projectOrder),
   }));
 
 export const createSidebarGroup = (workspace: Workspace, name: string): Workspace =>
