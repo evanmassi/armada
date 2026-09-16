@@ -2,7 +2,10 @@ import { useState, type CSSProperties, type DragEvent, type KeyboardEvent } from
 import type { Tile } from '@shared/workspace/workspaceSchemas';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useSessionActivityStore, type ActivityState } from '@renderer/app/stores/sessionActivityStore';
+import { useFolderActions } from '@renderer/domains/conversations';
 import { disposeLiveTerminal, TerminalSessionTile } from '@renderer/domains/terminal';
+import { ActionMenu } from '@renderer/shared/ui/components/ActionMenu';
+import { tileCwd } from '../../../model/boardQueries';
 import { ActivityDot } from '@renderer/shared/ui/components/ActivityDot';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
 import { BoardNotesTile } from '../notes/BoardNotesTile';
@@ -69,6 +72,8 @@ export function BoardTileFrame({
   const setFocusedTile = useBoardSelectionStore((state) => state.setFocusedTile);
   const activity = useSessionActivityStore((state) => state.byTileId[tile.id]?.state);
   const [launchCount, setLaunchCount] = useState(0);
+  const { revealInExplorer, openInEditor } = useFolderActions();
+  const cwd = tileCwd(tile);
   const relaunch = (): void => {
     disposeLiveTerminal(tile.id);
     setLaunchCount((count) => count + 1);
@@ -114,6 +119,15 @@ export function BoardTileFrame({
           <button type="button" className="px-1 font-bold text-muted hover:text-fg" onClick={onOpenShell} title="Open a shell in this folder" aria-label="Open a shell in this folder">
             {'>_'}
           </button>
+        )}
+        {cwd !== undefined && (
+          <ActionMenu
+            label={`${title} folder actions`}
+            items={[
+              { label: 'Open in Explorer', onSelect: () => revealInExplorer(cwd) },
+              { label: 'Open in VS Code', onSelect: () => openInEditor(cwd) },
+            ]}
+          />
         )}
         <button type="button" className="px-1 text-muted hover:text-fg" onClick={onClose} aria-label="Close tile">
           ×

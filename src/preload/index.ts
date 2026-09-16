@@ -14,6 +14,8 @@ const armadaApi: ArmadaApi = {
   },
   projects: {
     pickFolder: () => ipcRenderer.invoke(IPC_CHANNELS.projectsPickFolder),
+    reveal: (request) => ipcRenderer.invoke(IPC_CHANNELS.projectsReveal, request),
+    openInEditor: (request) => ipcRenderer.invoke(IPC_CHANNELS.projectsOpenInEditor, request),
   },
   workspace: {
     load: () => ipcRenderer.invoke(IPC_CHANNELS.workspaceLoad),

@@ -4,6 +4,7 @@ import type { WorkspaceRepository } from '@main/domain/repositories/WorkspaceRep
 import type { TerminalHost } from '@main/domain/terminals/TerminalHost';
 import { ClaudeProjectsReader } from '@main/infrastructure/claude/ClaudeProjectsReader';
 import { ClaudeHookInbox } from '@main/infrastructure/claude/ClaudeHookInbox';
+import { FolderOpener } from '@main/infrastructure/folders/FolderOpener';
 import { FileLogger } from '@main/infrastructure/logging/FileLogger';
 import { getClaudeProjectsDir, getClaudeHookInboxDir, getLogFilePath, getWorkspaceFilePath } from '@main/infrastructure/paths';
 import { JsonWorkspaceRepository } from '@main/infrastructure/persistence/JsonWorkspaceRepository';
@@ -15,6 +16,7 @@ export interface ServiceContainer {
   workspaceRepository: WorkspaceRepository;
   terminalHost: TerminalHost;
   claudeHookInbox: ClaudeHookInbox;
+  folderOpener: FolderOpener;
   logger: FileLogger;
 }
 
@@ -29,6 +31,7 @@ export function createServiceContainer(): ServiceContainer {
     workspaceRepository: new JsonWorkspaceRepository({ filePath: getWorkspaceFilePath(), logger }),
     terminalHost,
     claudeHookInbox: new ClaudeHookInbox({ inboxDir: hookInboxDir, logger }),
+    folderOpener: new FolderOpener({ logger }),
     logger,
   };
 }

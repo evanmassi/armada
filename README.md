@@ -51,13 +51,13 @@ Housekeeping the sidebar supports, all of it saved between launches:
 - Archive conversations or whole projects out of the way without deleting anything
 - Search by title or project name
 
-The `+` on a project starts a fresh session in that folder. The `+ folder` button in the header starts one anywhere.
+The `+` on a project starts a fresh session in that folder. The `+ folder` button in the header starts one anywhere. The ⋯ menu on a project, and on any tile, opens the folder in Explorer or in VS Code.
 
 ### Boards: a workspace per concern
 
 A board is a named set of tiles, shown as a tab across the top. Make one per project, one per bug, one per week, whatever helps. Boards you have opened stay alive in the background, so switching tabs never interrupts a running session.
 
-Clicking a project name in the sidebar opens that project as a board, seeded with its three most recent conversations. Opening a conversation while a different project's board is active routes it to that project's own board. Hold Shift to keep it where you are.
+Clicking a project name expands or collapses it. "Open as board" in the project's ⋯ menu opens that project as a board, seeded with its three most recent conversations, or jumps to it if one exists. Opening a conversation while a different project's board is active routes it to that project's own board. Hold Shift to keep it where you are.
 
 ### Layouts: auto or free
 

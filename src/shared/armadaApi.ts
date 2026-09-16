@@ -1,4 +1,5 @@
 import type { Project } from './conversations/conversationTypes';
+import type { FolderRequest } from './projects/projectSchemas';
 import type {
   ClaudeHookEvent,
   OpenSessionRequest,
@@ -18,6 +19,8 @@ export interface ArmadaApi {
   };
   projects: {
     pickFolder(): Promise<string | undefined>;
+    reveal(request: FolderRequest): Promise<void>;
+    openInEditor(request: FolderRequest): Promise<void>;
   };
   workspace: {
     load(): Promise<Workspace>;

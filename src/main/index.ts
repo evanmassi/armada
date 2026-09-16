@@ -53,7 +53,7 @@ app.whenReady().then(() => {
   });
 
   registerConversationHandlers(container);
-  registerProjectHandlers(mainWindow);
+  registerProjectHandlers(container, mainWindow);
   registerWorkspaceHandlers(container);
   registerSessionHandlers(container, mainWindow.webContents);
   void container.claudeHookInbox.start();

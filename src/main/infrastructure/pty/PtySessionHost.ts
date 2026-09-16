@@ -1,6 +1,4 @@
 import { randomUUID } from 'node:crypto';
-import { existsSync } from 'node:fs';
-import { delimiter, isAbsolute, join } from 'node:path';
 import * as pty from 'node-pty';
 import type {
   TerminalExitListener,
@@ -8,6 +6,7 @@ import type {
   TerminalOutputListener,
   TerminalSpawnOptions,
 } from '@main/domain/terminals/TerminalHost';
+import { assertLaunchable } from '@main/infrastructure/launchChecks';
 import type { FileLogger } from '@main/infrastructure/logging/FileLogger';
 
 const INHERITED_LAUNCHER_NOISE = ['CLAUDECODE', 'CLAUDE_CODE_CHILD_SESSION', 'NO_COLOR', 'FORCE_COLOR', 'CI'];
@@ -25,17 +24,6 @@ function hostEnvironment(terminalId: string, hookInboxDir: string): NodeJS.Proce
 interface PtySessionHostDeps {
   hookInboxDir: string;
   logger: FileLogger;
-}
-
-// PITFALL: node-pty resolves a bare command by exact filename on PATH and fails with an empty "File not found: " otherwise.
-const isOnPath = (command: string): boolean =>
-  isAbsolute(command)
-    ? existsSync(command)
-    : (process.env['PATH'] ?? '').split(delimiter).some((dir) => dir.length > 0 && existsSync(join(dir, command)));
-
-function assertLaunchable(command: string, cwd: string): void {
-  if (!existsSync(cwd)) throw new Error(`Folder no longer exists: ${cwd}`);
-  if (!isOnPath(command)) throw new Error(`${command} was not found on PATH`);
 }
 
 export class PtySessionHost implements TerminalHost {

@@ -30,7 +30,8 @@ interface ConversationSidebarPanelProps {
 
 export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoard, onStartSession }: ConversationSidebarPanelProps) {
   const { data: projects = [], isPending, isError, error } = useProjectsQuery();
-  const sidebar = useWorkspaceQuery().data?.sidebar;
+  const workspace = useWorkspaceQuery().data;
+  const sidebar = workspace?.sidebar;
   const { pinnedSessionIds, isPinned, togglePin } = usePinnedSessions();
   const nameOf = useProjectNames();
   const editor = useSidebarEditor();
@@ -146,6 +147,7 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
               isArchived={isArchivedSection}
               isExpanded={sidebar?.projectExpansion[project.cwd] ?? (!isArchivedSection && isRecentlyActive(project, openedAt.current))}
               isForcedOpen={isSearching}
+              hasBoard={workspace?.boards.some((board) => board.projectCwd === project.cwd) ?? false}
               activityBySession={activityBySession}
               archivedSessionIds={sidebar?.archivedSessionIds ?? []}
               moveTargets={moveTargetsFor(section, project.cwd)}

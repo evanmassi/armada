@@ -5,6 +5,7 @@ import { selectIsSidebarDragging, useSidebarDragStore } from '@renderer/app/stor
 import { ActionMenu, type ActionMenuItem } from '@renderer/shared/ui/components/ActionMenu';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
 import { applyDragGhost, placementFromPointer, PLACEMENT_LINE_CLASS, type DropPlacement } from '@renderer/shared/utils/dragGhost';
+import { useFolderActions } from '../../../hooks/useFolderActions';
 import { useProjectAccents, useProjectColors } from '../../../hooks/useProjectColors';
 import { splitArchivedConversations } from '../../../model/conversationSearch';
 import { ConversationRow } from './ConversationRow';
@@ -18,6 +19,7 @@ interface ConversationProjectSectionProps {
   isArchived: boolean;
   isExpanded: boolean;
   isForcedOpen: boolean;
+  hasBoard: boolean;
   activityBySession: Map<string, ActivityState>;
   archivedSessionIds: string[];
   moveTargets: ActionMenuItem[];
@@ -40,6 +42,7 @@ export function ConversationProjectSection({
   isArchived,
   isExpanded,
   isForcedOpen,
+  hasBoard,
   activityBySession,
   archivedSessionIds,
   moveTargets,
@@ -60,6 +63,7 @@ export function ConversationProjectSection({
   const [dropPlacement, setDropPlacement] = useState<DropPlacement>();
   const { colorOf, setColor } = useProjectColors();
   const accentFor = useProjectAccents();
+  const { revealInExplorer, openInEditor } = useFolderActions();
   const isAnyDragging = useSidebarDragStore(selectIsSidebarDragging);
   const isBeingDragged = useSidebarDragStore((state) => state.draggingCwd === project.cwd);
   const { beginProjectDrag, endDrag } = useSidebarDragStore.getState();
@@ -102,6 +106,9 @@ export function ConversationProjectSection({
   };
 
   const menuItems: ActionMenuItem[] = [
+    { label: hasBoard ? 'Go to board' : 'Open as board', onSelect: () => onOpenProjectBoard(project) },
+    { label: 'Open in Explorer', onSelect: () => revealInExplorer(project.cwd) },
+    { label: 'Open in VS Code', onSelect: () => openInEditor(project.cwd) },
     { label: 'Rename', onSelect: () => setIsRenaming(true) },
     ...moveTargets,
     { label: isArchived ? 'Restore' : 'Archive', onSelect: () => onSetArchived(project.cwd, !isArchived) },
@@ -158,9 +165,10 @@ export function ConversationProjectSection({
           <button
             type="button"
             className="flex min-w-0 flex-1 items-center gap-2 text-left hover:text-white"
-            onClick={() => onOpenProjectBoard(project)}
+            onClick={() => onToggleExpanded(project.cwd, !isOpen)}
             onKeyDown={handleNameKeyDown}
-            title={`${project.cwd}\nOpen as board. F2 renames. Ctrl+Up/Down moves.`}
+            aria-expanded={isOpen}
+            title={`${project.cwd}\nF2 renames. Ctrl+Up/Down moves.`}
           >
             <span className="truncate font-ui text-[15px] font-semibold tracking-wide">{displayName}</span>
             <span className="shrink-0 text-muted" aria-hidden="true">·</span>
