@@ -33,9 +33,12 @@ export const terminalResizeRequestSchema = terminalRefSchema.merge(terminalSizeS
 
 export const CLAUDE_HOOK_EVENT_KINDS = ['sessionStarted', 'promptSubmitted', 'turnEnded', 'permissionRequested'] as const;
 
+export const SESSION_START_SOURCES = ['startup', 'resume', 'clear', 'compact', 'fork'] as const;
+
 export const claudeHookEventSchema = terminalRefSchema.extend({
   sessionId: z.string().uuid(),
   kind: z.enum(CLAUDE_HOOK_EVENT_KINDS),
+  source: z.enum(SESSION_START_SOURCES).optional(),
 });
 
 export type SessionLaunch = z.infer<typeof claudeLaunchSchema> | z.infer<typeof shellLaunchSchema>;

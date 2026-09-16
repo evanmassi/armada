@@ -1,7 +1,7 @@
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import type { Unsubscribe } from '@shared/armadaApi';
-import type { OpenSessionRequest, SessionLaunch } from '@shared/sessions/sessionSchemas';
+import type { ClaudeHookEvent, OpenSessionRequest, SessionLaunch } from '@shared/sessions/sessionSchemas';
 import { isGlobalShortcut } from '@renderer/app/keyboardShortcuts';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useNotificationStore } from '@renderer/app/stores/notificationStore';
@@ -16,6 +16,12 @@ const TERMINAL_FONT = '"Cascadia Code", Consolas, monospace';
 const REFIT_DEBOUNCE_MS = 80;
 
 const exitBanner = (exitCode: number): string => `\r\n[exited with code ${exitCode}]\r\n`;
+
+const SESSION_ROTATION_SOURCES = new Set<string>(['clear', 'resume', 'fork']);
+
+// PITFALL: a claude started by Claude inside the tile inherits the tile id and reports its own session; only a rotation of the tile's own session rebinds.
+const isSessionRotation = (event: ClaudeHookEvent): boolean =>
+  event.kind === 'sessionStarted' && event.source !== undefined && SESSION_ROTATION_SOURCES.has(event.source);
 
 export type SessionReboundHandler = (sessionId: string) => void;
 
@@ -135,6 +141,7 @@ class LiveTerminalEntry implements LiveTerminal {
           armadaClient.sessions.onClaudeHookEvent((event) => {
             if (event.terminalId !== terminalId) return;
             if (event.sessionId !== boundSessionId) {
+              if (!isSessionRotation(event)) return;
               boundSessionId = event.sessionId;
               this.onSessionRebound(event.sessionId);
             }

@@ -24,6 +24,7 @@ process.stdin.on('end', () => {
   if (kind === 'permissionRequested' && payload.notification_type !== RELAYED_NOTIFICATION_TYPE) return;
   mkdirSync(inboxDir, { recursive: true });
   const target = join(inboxDir, `${terminalId}-${Date.now()}-${process.pid}.json`);
-  writeFileSync(`${target}.tmp`, JSON.stringify({ terminalId, sessionId, kind }), 'utf8');
+  const event = kind === 'sessionStarted' ? { terminalId, sessionId, kind, source: payload.source } : { terminalId, sessionId, kind };
+  writeFileSync(`${target}.tmp`, JSON.stringify(event), 'utf8');
   renameSync(`${target}.tmp`, target);
 });
