@@ -57,7 +57,7 @@ export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggl
       {!lane.isCollapsed && <span className="text-edge-strong">{lane.tiles.length}</span>}
       {!lane.isCollapsed && (
         <button type="button" className="px-1 hover:text-white" onClick={onAddNotes} title="Add notes to this lane" aria-label={`Add notes to ${name}`}>
-          +
+          + notes
         </button>
       )}
     </header>

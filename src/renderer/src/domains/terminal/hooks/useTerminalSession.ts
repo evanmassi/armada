@@ -6,19 +6,17 @@ import type { OpenSessionRequest, SessionLaunch } from '@shared/sessions/session
 import { isGlobalShortcut } from '@renderer/app/keyboardShortcuts';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useNotificationStore } from '@renderer/app/stores/notificationStore';
-import { useSessionActivityStore, type ActivityState } from '@renderer/app/stores/sessionActivityStore';
+import { useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
 import { useTerminalFontSize } from '@renderer/domains/workspace';
 import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
 import { getErrorMessage } from '@renderer/shared/utils/getErrorMessage';
+import { createActivityTracker } from '../model/activityTracker';
 import { handleClipboardKey, handleContextMenu } from '../model/terminalClipboard';
 
 const TERMINAL_THEME = { background: '#080a0f', foreground: '#d7dbe2', cursor: '#8fd3e8', selectionBackground: '#8fd3e844' };
 const TERMINAL_FONT = '"Cascadia Code", Consolas, monospace';
 const SESSION_ENDED_BANNER = '\r\n[session ended]\r\n';
 const REFIT_DEBOUNCE_MS = 80;
-const WORKING_WINDOW_MS = 1500;
-const WORKING_MIN_CHUNKS = 3;
-const BELL = '\x07';
 
 interface TerminalSessionOptions {
   tileId: string;
@@ -54,24 +52,7 @@ export function useTerminalSession(containerRef: RefObject<HTMLDivElement | null
     container.addEventListener('contextmenu', onContextMenu);
 
     const { setActivity, clearActivity } = useSessionActivityStore.getState();
-    let activity: ActivityState = 'idle';
-    let recentOutputTimes: number[] = [];
-    let settleTimer: number | undefined;
-    const updateActivity = (next: ActivityState): void => {
-      activity = next;
-      setActivity(tileId, claudeSessionId, next);
-    };
-    const recordOutput = (data: string): void => {
-      const now = Date.now();
-      recentOutputTimes = [...recentOutputTimes.filter((time) => now - time < WORKING_WINDOW_MS), now];
-      if (data.includes(BELL)) updateActivity('waiting');
-      else if (recentOutputTimes.length >= WORKING_MIN_CHUNKS) updateActivity('working');
-      window.clearTimeout(settleTimer);
-      settleTimer = window.setTimeout(() => {
-        if (activity === 'working') updateActivity('waiting');
-      }, WORKING_WINDOW_MS);
-    };
-    updateActivity('idle');
+    const activity = createActivityTracker((state) => setActivity(tileId, claudeSessionId, state));
 
     let isDisposed = false;
     let terminalId: string | undefined;
@@ -92,7 +73,7 @@ export function useTerminalSession(containerRef: RefObject<HTMLDivElement | null
           armadaClient.sessions.onOutput((event) => {
             if (event.terminalId !== terminalId) return;
             terminal.write(event.data);
-            recordOutput(event.data);
+            activity.recordOutput(event.data);
           }),
           armadaClient.sessions.onExit((event) => {
             if (event.terminalId === terminalId) terminal.write(SESSION_ENDED_BANNER);
@@ -100,7 +81,7 @@ export function useTerminalSession(containerRef: RefObject<HTMLDivElement | null
         );
         terminal.onData((data) => {
           armadaClient.sessions.write({ terminalId: ref.terminalId, data });
-          updateActivity('idle');
+          activity.recordInput(data);
         });
         terminal.onResize(({ cols, rows }) => armadaClient.sessions.resize({ terminalId: ref.terminalId, cols, rows }));
         terminal.focus();
@@ -118,7 +99,7 @@ export function useTerminalSession(containerRef: RefObject<HTMLDivElement | null
     return () => {
       isDisposed = true;
       window.clearTimeout(refitTimer);
-      window.clearTimeout(settleTimer);
+      activity.dispose();
       resizeObserver.disconnect();
       container.removeEventListener('contextmenu', onContextMenu);
       subscriptions.forEach((unsubscribe) => unsubscribe());

@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
 import { selectActivityBySession, useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
+import armadaIcon from '@renderer/assets/armada-icon.png';
 import { useWorkspaceQuery } from '@renderer/domains/workspace';
 import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
 import { ActionMenu, type ActionMenuItem } from '@renderer/shared/ui/components/ActionMenu';
@@ -39,6 +40,7 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
   const [isArchivedOpen, setIsArchivedOpen] = useState(false);
   const openedAt = useRef(new Date());
   const widthAtDragStart = useRef(0);
+  const liveWidth = useRef<number>(undefined);
 
   const activityBySession = useMemo(() => selectActivityBySession(byTileId), [byTileId]);
   const visibleProjects = useMemo(() => filterProjects(projects, query, nameOf), [projects, query, nameOf]);
@@ -158,6 +160,7 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
     <aside className="flex shrink-0 border-r border-edge bg-ink" style={{ width }}>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center gap-1 border-b border-edge bg-panel/80 px-3 py-2 backdrop-blur">
+          <img src={armadaIcon} alt="" className="h-4 w-4" />
           <strong className="readout flex-1 text-accent">Armada</strong>
           <button type="button" className="readout border border-edge-strong px-2 py-0.5 text-muted hover:border-accent hover:text-accent" onClick={() => void startSessionInPickedFolder()} title="Start a session in a folder">
             + folder
@@ -204,9 +207,13 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
         onDragStart={() => {
           widthAtDragStart.current = width;
         }}
-        onDragMove={(deltaPx) => setDraftWidth(Math.min(MAX_WIDTH_PX, Math.max(MIN_WIDTH_PX, widthAtDragStart.current + deltaPx)))}
+        onDragMove={(deltaPx) => {
+          liveWidth.current = Math.min(MAX_WIDTH_PX, Math.max(MIN_WIDTH_PX, widthAtDragStart.current + deltaPx));
+          setDraftWidth(liveWidth.current);
+        }}
         onDragEnd={() => {
-          if (draftWidth !== undefined) editor.setWidth(draftWidth);
+          if (liveWidth.current !== undefined) editor.setWidth(liveWidth.current);
+          liveWidth.current = undefined;
           setDraftWidth(undefined);
         }}
       />

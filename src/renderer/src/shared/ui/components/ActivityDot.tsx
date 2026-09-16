@@ -12,5 +12,5 @@ const ACTIVITY_STYLES: Record<ActivityState, { className: string; label: string 
 
 export function ActivityDot({ state }: ActivityDotProps) {
   const { className, label } = ACTIVITY_STYLES[state];
-  return <span className={`inline-block h-2 w-2 shrink-0 rounded-full ${className}`} title={label} aria-label={label} />;
+  return <span className={`inline-block h-2 w-2 shrink-0 rounded-full transition-colors duration-500 ${className}`} title={label} aria-label={label} />;
 }
