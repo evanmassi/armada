@@ -61,7 +61,7 @@ export function ActionMenu({ label, entries }: ActionMenuProps) {
           <span className="flex-1">{entry.label}</span>
           <span className="text-muted">▸</span>
         </button>
-        <div role="menu" className={`absolute top-0 left-full ml-px hidden group-hover:flex group-focus-within:flex ${MENU_SURFACE_CLASS}`}>
+        <div role="menu" className={`absolute top-0 right-full mr-px hidden group-hover:flex group-focus-within:flex ${MENU_SURFACE_CLASS}`}>
           {entry.items.map(renderItem)}
         </div>
       </div>
