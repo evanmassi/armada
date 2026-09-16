@@ -64,9 +64,10 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
   };
 
   const sortMenuItems = [
-    { label: 'Sort A-Z', onSelect: () => editor.sortProjects((a, b) => nameOf(a).localeCompare(nameOf(b), undefined, { sensitivity: 'base' }), otherOrder) },
+    { label: 'Sort', emphasis: 'A-Z', onSelect: () => editor.sortProjects((a, b) => nameOf(a).localeCompare(nameOf(b), undefined, { sensitivity: 'base' }), otherOrder) },
     {
-      label: 'Sort by recent',
+      label: 'Sort',
+      emphasis: 'by recent',
       onSelect: () =>
         editor.sortProjects((a, b) => {
           const left = projectByCwd.get(a);
@@ -109,8 +110,8 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
   const moveTargetsFor = (section: SidebarSection, cwd: string): ActionMenuItem[] => [
     ...groups
       .filter((group) => group.id !== section.group?.id)
-      .map((group) => ({ label: `Move to ${group.name}`, onSelect: () => editor.moveProject(cwd, { groupId: group.id }, otherOrder) })),
-    ...(section.kind === 'other' ? [] : [{ label: 'Move to Other', onSelect: () => editor.moveProject(cwd, { groupId: undefined }, otherOrder) }]),
+      .map((group) => ({ label: group.name, onSelect: () => editor.moveProject(cwd, { groupId: group.id }, otherOrder) })),
+    ...(section.kind === 'other' ? [] : [{ label: 'Other', onSelect: () => editor.moveProject(cwd, { groupId: undefined }, otherOrder) }]),
   ];
 
   const renderSection = (section: SidebarSection) => {
@@ -180,7 +181,7 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
           <button type="button" className="readout border border-edge-strong px-2 py-0.5 text-muted hover:border-accent hover:text-accent" onClick={createGroup} title="New group">
             + group
           </button>
-          <ActionMenu label="Sort projects" items={sortMenuItems} />
+          <ActionMenu label="Sort projects" entries={sortMenuItems} />
         </header>
         <input
           type="search"

@@ -123,9 +123,9 @@ export function BoardTileFrame({
         {cwd !== undefined && (
           <ActionMenu
             label={`${title} folder actions`}
-            items={[
-              { label: 'Open in Explorer', onSelect: () => revealInExplorer(cwd) },
-              { label: 'Open in VS Code', onSelect: () => openInEditor(cwd) },
+            entries={[
+              { label: 'Open in', emphasis: 'Explorer', onSelect: () => revealInExplorer(cwd) },
+              { label: 'Open in', emphasis: 'VS Code', onSelect: () => openInEditor(cwd) },
             ]}
           />
         )}

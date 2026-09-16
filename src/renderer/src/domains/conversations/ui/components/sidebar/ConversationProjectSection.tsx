@@ -2,7 +2,7 @@ import { useState, type DragEvent, type KeyboardEvent } from 'react';
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
 import type { ActivityState } from '@renderer/app/stores/sessionActivityStore';
 import { selectIsSidebarDragging, useSidebarDragStore } from '@renderer/app/stores/sidebarDragStore';
-import { ActionMenu, type ActionMenuItem } from '@renderer/shared/ui/components/ActionMenu';
+import { ActionMenu, type ActionMenuEntry, type ActionMenuItem } from '@renderer/shared/ui/components/ActionMenu';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
 import { applyDragGhost, placementFromPointer, PLACEMENT_LINE_CLASS, type DropPlacement } from '@renderer/shared/utils/dragGhost';
 import { useFolderActions } from '../../../hooks/useFolderActions';
@@ -105,12 +105,13 @@ export function ConversationProjectSection({
     }
   };
 
-  const menuItems: ActionMenuItem[] = [
-    { label: hasBoard ? 'Go to board' : 'Open as board', onSelect: () => onOpenProjectBoard(project) },
-    { label: 'Open in Explorer', onSelect: () => revealInExplorer(project.cwd) },
-    { label: 'Open in VS Code', onSelect: () => openInEditor(project.cwd) },
+  const menuEntries: ActionMenuEntry[] = [
+    { label: hasBoard ? 'Go to' : 'Open as', emphasis: 'Board', onSelect: () => onOpenProjectBoard(project) },
+    { label: 'Open in', emphasis: 'Explorer', onSelect: () => revealInExplorer(project.cwd) },
+    { label: 'Open in', emphasis: 'VS Code', onSelect: () => openInEditor(project.cwd) },
+    ...(moveTargets.length > 0 ? ['divider' as const, { label: 'Move to', items: moveTargets }] : []),
+    'divider',
     { label: 'Rename', onSelect: () => setIsRenaming(true) },
-    ...moveTargets,
     { label: isArchived ? 'Restore' : 'Archive', onSelect: () => onSetArchived(project.cwd, !isArchived) },
   ];
 
@@ -184,7 +185,7 @@ export function ConversationProjectSection({
         >
           +
         </button>
-        <ActionMenu label={`${displayName} actions`} items={menuItems} />
+        <ActionMenu label={`${displayName} actions`} entries={menuEntries} />
       </header>
       {isOpen && (
         <div className="flex flex-col pb-1">
