@@ -61,6 +61,7 @@ const shellTileSchema = tileBaseSchema.extend({
 const notesTileSchema = tileBaseSchema.extend({
   kind: z.literal('notes'),
   text: z.string(),
+  cwd: z.string().min(1).optional(),
 });
 
 // PITFALL: workspace files written before tile kinds existed have no "kind"; they are all Claude tiles.

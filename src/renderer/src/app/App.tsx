@@ -73,7 +73,11 @@ export function App() {
 
   const createBoard = (): void => selectBoard(editor.createBoard({ name: `${DEFAULT_BOARD_NAME} ${boards.length + 1}` }));
 
-  const addNotes = (): void => editor.addTile(ensureActiveBoard(), { kind: 'notes', text: '' });
+  const addNotes = (): void => {
+    const focusedTile = activeBoard?.tiles.find((tile) => tile.id === focusedTileId);
+    const cwd = (focusedTile && tileCwd(focusedTile)) ?? activeBoard?.projectCwd;
+    editor.addTile(ensureActiveBoard(), { kind: 'notes', text: '', cwd });
+  };
 
   const startSessionNearFocus = async (): Promise<void> => {
     const focusedTile = activeBoard?.tiles.find((tile) => tile.id === focusedTileId);

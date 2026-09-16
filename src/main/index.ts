@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, Menu } from 'electron';
 import { createServiceContainer } from '@main/infrastructure/di/ServiceContainer';
 import { registerConversationHandlers } from '@main/ipc/registerConversationHandlers';
 import { registerProjectHandlers } from '@main/ipc/registerProjectHandlers';
@@ -34,6 +34,7 @@ function createMainWindow(): BrowserWindow {
 }
 
 app.setAppUserModelId(appIdentity.appUserModelId);
+Menu.setApplicationMenu(null);
 
 const isPrimaryInstance = app.requestSingleInstanceLock();
 if (!isPrimaryInstance) app.quit();

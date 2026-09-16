@@ -63,7 +63,7 @@ const updateTile = (workspace: Workspace, boardId: string, tileId: string, trans
     tiles: board.tiles.map((tile) => (tile.id === tileId ? transform(tile) : tile)),
   }));
 
-const seedCwd = (seed: TileSeed): string | undefined => (seed.kind === 'notes' ? undefined : seed.cwd);
+const seedCwd = (seed: TileSeed): string | undefined => seed.cwd;
 
 const insertionIndex = (tiles: Tile[], seed: TileSeed, afterTileId: string | undefined): number => {
   const anchorIndex = afterTileId ? tiles.findIndex((tile) => tile.id === afterTileId) : -1;

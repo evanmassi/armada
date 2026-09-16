@@ -5,14 +5,13 @@ import { DragSplitter } from '@renderer/shared/ui/components/DragSplitter';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
 import { useSeamDrag } from '../../../hooks/useSeamDrag';
 import { useTilePresentation } from '../../../hooks/useTilePresentation';
-import { computeLanes, NOTES_LANE_KEY, type Lane } from '../../../model/lanes';
+import { computeLanes, type Lane } from '../../../model/lanes';
 import { BoardTileFrame, type ArrowDirection } from '../grid/BoardTileFrame';
 import { BoardLaneHeader, LANE_DRAG_MIME } from './BoardLaneHeader';
 
 const KEYBOARD_HINT = 'Up and down reorder within the lane. Shift with up or down resizes the tile, shift with left or right resizes the lane.';
 const WEIGHT_STEP = 1.15;
 const TILE_DRAG_MIME = 'application/x-armada-tile';
-const NOTES_LANE_NAME = 'notes';
 
 interface BoardLanesPanelProps {
   board: Board;
@@ -34,8 +33,8 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell }: Bo
   const [dropTargetLaneKey, setDropTargetLaneKey] = useState<string>();
 
   const lanes = computeLanes(board);
-  const laneName = (lane: Lane): string => (lane.key === NOTES_LANE_KEY ? NOTES_LANE_NAME : nameOf(lane.key));
-  const laneAccent = (lane: Lane): string => accentFor(lane.key === NOTES_LANE_KEY ? undefined : lane.key);
+  const laneName = (lane: Lane): string => nameOf(lane.key);
+  const laneAccent = (lane: Lane): string => accentFor(lane.key);
   const tileWeightOf = (tile: Tile): number => draftTileWeights[tile.id] ?? tile.weight;
   const laneWeightOf = (lane: Lane): number => draftLaneWeights[lane.key] ?? lane.weight;
 
@@ -145,6 +144,7 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell }: Bo
               accentColor={laneAccent(lane)}
               isDropTarget={dropTargetLaneKey === lane.key}
               onToggleCollapsed={() => editor.toggleLaneCollapsed(board.id, lane.key)}
+              onAddNotes={() => editor.addTile(board.id, { kind: 'notes', text: '', cwd: lane.key })}
               onDragOver={(event) => handleLaneDragOver(lane, event)}
               onDragLeave={() => setDropTargetLaneKey((current) => (current === lane.key ? undefined : current))}
               onDrop={(event) => handleLaneDrop(lane, event)}

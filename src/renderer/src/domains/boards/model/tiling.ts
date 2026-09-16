@@ -1,4 +1,5 @@
 import type { Board, Tile } from '@shared/workspace/workspaceSchemas';
+import { lanedTiles } from './lanes';
 
 export interface TilingRow {
   tiles: Tile[];
@@ -22,7 +23,7 @@ export const normalizeRowWeights = (rowWeights: number[], rowCount: number): num
   rowWeights.length === rowCount ? rowWeights : Array.from({ length: rowCount }, () => 1);
 
 export const computeTiling = (board: Board): TilingRow[] => {
-  const rows = chunkTilesIntoRows(board.tiles);
+  const rows = chunkTilesIntoRows(lanedTiles(board));
   const weights = normalizeRowWeights(board.rowWeights, rows.length);
   return rows.map((tiles, index) => ({ tiles, weight: weights[index]! }));
 };

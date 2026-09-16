@@ -13,12 +13,13 @@ interface BoardLaneHeaderProps {
   accentColor: string;
   isDropTarget: boolean;
   onToggleCollapsed(): void;
+  onAddNotes(): void;
   onDragOver(event: DragEvent<HTMLElement>): void;
   onDrop(event: DragEvent<HTMLElement>): void;
   onDragLeave(): void;
 }
 
-export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggleCollapsed, onDragOver, onDrop, onDragLeave }: BoardLaneHeaderProps) {
+export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggleCollapsed, onAddNotes, onDragOver, onDrop, onDragLeave }: BoardLaneHeaderProps) {
   const activities = useSessionActivityStore(useShallow((state) => lane.tiles.map((tile) => state.byTileId[tile.id]?.state)));
 
   const handleDragStart = (event: DragEvent<HTMLElement>): void => {
@@ -54,6 +55,11 @@ export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggl
         {activities.map((activity, index) => (activity ? <ActivityDot key={index} state={activity} /> : null))}
       </span>
       {!lane.isCollapsed && <span className="text-edge-strong">{lane.tiles.length}</span>}
+      {!lane.isCollapsed && (
+        <button type="button" className="px-1 hover:text-white" onClick={onAddNotes} title="Add notes to this lane" aria-label={`Add notes to ${name}`}>
+          +
+        </button>
+      )}
     </header>
   );
 }

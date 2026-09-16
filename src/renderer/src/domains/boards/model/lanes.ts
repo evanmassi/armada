@@ -1,7 +1,7 @@
-import type { Board, Tile } from '@shared/workspace/workspaceSchemas';
-import { tileCwd } from './boardQueries';
+import type { Board, NotesTile, Tile } from '@shared/workspace/workspaceSchemas';
+import { isBoardWideNote, tileCwd } from './boardQueries';
 
-export const NOTES_LANE_KEY = '<notes>';
+export const NOTES_STRIP_KEY = '<notes>';
 
 export interface Lane {
   key: string;
@@ -10,18 +10,22 @@ export interface Lane {
   isCollapsed: boolean;
 }
 
-export const laneKeyOf = (tile: Tile): string => tileCwd(tile) ?? NOTES_LANE_KEY;
+export const lanedTiles = (board: Board): Tile[] => board.tiles.filter((tile) => !isBoardWideNote(tile));
 
-export const laneKeysInAppearanceOrder = (tiles: Tile[]): string[] => [...new Set(tiles.map(laneKeyOf))];
+export const boardWideNotes = (board: Board): NotesTile[] =>
+  board.tiles.filter((tile): tile is NotesTile => isBoardWideNote(tile));
+
+export const laneKeysInAppearanceOrder = (tiles: Tile[]): string[] => [...new Set(tiles.flatMap((tile) => tileCwd(tile) ?? []))];
 
 export const hasMultipleLanes = (board: Board): boolean => laneKeysInAppearanceOrder(board.tiles).length > 1;
 
 export function computeLanes(board: Board): Lane[] {
-  const present = laneKeysInAppearanceOrder(board.tiles);
+  const tiles = lanedTiles(board);
+  const present = laneKeysInAppearanceOrder(tiles);
   const ordered = [...board.laneOrder.filter((key) => present.includes(key)), ...present.filter((key) => !board.laneOrder.includes(key))];
   return ordered.map((key) => ({
     key,
-    tiles: board.tiles.filter((tile) => laneKeyOf(tile) === key),
+    tiles: tiles.filter((tile) => tileCwd(tile) === key),
     weight: board.lanes[key]?.weight ?? 1,
     isCollapsed: board.lanes[key]?.isCollapsed ?? false,
   }));

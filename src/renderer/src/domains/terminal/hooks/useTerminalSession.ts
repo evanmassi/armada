@@ -10,6 +10,7 @@ import { useSessionActivityStore, type ActivityState } from '@renderer/app/store
 import { useTerminalFontSize } from '@renderer/domains/workspace';
 import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
 import { getErrorMessage } from '@renderer/shared/utils/getErrorMessage';
+import { handleClipboardKey, handleContextMenu } from '../model/terminalClipboard';
 
 const TERMINAL_THEME = { background: '#080a0f', foreground: '#d7dbe2', cursor: '#8fd3e8', selectionBackground: '#8fd3e844' };
 const TERMINAL_FONT = '"Cascadia Code", Consolas, monospace';
@@ -44,11 +45,13 @@ export function useTerminalSession(containerRef: RefObject<HTMLDivElement | null
     const terminal = new Terminal({ theme: TERMINAL_THEME, fontFamily: TERMINAL_FONT, fontSize: initialFontSizeRef.current, cursorBlink: true });
     const fit = new FitAddon();
     terminal.loadAddon(fit);
-    terminal.attachCustomKeyEventHandler((event) => !isGlobalShortcut(event));
+    terminal.attachCustomKeyEventHandler((event) => !isGlobalShortcut(event) && !handleClipboardKey(terminal, event));
     terminal.open(container);
     fit.fit();
     instanceRef.current = { terminal, fit };
     terminal.textarea?.addEventListener('focus', () => useBoardSelectionStore.getState().setFocusedTile(tileId));
+    const onContextMenu = (event: MouseEvent): void => handleContextMenu(terminal, event);
+    container.addEventListener('contextmenu', onContextMenu);
 
     const { setActivity, clearActivity } = useSessionActivityStore.getState();
     let activity: ActivityState = 'idle';
@@ -117,6 +120,7 @@ export function useTerminalSession(containerRef: RefObject<HTMLDivElement | null
       window.clearTimeout(refitTimer);
       window.clearTimeout(settleTimer);
       resizeObserver.disconnect();
+      container.removeEventListener('contextmenu', onContextMenu);
       subscriptions.forEach((unsubscribe) => unsubscribe());
       if (terminalId) armadaClient.sessions.close({ terminalId });
       clearActivity(tileId);

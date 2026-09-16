@@ -1,6 +1,8 @@
 import type { ClaudeTile, Tile, Workspace } from '@shared/workspace/workspaceSchemas';
 
-export const tileCwd = (tile: Tile): string | undefined => (tile.kind === 'notes' ? undefined : tile.cwd);
+export const tileCwd = (tile: Tile): string | undefined => tile.cwd;
+
+export const isBoardWideNote = (tile: Tile): boolean => tile.kind === 'notes' && tile.cwd === undefined;
 
 export interface TileLocation {
   boardId: string;
