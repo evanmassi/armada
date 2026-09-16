@@ -16,6 +16,8 @@ const board = (tiles: Tile[], rowWeights: number[] = []): Board => ({
   name: 'Board',
   layoutMode: 'auto',
   rowWeights,
+  lanes: {},
+  laneOrder: [],
   tiles,
 });
 

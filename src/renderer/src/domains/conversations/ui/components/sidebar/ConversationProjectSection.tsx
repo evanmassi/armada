@@ -22,9 +22,9 @@ interface ConversationProjectSectionProps {
   archivedSessionIds: string[];
   moveTargets: ActionMenuItem[];
   isPinned(sessionId: string): boolean;
-  onOpenConversation(conversation: Conversation): void;
+  onOpenConversation(conversation: Conversation, keepOnCurrentBoard: boolean): void;
   onOpenProjectBoard(project: Project): void;
-  onStartSession(cwd: string): void;
+  onStartSession(cwd: string, keepOnCurrentBoard: boolean): void;
   onTogglePin(sessionId: string): void;
   onSetConversationArchived(sessionId: string, isArchived: boolean): void;
   onRename(cwd: string, alias: string | undefined): void;
@@ -169,7 +169,7 @@ export function ConversationProjectSection({
         <button
           type="button"
           className="rounded px-1.5 text-muted hover:bg-edge hover:text-fg"
-          onClick={() => onStartSession(project.cwd)}
+          onClick={(event) => onStartSession(project.cwd, event.shiftKey)}
           title="New session in this project"
           aria-label="New session in this project"
         >

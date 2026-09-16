@@ -72,12 +72,19 @@ export const tileSchema = z.preprocess(
   z.discriminatedUnion('kind', [claudeTileSchema, shellTileSchema, notesTileSchema]),
 );
 
+export const laneStateSchema = z.object({
+  weight: z.number().positive().default(1),
+  isCollapsed: z.boolean().default(false),
+});
+
 export const boardSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1),
   projectCwd: z.string().min(1).optional(),
   layoutMode: layoutModeSchema.default('auto'),
   rowWeights: z.array(z.number().positive()).default([]),
+  lanes: z.record(z.string().min(1), laneStateSchema).default({}),
+  laneOrder: z.array(z.string().min(1)).default([]),
   tiles: z.array(tileSchema),
 });
 
@@ -118,6 +125,7 @@ export type ShellTile = z.infer<typeof shellTileSchema>;
 export type NotesTile = z.infer<typeof notesTileSchema>;
 export type Tile = z.infer<typeof tileSchema>;
 export type TileKind = Tile['kind'];
+export type LaneState = z.infer<typeof laneStateSchema>;
 export type Board = z.infer<typeof boardSchema>;
 export type Preferences = z.infer<typeof preferencesSchema>;
 export type SidebarGroup = z.infer<typeof sidebarGroupSchema>;

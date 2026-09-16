@@ -22,9 +22,9 @@ const MIN_WIDTH_PX = 200;
 const MAX_WIDTH_PX = 640;
 
 interface ConversationSidebarPanelProps {
-  onOpenConversation(conversation: Conversation): void;
+  onOpenConversation(conversation: Conversation, keepOnCurrentBoard: boolean): void;
   onOpenProjectBoard(project: Project): void;
-  onStartSession(cwd: string): void;
+  onStartSession(cwd: string, keepOnCurrentBoard: boolean): void;
 }
 
 export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoard, onStartSession }: ConversationSidebarPanelProps) {
@@ -52,7 +52,7 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
 
   const startSessionInPickedFolder = async (): Promise<void> => {
     const cwd = await armadaClient.projects.pickFolder();
-    if (cwd) onStartSession(cwd);
+    if (cwd) onStartSession(cwd, true);
   };
 
   const sortMenuItems = [

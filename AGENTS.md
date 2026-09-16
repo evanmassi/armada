@@ -125,10 +125,12 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
 - `boards` owns Tile placement, size, and order. Tiles come in three kinds (`claude`, `shell`, `notes`), a
   discriminated union in the schema; files written before kinds existed default to `claude`. A Claude tile references
   a session by id and nothing else; it asks `conversations` for its title and accent. New tiles insert after the
-  last tile from the same project. Two layout modes per board: `auto` tiles the visible area from tile
-  order plus weights (`model/tiling.ts`, rows of 1/2/3 columns by count, drag-to-swap, splitters adjust weights) and
-  `free` is a scrolling grid with explicit x/y/w/h (`react-grid-layout`). Reflow in free mode rewrites grid
-  positions from the tiling. New tiles append; the tiling decides where they land.
+  last tile from the same project. Two layout modes per board: `auto` and `free`. In `auto`, a
+  single-project board tiles by count (`model/tiling.ts`, rows of 1/2/3 columns, drag-to-swap, splitters adjust
+  weights); a board spanning more than one project renders lanes (`model/lanes.ts`), one column per project keyed
+  by cwd with tiles stacked inside, lane order, width, and collapse saved on the board. `free` is a scrolling grid
+  with explicit x/y/w/h (`react-grid-layout`); reflow rewrites its positions from the tiling. Opening a
+  conversation while another project's board is active routes it to that project's own board unless shift is held.
 - `terminal` renders one pty session, Claude or plain shell. It does not know which board it sits on. It owns the
   activity heuristic and lets global shortcuts (`app/keyboardShortcuts.ts`) bubble past xterm.
 

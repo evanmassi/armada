@@ -11,9 +11,12 @@ import {
   nudgeTile,
   reflowFreeLayout,
   scaleTileWeight,
+  setLaneOrder,
+  setLaneWeights,
   setNotesText,
   setTileWeights,
   swapTiles,
+  toggleLaneCollapsed,
 } from './boardEdits';
 
 const tile = (id: string, x: number, y: number, w: number, h: number, weight = 1, cwd = 'C:\\dev'): Tile => ({
@@ -26,7 +29,7 @@ const tile = (id: string, x: number, y: number, w: number, h: number, weight = 1
 });
 
 const workspaceWith = (...tiles: Tile[]): Workspace => ({
-  boards: [{ id: 'board', name: 'Board', layoutMode: 'auto', rowWeights: [], tiles }],
+  boards: [{ id: 'board', name: 'Board', layoutMode: 'auto', rowWeights: [], lanes: {}, laneOrder: [], tiles }],
   projectColors: { 'C:\\dev': 'red' },
   pinnedSessionIds: [],
   preferences: { terminalFontSize: 13 },
@@ -111,6 +114,16 @@ describe('weights', () => {
 
   it('scales a single tile weight', () => {
     expect(scaleTileWeight(workspaceWith(tile('a', 0, 0, 4, 6, 2)), 'board', 'a', 1.5).boards[0]!.tiles[0]!.weight).toBe(3);
+  });
+});
+
+describe('lanes', () => {
+  it('stores lane weights, collapse state, and order per board', () => {
+    const start = workspaceWith(tile('a', 0, 0, 4, 6));
+    const weighted = setLaneWeights(start, 'board', { 'C:\\dev': 2.5, 'C:\\x': 0.1 });
+    expect(weighted.boards[0]!.lanes).toEqual({ 'C:\\dev': { weight: 2.5, isCollapsed: false }, 'C:\\x': { weight: 0.25, isCollapsed: false } });
+    expect(toggleLaneCollapsed(weighted, 'board', 'C:\\dev').boards[0]!.lanes['C:\\dev']).toEqual({ weight: 2.5, isCollapsed: true });
+    expect(setLaneOrder(start, 'board', ['C:\\x', 'C:\\dev']).boards[0]!.laneOrder).toEqual(['C:\\x', 'C:\\dev']);
   });
 });
 

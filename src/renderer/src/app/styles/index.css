@@ -93,6 +93,20 @@ body,
   transition: filter 200ms;
 }
 
+.lane-titlebar {
+  --bar-accent-soft: color-mix(in srgb, var(--tile-accent) 26%, transparent);
+  --bar-accent-glint: color-mix(in srgb, var(--tile-accent) 55%, transparent);
+  background-color: var(--color-panel);
+  background-image:
+    linear-gradient(90deg, var(--bar-accent-glint), transparent 60%),
+    linear-gradient(90deg, var(--bar-accent-soft), color-mix(in srgb, var(--tile-accent) 8%, transparent) 30%, transparent 55%);
+  background-repeat: no-repeat;
+  background-size:
+    100% 1px,
+    100% 100%;
+  background-position: top left;
+}
+
 .tile-focused .tile-titlebar {
   filter: saturate(1.25) brightness(1.15);
 }

@@ -1,13 +1,13 @@
 import { useRef, useState, type DragEvent } from 'react';
 import type { Board, Tile } from '@shared/workspace/workspaceSchemas';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
+import { useSeamDrag, type SeamDrag } from '../../../hooks/useSeamDrag';
 import { useTilePresentation } from '../../../hooks/useTilePresentation';
 import { computeTiling } from '../../../model/tiling';
 import { BoardTileFrame, type ArrowDirection } from '../grid/BoardTileFrame';
 import { DragSplitter } from '@renderer/shared/ui/components/DragSplitter';
 
 const KEYBOARD_HINT = 'Arrow keys reorder, shift with left or right resizes.';
-const MIN_SHARE = 0.15;
 const WEIGHT_STEP = 1.15;
 const DRAG_MIME = 'application/x-armada-tile';
 
@@ -17,47 +17,24 @@ interface BoardTilingPanelProps {
   onOpenShell(cwd: string, afterTileId: string): void;
 }
 
-interface SeamDrag {
-  firstPx: number;
-  secondPx: number;
-  totalWeight: number;
-  apply(firstWeight: number, secondWeight: number): void;
-  commit(): void;
-}
-
-const clampShare = (share: number): number => Math.min(1 - MIN_SHARE, Math.max(MIN_SHARE, share));
-
 export function BoardTilingPanel({ board, shouldMountTerminals, onOpenShell }: BoardTilingPanelProps) {
   const presentationOf = useTilePresentation();
   const editor = useBoardsEditor();
   const tileElements = useRef(new Map<string, HTMLDivElement>());
   const rowElements = useRef(new Map<number, HTMLDivElement>());
-  const seamDrag = useRef<SeamDrag | undefined>(undefined);
+  const seam = useSeamDrag();
   const [draftTileWeights, setDraftTileWeights] = useState<Record<string, number>>({});
   const [draftRowWeights, setDraftRowWeights] = useState<number[]>();
-  const [isDraggingSeam, setIsDraggingSeam] = useState(false);
   const [dropTargetId, setDropTargetId] = useState<string>();
 
   const rows = computeTiling(board);
   const rowWeights = draftRowWeights ?? rows.map((row) => row.weight);
   const weightOf = (tile: Tile): number => draftTileWeights[tile.id] ?? tile.weight;
 
-  const beginSeamDrag = (drag: SeamDrag): void => {
-    seamDrag.current = drag;
-    setIsDraggingSeam(true);
-  };
-
-  const moveSeam = (deltaPx: number): void => {
-    const drag = seamDrag.current;
-    if (!drag) return;
-    const share = clampShare((drag.firstPx + deltaPx) / (drag.firstPx + drag.secondPx));
-    drag.apply(share * drag.totalWeight, (1 - share) * drag.totalWeight);
-  };
-
+  const beginSeamDrag = (drag: SeamDrag): void => seam.begin(drag);
+  const moveSeam = seam.move;
   const endSeamDrag = (): void => {
-    seamDrag.current?.commit();
-    seamDrag.current = undefined;
-    setIsDraggingSeam(false);
+    seam.end();
     setDraftTileWeights({});
     setDraftRowWeights(undefined);
   };
@@ -118,7 +95,7 @@ export function BoardTilingPanel({ board, shouldMountTerminals, onOpenShell }: B
   };
 
   return (
-    <div className={`flex h-full flex-col gap-1 p-2 ${isDraggingSeam ? 'select-none [&_*]:transition-none' : ''}`}>
+    <div className={`flex h-full flex-col gap-1 p-2 ${seam.isDragging ? 'select-none [&_*]:transition-none' : ''}`}>
       {rows.map((row, rowIndex) => (
         <div key={rowIndex} className="contents">
           {rowIndex > 0 && (

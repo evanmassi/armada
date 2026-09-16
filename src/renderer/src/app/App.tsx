@@ -31,19 +31,28 @@ export function App() {
 
   const ensureActiveBoard = (): string => resolvedActiveBoardId ?? editor.createBoard({ name: DEFAULT_BOARD_NAME });
 
-  const openConversation = (conversation: Conversation): void => {
+  const boardFor = (cwd: string, keepOnCurrentBoard: boolean): string => {
+    const isForeignProjectBoard = activeBoard?.projectCwd !== undefined && activeBoard.projectCwd !== cwd;
+    if (keepOnCurrentBoard || !isForeignProjectBoard) return ensureActiveBoard();
+    const own = boards.find((board) => board.projectCwd === cwd);
+    const boardId = own?.id ?? editor.createBoard({ name: nameOf(cwd), projectCwd: cwd });
+    selectBoard(boardId);
+    return boardId;
+  };
+
+  const openConversation = (conversation: Conversation, keepOnCurrentBoard = false): void => {
     const existing = workspace && findClaudeTile(workspace, conversation.sessionId);
     if (existing) {
       focusTile(existing.boardId, existing.tile.id);
       return;
     }
     ensureColor(conversation.cwd);
-    editor.addTile(ensureActiveBoard(), { kind: 'claude', sessionId: conversation.sessionId, cwd: conversation.cwd });
+    editor.addTile(boardFor(conversation.cwd, keepOnCurrentBoard), { kind: 'claude', sessionId: conversation.sessionId, cwd: conversation.cwd });
   };
 
-  const startSession = (cwd: string, afterTileId?: string): void => {
+  const startSession = (cwd: string, keepOnCurrentBoard = false, afterTileId?: string): void => {
     ensureColor(cwd);
-    editor.addTile(ensureActiveBoard(), { kind: 'claude', sessionId: crypto.randomUUID(), cwd }, afterTileId);
+    editor.addTile(boardFor(cwd, keepOnCurrentBoard), { kind: 'claude', sessionId: crypto.randomUUID(), cwd }, afterTileId);
   };
 
   const openShell = (cwd: string, afterTileId: string): void =>
@@ -70,11 +79,11 @@ export function App() {
     const focusedTile = activeBoard?.tiles.find((tile) => tile.id === focusedTileId);
     const cwd = (focusedTile && tileCwd(focusedTile)) ?? activeBoard?.projectCwd ?? activeBoard?.tiles.map(tileCwd).find(Boolean);
     if (cwd) {
-      startSession(cwd, focusedTile?.id);
+      startSession(cwd, true, focusedTile?.id);
       return;
     }
     const picked = await armadaClient.projects.pickFolder();
-    if (picked) startSession(picked);
+    if (picked) startSession(picked, true);
   };
 
   useEffect(() => {

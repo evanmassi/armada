@@ -1,4 +1,4 @@
-import type { Board, LayoutMode, Tile, TileLayout, Workspace } from '@shared/workspace/workspaceSchemas';
+import type { Board, LaneState, LayoutMode, Tile, TileLayout, Workspace } from '@shared/workspace/workspaceSchemas';
 import { tileCwd } from './boardQueries';
 import { tilingToCells } from './tiling';
 
@@ -88,6 +88,8 @@ export const createBoard = ({ name, projectCwd, tiles = [] }: BoardSeed): Board 
     projectCwd,
     layoutMode: 'auto',
     rowWeights: [],
+    lanes: {},
+    laneOrder: [],
     tiles: [],
   });
 
@@ -140,6 +142,25 @@ export const setTileWeights = (workspace: Workspace, boardId: string, weights: R
 
 export const scaleTileWeight = (workspace: Workspace, boardId: string, tileId: string, factor: number): Workspace =>
   updateTile(workspace, boardId, tileId, (tile) => ({ ...tile, weight: clampWeight(tile.weight * factor) }));
+
+const updateLane = (board: Board, key: string, transform: (lane: LaneState) => LaneState): Board => ({
+  ...board,
+  lanes: { ...board.lanes, [key]: transform(board.lanes[key] ?? { weight: 1, isCollapsed: false }) },
+});
+
+export const setLaneWeights = (workspace: Workspace, boardId: string, weights: Record<string, number>): Workspace =>
+  updateBoard(workspace, boardId, (board) =>
+    Object.entries(weights).reduce((current, [key, weight]) => updateLane(current, key, (lane) => ({ ...lane, weight: clampWeight(weight) })), board),
+  );
+
+export const scaleLaneWeight = (workspace: Workspace, boardId: string, key: string, factor: number): Workspace =>
+  updateBoard(workspace, boardId, (board) => updateLane(board, key, (lane) => ({ ...lane, weight: clampWeight(lane.weight * factor) })));
+
+export const toggleLaneCollapsed = (workspace: Workspace, boardId: string, key: string): Workspace =>
+  updateBoard(workspace, boardId, (board) => updateLane(board, key, (lane) => ({ ...lane, isCollapsed: !lane.isCollapsed })));
+
+export const setLaneOrder = (workspace: Workspace, boardId: string, laneOrder: string[]): Workspace =>
+  updateBoard(workspace, boardId, (board) => ({ ...board, laneOrder }));
 
 export const setRowWeights = (workspace: Workspace, boardId: string, rowWeights: number[]): Workspace =>
   updateBoard(workspace, boardId, (board) => ({ ...board, rowWeights: rowWeights.map(clampWeight) }));

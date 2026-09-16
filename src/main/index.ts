@@ -35,9 +35,11 @@ function createMainWindow(): BrowserWindow {
 
 app.setAppUserModelId(appIdentity.appUserModelId);
 
-if (!app.requestSingleInstanceLock()) app.quit();
+const isPrimaryInstance = app.requestSingleInstanceLock();
+if (!isPrimaryInstance) app.quit();
 
 app.whenReady().then(() => {
+  if (!isPrimaryInstance) return;
   const container = createServiceContainer();
   const mainWindow = createMainWindow();
 
