@@ -114,7 +114,12 @@ export function SidebarGroupHeader({
         >
           <span>
             {isProjectTarget ? (projectDropLabel ?? `Move to ${name}`) : name}
-            {!isProjectTarget && <span className="ml-2 text-edge-strong">{projectCount}</span>}
+            {!isProjectTarget && (
+              <>
+                <span className="mx-2 text-muted" aria-hidden="true">·</span>
+                <span className="text-fg">{projectCount}</span>
+              </>
+            )}
           </span>
         </button>
       )}

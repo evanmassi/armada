@@ -163,7 +163,8 @@ export function ConversationProjectSection({
             title={`${project.cwd}\nOpen as board. F2 renames. Ctrl+Up/Down moves.`}
           >
             <span className="truncate font-ui text-[15px] font-semibold tracking-wide">{displayName}</span>
-            <span className="readout text-[10px] text-edge-strong">{active.length}</span>
+            <span className="shrink-0 text-muted" aria-hidden="true">·</span>
+            <span className="readout shrink-0 text-[12px] text-fg">{active.length}</span>
           </button>
         )}
         <button
