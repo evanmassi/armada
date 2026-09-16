@@ -15,13 +15,20 @@ export function BoardNotesTile({ boardId, tile }: BoardNotesTileProps) {
   const setFocusedTile = useBoardSelectionStore((state) => state.setFocusedTile);
   const [draft, setDraft] = useState(tile.text);
   const saveTimer = useRef<number | undefined>(undefined);
+  const flushRef = useRef<() => void>(() => undefined);
 
-  useEffect(() => () => window.clearTimeout(saveTimer.current), []);
+  useEffect(() => () => flushRef.current(), []);
 
   const handleChange = (text: string): void => {
     setDraft(text);
     window.clearTimeout(saveTimer.current);
-    saveTimer.current = window.setTimeout(() => editor.setNotesText(boardId, tile.id, text), SAVE_DEBOUNCE_MS);
+    const save = (): void => {
+      window.clearTimeout(saveTimer.current);
+      flushRef.current = () => undefined;
+      editor.setNotesText(boardId, tile.id, text);
+    };
+    flushRef.current = save;
+    saveTimer.current = window.setTimeout(save, SAVE_DEBOUNCE_MS);
   };
 
   return (

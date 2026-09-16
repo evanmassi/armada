@@ -105,6 +105,13 @@ describe('swapTiles and moveTile', () => {
     expect(tileIds(moveTile(three, 'board', 'b', 1))).toEqual(['a', 'c', 'b']);
     expect(tileIds(moveTile(three, 'board', 'a', -1))).toEqual(['a', 'b', 'c']);
   });
+
+  it('steps past a board-wide note that is not part of the layout', () => {
+    const withNote = addTile(workspaceWith(tile('a', 0, 0, 4, 6), tile('b', 4, 0, 4, 6)), 'board', { kind: 'notes', text: '' });
+    const noteId = withNote.boards[0]!.tiles[2]!.id;
+    expect(tileIds(moveTile(withNote, 'board', 'a', 1))).toEqual(['b', 'a', noteId]);
+    expect(tileIds(moveTile(withNote, 'board', 'b', 1))).toEqual(['a', 'b', noteId]);
+  });
 });
 
 describe('weights', () => {

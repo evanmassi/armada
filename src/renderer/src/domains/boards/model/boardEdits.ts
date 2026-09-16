@@ -1,5 +1,6 @@
 import type { Board, LaneState, LayoutMode, Tile, TileLayout, Workspace } from '@shared/workspace/workspaceSchemas';
 import { tileCwd } from './boardQueries';
+import { lanedTiles } from './lanes';
 import { tilingToCells } from './tiling';
 
 export const GRID_COLUMNS = 12;
@@ -121,8 +122,11 @@ export const rebindClaudeTile = (workspace: Workspace, boardId: string, tileId: 
   return updateTile(workspace, boardId, tileId, (current) => ({ ...current, sessionId }));
 };
 
-export const setNotesText = (workspace: Workspace, boardId: string, tileId: string, text: string): Workspace =>
-  updateTile(workspace, boardId, tileId, (tile) => (tile.kind === 'notes' ? { ...tile, text } : tile));
+export const setNotesText = (workspace: Workspace, boardId: string, tileId: string, text: string): Workspace => {
+  const tile = workspace.boards.find((board) => board.id === boardId)?.tiles.find((item) => item.id === tileId);
+  if (tile?.kind !== 'notes' || tile.text === text) return workspace;
+  return updateTile(workspace, boardId, tileId, (current) => ({ ...current, text }));
+};
 
 export const swapTiles = (workspace: Workspace, boardId: string, tileIdA: string, tileIdB: string): Workspace =>
   updateBoard(workspace, boardId, (board) => {
@@ -134,9 +138,11 @@ export const swapTiles = (workspace: Workspace, boardId: string, tileIdA: string
     return { ...board, tiles };
   });
 
+// PITFALL: neighbors come from the laid-out tiles, so a board-wide note in the strip is never the swap partner.
 export const moveTile = (workspace: Workspace, boardId: string, tileId: string, step: -1 | 1): Workspace => {
   const board = workspace.boards.find((item) => item.id === boardId);
-  const neighbor = board?.tiles[board.tiles.findIndex((tile) => tile.id === tileId) + step];
+  const laidOut = board ? lanedTiles(board) : [];
+  const neighbor = laidOut[laidOut.findIndex((tile) => tile.id === tileId) + step];
   return neighbor ? swapTiles(workspace, boardId, tileId, neighbor.id) : workspace;
 };
 

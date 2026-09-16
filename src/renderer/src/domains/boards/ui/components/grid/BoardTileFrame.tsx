@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type DragEvent, type KeyboardEvent } from
 import type { Tile } from '@shared/workspace/workspaceSchemas';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useSessionActivityStore, type ActivityState } from '@renderer/app/stores/sessionActivityStore';
-import { TerminalSessionTile } from '@renderer/domains/terminal';
+import { disposeLiveTerminal, TerminalSessionTile } from '@renderer/domains/terminal';
 import { ActivityDot } from '@renderer/shared/ui/components/ActivityDot';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
 import { BoardNotesTile } from '../notes/BoardNotesTile';
@@ -69,6 +69,10 @@ export function BoardTileFrame({
   const setFocusedTile = useBoardSelectionStore((state) => state.setFocusedTile);
   const activity = useSessionActivityStore((state) => state.byTileId[tile.id]?.state);
   const [launchCount, setLaunchCount] = useState(0);
+  const relaunch = (): void => {
+    disposeLiveTerminal(tile.id);
+    setLaunchCount((count) => count + 1);
+  };
 
   const handleHeaderKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const direction = ARROW_KEYS[event.key];
@@ -102,7 +106,7 @@ export function BoardTileFrame({
           {plateLabel(tile, activity)}
         </span>
         {activity === 'exited' && (
-          <button type="button" className="px-1 text-muted hover:text-fg" onClick={() => setLaunchCount((count) => count + 1)} title="Relaunch" aria-label="Relaunch session">
+          <button type="button" className="px-1 text-muted hover:text-fg" onClick={relaunch} title="Relaunch" aria-label="Relaunch session">
             ↻
           </button>
         )}

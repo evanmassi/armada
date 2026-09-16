@@ -17,7 +17,7 @@ export const useBoardSelectionStore = create<BoardSelectionState>((set) => ({
   openedBoardIds: [],
   focusedTileId: undefined,
   selectBoard: (boardId) =>
-    set((state) => ({ activeBoardId: boardId, openedBoardIds: withBoardOpened(state.openedBoardIds, boardId) })),
+    set((state) => ({ activeBoardId: boardId, openedBoardIds: withBoardOpened(state.openedBoardIds, boardId), focusedTileId: undefined })),
   focusTile: (boardId, tileId) =>
     set((state) => ({
       activeBoardId: boardId,

@@ -136,8 +136,12 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   that project's lane; one without is board-wide and renders in a collapsible strip on the right, outside any layout. `free` is a scrolling grid
   with explicit x/y/w/h (`react-grid-layout`); reflow rewrites its positions from the tiling. Opening a
   conversation while another project's board is active routes it to that project's own board unless shift is held.
-- `terminal` renders one pty session, Claude or plain shell. It does not know which board it sits on. It owns the
-  activity tracker (`model/activityTracker.ts`) and lets global shortcuts (`app/keyboardShortcuts.ts`) bubble past xterm.
+- `terminal` renders one pty session, Claude or plain shell. It does not know which board it sits on. The xterm
+  instance and its pty live in `model/liveTerminals.ts`, keyed by tile id and independent of the React tree: a tile
+  component attaches the existing terminal element on mount and detaches on unmount, so a layout change that
+  remounts the tile never restarts the process. `App` disposes terminals whose tile has left the workspace. It owns
+  the activity tracker (`model/activityTracker.ts`) and lets global shortcuts (`app/keyboardShortcuts.ts`) bubble
+  past xterm.
 
 ---
 

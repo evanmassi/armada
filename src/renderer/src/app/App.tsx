@@ -4,6 +4,7 @@ import { GLOBAL_SHORTCUTS, isGlobalShortcut } from '@renderer/app/keyboardShortc
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { BoardLayoutModeControls, BoardPanel, BoardSwitcherBar, findClaudeTile, tileCwd, useBoardsEditor } from '@renderer/domains/boards';
 import { ConversationSidebarPanel, useProjectColors, useProjectNames } from '@renderer/domains/conversations';
+import { disposeLiveTerminalsExcept } from '@renderer/domains/terminal';
 import { adjustTerminalFontSize, resetTerminalFontSize, useWorkspaceEditor, useWorkspaceQuery } from '@renderer/domains/workspace';
 import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
 import { NotificationBar } from '@renderer/shared/ui/components/NotificationBar';
@@ -18,7 +19,7 @@ export function App() {
   const editor = useBoardsEditor();
   const { ensureColor } = useProjectColors();
   const nameOf = useProjectNames();
-  const { activeBoardId, openedBoardIds, focusedTileId, selectBoard, focusTile } = useBoardSelectionStore();
+  const { activeBoardId, openedBoardIds, focusedTileId, selectBoard, focusTile, setFocusedTile } = useBoardSelectionStore();
   const boardAreaRef = useRef<HTMLDivElement>(null);
 
   const boards = workspace?.boards ?? [];
@@ -28,6 +29,13 @@ export function App() {
   useEffect(() => {
     if (resolvedActiveBoardId && resolvedActiveBoardId !== activeBoardId) selectBoard(resolvedActiveBoardId);
   }, [resolvedActiveBoardId, activeBoardId, selectBoard]);
+
+  useEffect(() => {
+    if (!workspace) return;
+    const tileIds = new Set(workspace.boards.flatMap((board) => board.tiles.map((tile) => tile.id)));
+    disposeLiveTerminalsExcept(tileIds);
+    if (focusedTileId !== undefined && !tileIds.has(focusedTileId)) setFocusedTile(undefined);
+  }, [workspace, focusedTileId, setFocusedTile]);
 
   const ensureActiveBoard = (): string => resolvedActiveBoardId ?? editor.createBoard({ name: DEFAULT_BOARD_NAME });
 
