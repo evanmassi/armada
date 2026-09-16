@@ -31,11 +31,16 @@ export const terminalWriteRequestSchema = terminalRefSchema.extend({
 
 export const terminalResizeRequestSchema = terminalRefSchema.merge(terminalSizeSchema);
 
+export const claudeSessionStartedEventSchema = terminalRefSchema.extend({
+  sessionId: z.string().uuid(),
+});
+
 export type SessionLaunch = z.infer<typeof claudeLaunchSchema> | z.infer<typeof shellLaunchSchema>;
 export type TerminalRef = z.infer<typeof terminalRefSchema>;
 export type OpenSessionRequest = z.infer<typeof openSessionRequestSchema>;
 export type TerminalWriteRequest = z.infer<typeof terminalWriteRequestSchema>;
 export type TerminalResizeRequest = z.infer<typeof terminalResizeRequestSchema>;
+export type ClaudeSessionStartedEvent = z.infer<typeof claudeSessionStartedEventSchema>;
 
 export interface TerminalOutputEvent {
   terminalId: string;

@@ -1,5 +1,6 @@
 import type { Project } from './conversations/conversationTypes';
 import type {
+  ClaudeSessionStartedEvent,
   OpenSessionRequest,
   TerminalExitEvent,
   TerminalOutputEvent,
@@ -29,5 +30,6 @@ export interface ArmadaApi {
     close(request: TerminalRef): void;
     onOutput(listener: (event: TerminalOutputEvent) => void): Unsubscribe;
     onExit(listener: (event: TerminalExitEvent) => void): Unsubscribe;
+    onClaudeSessionStarted(listener: (event: ClaudeSessionStartedEvent) => void): Unsubscribe;
   };
 }

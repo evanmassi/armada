@@ -7,6 +7,7 @@ import {
   createBoard,
   moveTile,
   nudgeTile,
+  rebindClaudeTile,
   reflowFreeLayout,
   removeBoard,
   removeTile,
@@ -41,6 +42,8 @@ export function useBoardsEditor() {
     addTile: (boardId: string, seed: TileSeed, afterTileId?: string) =>
       edit((workspace) => addTile(workspace, boardId, seed, afterTileId)),
     removeTile: (boardId: string, tileId: string) => edit((workspace) => removeTile(workspace, boardId, tileId)),
+    rebindClaudeTile: (boardId: string, tileId: string, sessionId: string) =>
+      edit((workspace) => rebindClaudeTile(workspace, boardId, tileId, sessionId)),
     setNotesText: (boardId: string, tileId: string, text: string) => edit((workspace) => setNotesText(workspace, boardId, tileId, text)),
     swapTiles: (boardId: string, tileIdA: string, tileIdB: string) =>
       edit((workspace) => swapTiles(workspace, boardId, tileIdA, tileIdB)),

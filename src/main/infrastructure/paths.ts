@@ -5,3 +5,5 @@ import { app } from 'electron';
 export const getClaudeProjectsDir = (): string => join(homedir(), '.claude', 'projects');
 
 export const getWorkspaceFilePath = (): string => join(app.getPath('userData'), 'workspace.json');
+
+export const getClaudeSessionInboxDir = (): string => join(app.getPath('userData'), 'claude-session-inbox');

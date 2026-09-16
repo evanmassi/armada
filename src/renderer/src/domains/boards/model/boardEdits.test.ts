@@ -9,6 +9,7 @@ import {
   hasLayoutChanged,
   moveTile,
   nudgeTile,
+  rebindClaudeTile,
   reflowFreeLayout,
   scaleTileWeight,
   setLaneOrder,
@@ -154,5 +155,20 @@ describe('hasLayoutChanged', () => {
     const board = workspaceWith(tile('a', 0, 0, 6, 14)).boards[0]!;
     expect(hasLayoutChanged(board, [{ i: 'a', x: 0, y: 0, w: 6, h: 14 }])).toBe(false);
     expect(hasLayoutChanged(board, [{ i: 'a', x: 1, y: 0, w: 6, h: 14 }])).toBe(true);
+  });
+});
+
+describe('rebindClaudeTile', () => {
+  it('points the tile at the new session id', () => {
+    const workspace = workspaceWith(tile('a', 0, 0, 6, 14));
+    const next = rebindClaudeTile(workspace, 'board', 'a', 'fresh');
+    expect(next.boards[0]!.tiles[0]).toMatchObject({ kind: 'claude', sessionId: 'fresh' });
+  });
+
+  it('returns the same workspace when the id is unchanged or the tile is not a claude tile', () => {
+    const notes: Tile = { kind: 'notes', id: 'n', text: '', layout: { x: 0, y: 0, w: 6, h: 14 }, weight: 1 };
+    const workspace = workspaceWith(tile('a', 0, 0, 6, 14), notes);
+    expect(rebindClaudeTile(workspace, 'board', 'a', 'a')).toBe(workspace);
+    expect(rebindClaudeTile(workspace, 'board', 'n', 'fresh')).toBe(workspace);
   });
 });

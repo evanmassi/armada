@@ -32,7 +32,9 @@ armada/
 | Testing | Vitest |
 
 Sessions are spawned as `claude` for a new conversation or `claude --resume <sessionId>` to continue one, always
-with an argv array, never a shell string.
+with an argv array, never a shell string. A `/clear` or `/resume` typed inside a tile rotates the Claude session id
+under the tile; `scripts/claudeSessionStartHook.cjs`, installed into `~/.claude/settings.json` by `npm run hook`, reports
+the new id through a file inbox under `userData` (`ClaudeSessionInbox`) and the tile rebinds to it.
 
 ---
 
@@ -387,6 +389,7 @@ Commits: `audit: <directory scope> — <specific changes, comma-separated>`, no 
 npm run dev           # Electron with hot reload
 npm run build         # Production build (what the Start Menu shortcut launches)
 npm run shortcut      # Write the Start Menu shortcut (pin it to the taskbar from there)
+npm run hook          # Register the Claude SessionStart hook that keeps tiles on the live session id
 npm run typecheck     # Type check main, preload, renderer
 npm run lint          # Lint
 npm test              # Vitest

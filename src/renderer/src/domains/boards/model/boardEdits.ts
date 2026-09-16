@@ -115,6 +115,12 @@ export const addTile = (workspace: Workspace, boardId: string, seed: TileSeed, a
 export const removeTile = (workspace: Workspace, boardId: string, tileId: string): Workspace =>
   updateBoard(workspace, boardId, (board) => ({ ...board, tiles: board.tiles.filter((tile) => tile.id !== tileId) }));
 
+export const rebindClaudeTile = (workspace: Workspace, boardId: string, tileId: string, sessionId: string): Workspace => {
+  const tile = workspace.boards.find((board) => board.id === boardId)?.tiles.find((item) => item.id === tileId);
+  if (tile?.kind !== 'claude' || tile.sessionId === sessionId) return workspace;
+  return updateTile(workspace, boardId, tileId, (current) => ({ ...current, sessionId }));
+};
+
 export const setNotesText = (workspace: Workspace, boardId: string, tileId: string, text: string): Workspace =>
   updateTile(workspace, boardId, tileId, (tile) => (tile.kind === 'notes' ? { ...tile, text } : tile));
 

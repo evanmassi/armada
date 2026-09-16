@@ -21,6 +21,7 @@ const REFIT_DEBOUNCE_MS = 80;
 interface TerminalSessionOptions {
   tileId: string;
   launch: SessionLaunch;
+  onSessionRebound(sessionId: string): void;
 }
 
 interface TerminalInstance {
@@ -28,12 +29,19 @@ interface TerminalInstance {
   fit: FitAddon;
 }
 
-export function useTerminalSession(containerRef: RefObject<HTMLDivElement | null>, { tileId, launch }: TerminalSessionOptions) {
+export function useTerminalSession(
+  containerRef: RefObject<HTMLDivElement | null>,
+  { tileId, launch, onSessionRebound }: TerminalSessionOptions,
+) {
   const fontSize = useTerminalFontSize();
   const initialFontSizeRef = useRef(fontSize);
   initialFontSizeRef.current = fontSize;
+  const onSessionReboundRef = useRef(onSessionRebound);
+  onSessionReboundRef.current = onSessionRebound;
   const instanceRef = useRef<TerminalInstance | undefined>(undefined);
-  const claudeSessionId = launch.kind === 'claude' ? launch.sessionId : undefined;
+  // PITFALL: a /clear inside the tile rotates the Claude session id and the tile follows; the running process must not be respawned for it.
+  const launchedSessionIdRef = useRef(launch.kind === 'claude' ? launch.sessionId : undefined);
+  const claudeSessionId = launchedSessionIdRef.current;
   const { cwd } = launch;
 
   useEffect(() => {
@@ -52,7 +60,8 @@ export function useTerminalSession(containerRef: RefObject<HTMLDivElement | null
     container.addEventListener('contextmenu', onContextMenu);
 
     const { setActivity, clearActivity } = useSessionActivityStore.getState();
-    const activity = createActivityTracker((state) => setActivity(tileId, claudeSessionId, state));
+    let boundSessionId = claudeSessionId;
+    const activity = createActivityTracker((state) => setActivity(tileId, boundSessionId, state));
 
     let isDisposed = false;
     let terminalId: string | undefined;
@@ -77,6 +86,11 @@ export function useTerminalSession(containerRef: RefObject<HTMLDivElement | null
           }),
           armadaClient.sessions.onExit((event) => {
             if (event.terminalId === terminalId) terminal.write(SESSION_ENDED_BANNER);
+          }),
+          armadaClient.sessions.onClaudeSessionStarted((event) => {
+            if (event.terminalId !== terminalId || event.sessionId === boundSessionId) return;
+            boundSessionId = event.sessionId;
+            onSessionReboundRef.current(event.sessionId);
           }),
         );
         terminal.onData((data) => {

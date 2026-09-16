@@ -4,6 +4,7 @@ import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore
 import { useSessionActivityStore, type ActivityState } from '@renderer/app/stores/sessionActivityStore';
 import { TerminalSessionTile } from '@renderer/domains/terminal';
 import { ActivityDot } from '@renderer/shared/ui/components/ActivityDot';
+import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
 import { BoardNotesTile } from '../notes/BoardNotesTile';
 
 export const TILE_DRAG_HANDLE_CLASS = 'tile-drag-handle';
@@ -39,10 +40,17 @@ interface BoardTileFrameProps {
 }
 
 function TileBody({ boardId, tile, shouldMountTerminal }: Pick<BoardTileFrameProps, 'boardId' | 'tile' | 'shouldMountTerminal'>) {
+  const editor = useBoardsEditor();
   if (tile.kind === 'notes') return <BoardNotesTile boardId={boardId} tile={tile} />;
   if (!shouldMountTerminal) return null;
   const launch = tile.kind === 'claude' ? { kind: tile.kind, sessionId: tile.sessionId, cwd: tile.cwd } : { kind: tile.kind, cwd: tile.cwd };
-  return <TerminalSessionTile tileId={tile.id} launch={launch} />;
+  return (
+    <TerminalSessionTile
+      tileId={tile.id}
+      launch={launch}
+      onSessionRebound={(sessionId) => editor.rebindClaudeTile(boardId, tile.id, sessionId)}
+    />
+  );
 }
 
 export function BoardTileFrame({

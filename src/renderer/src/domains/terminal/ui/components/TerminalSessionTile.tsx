@@ -6,11 +6,12 @@ import { useTerminalSession } from '../../hooks/useTerminalSession';
 interface TerminalSessionTileProps {
   tileId: string;
   launch: SessionLaunch;
+  onSessionRebound(sessionId: string): void;
 }
 
-export function TerminalSessionTile({ tileId, launch }: TerminalSessionTileProps) {
+export function TerminalSessionTile({ tileId, launch, onSessionRebound }: TerminalSessionTileProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const focusTerminal = useTerminalSession(containerRef, { tileId, launch });
+  const focusTerminal = useTerminalSession(containerRef, { tileId, launch, onSessionRebound });
   const isFocusRequested = useBoardSelectionStore((state) => state.focusedTileId === tileId);
 
   useEffect(() => {
