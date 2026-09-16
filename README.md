@@ -10,11 +10,12 @@ Early and Windows-only. It runs from source today; an installer is planned. Expe
 
 ## Install
 
-You need three things on your `PATH`:
+You need these on your `PATH`:
 
 - Node.js 22 or newer
-- Claude Code (`claude.exe`)
+- Claude Code from its native installer, which provides `claude.exe`. The npm package ships `claude.cmd`, which Armada cannot launch.
 - PowerShell 7 (`pwsh.exe`), only if you want shell tiles
+- VS Code (`code`), only if you want the "Open in VS Code" menu item
 
 Then:
 
@@ -22,26 +23,35 @@ Then:
 git clone https://github.com/evanmassi/armada.git
 cd armada
 npm install
+npm run hook
 npm run dev
 ```
 
-To launch it like a normal app instead of from a terminal:
+`npm run hook` registers Claude Code hooks that tell Armada when a session starts, when you send a prompt, when Claude finishes a turn, and when it is waiting on a permission. Without them, tiles cannot show what Claude is doing and lose track of a conversation after `/clear` or `/resume`, which give the session a new id. It is safe to run again; it never touches other hooks in your settings.
+
+To launch Armada like a normal app instead of from a terminal:
 
 ```
 npm run build
 npm run shortcut
-npm run hook
 ```
 
-That writes an Armada entry to the Start Menu; pin it to the taskbar from there. The last command registers Claude Code hooks that tell Armada when a session starts, when you send a prompt, when Claude finishes a turn, and when it is waiting on a permission. Without them, tiles cannot show what Claude is doing and lose track of a conversation after `/clear` or `/resume`, which give the session a new id.
+That writes an Armada entry to the Start Menu; pin it to the taskbar from there. Rerun `npm run build` after pulling changes, since the shortcut launches the compiled copy.
 
 ## How it fits together
 
 ### Sidebar: every conversation, by project
 
-The sidebar lists every project Claude Code has been run in, with its conversations underneath, most recent first. Click a conversation and it opens as a live tile on the current board. If it is already open somewhere, Armada focuses that tile instead of opening a second copy.
+The sidebar lists every project Claude Code has been run in, with its conversations underneath, most recent first. Click a project name to expand or collapse it. Click a conversation and it opens as a live tile on the current board. If it is already open somewhere, Armada focuses that tile instead of opening a second copy.
 
 Each project has a color. Every tile, tab, and lane from that project wears it, so you can tell at a glance which codebase you are looking at.
+
+The `+` on a project starts a fresh session in that folder. The `+ folder` button in the header starts one anywhere. The ⋯ menu on a project holds the rest:
+
+- Open as **Board**, or Go to **Board** once one exists
+- Open in **Explorer** and Open in **VS Code**
+- Move to a group, or back to Other
+- Rename and Archive
 
 Housekeeping the sidebar supports, all of it saved between launches:
 
@@ -51,13 +61,11 @@ Housekeeping the sidebar supports, all of it saved between launches:
 - Archive conversations or whole projects out of the way without deleting anything
 - Search by title or project name
 
-The `+` on a project starts a fresh session in that folder. The `+ folder` button in the header starts one anywhere. The ⋯ menu on a project, and on any tile, opens the folder in Explorer or in VS Code.
-
 ### Boards: a workspace per concern
 
 A board is a named set of tiles, shown as a tab across the top. Make one per project, one per bug, one per week, whatever helps. Boards you have opened stay alive in the background, so switching tabs never interrupts a running session.
 
-Clicking a project name expands or collapses it. "Open as board" in the project's ⋯ menu opens that project as a board, seeded with its three most recent conversations, or jumps to it if one exists. Opening a conversation while a different project's board is active routes it to that project's own board. Hold Shift to keep it where you are.
+"Open as Board" on a project creates a board seeded with its three most recent conversations. Opening a conversation while a different project's board is active routes it to that project's own board. Hold Shift to keep it where you are.
 
 ### Layouts: auto or free
 
@@ -70,15 +78,25 @@ Every board has a layout mode.
 
 **Free** is a scrolling grid. Drag tiles anywhere, resize from the corner. A reflow button snaps everything back to the auto arrangement when it gets messy.
 
+Changing layout never restarts a session. Tiles keep their process through any rearrangement.
+
 ### Tiles: three kinds
 
 - **Claude** tiles are the point. Each one is a real `claude` session, resumed from its conversation or started fresh, running in a terminal.
 - **Shell** tiles open PowerShell in the same folder as a Claude tile, one click from its title bar. For the `git status` you want to run alongside.
 - **Notes** tiles are a scratchpad. Give one a project and it stacks in that project's lane. Leave it board-wide and it lives in a collapsible strip on the right.
 
+Every tile with a folder has a ⋯ menu to open that folder in Explorer or VS Code.
+
 ### Activity: what each session is doing
 
-Every Claude tile carries a live status plate, fed by Claude Code's own hooks rather than guessed from the output: **working** from the moment you send a prompt, **approval** when a permission prompt has been sitting unanswered, **waiting** when Claude finishes a turn, **idle** once you have answered, **exited** when the process ends, with its exit code in the terminal and a ↻ in the title bar to relaunch it in place. The same dot shows on the sidebar row and in the lane header, so you can see across five sessions which one wants attention without reading any of them.
+Every Claude tile carries a live status plate, fed by Claude Code's own hooks rather than guessed from the output. The same dot shows on the sidebar row and in the lane header, so you can see across five sessions which one wants attention without reading any of them.
+
+- **working** from the moment you send a prompt
+- **approval** when a permission prompt has been sitting unanswered
+- **waiting** when Claude finishes a turn
+- **idle** once you have answered
+- **exited** when the process ends. The exit code prints in the terminal and a ↻ in the title bar relaunches it in place.
 
 ### Terminal
 
@@ -95,13 +113,24 @@ Tiles are full terminals. Copy with Ctrl+C when text is selected (it still inter
 | Arrow keys on a tile title bar | Reorder or move the tile |
 | Shift+Arrow keys on a tile title bar | Resize the tile, or the lane |
 
-Tiles, projects, groups, and boards are all reachable from the keyboard.
+Tiles, projects, groups, boards, and menus are all reachable from the keyboard.
 
 ## Where your data lives
 
-Armada never writes to Claude Code's conversation files. It reads `~/.claude/projects` for conversations, adds its hook entries to `~/.claude/settings.json` when you run `npm run hook`, and keeps its own state in one JSON file in the app's user data folder: boards, tiles, colors, sidebar arrangement, and font size. Delete that file and you are back to a blank slate with all your conversations intact.
+Armada never writes to Claude Code's conversation files. It reads `~/.claude/projects` for conversations and adds its hook entries to `~/.claude/settings.json` when you run `npm run hook`.
 
-Next to it sits `armada.log`, one JSON line per event: every session spawn with its command line, every exit code, every hook event received or rejected, and any workspace file that failed validation. It rotates to `armada.log.1` once it passes a megabyte. When a tile misbehaves, that file is the first place to look.
+Its own state lives in `%APPDATA%\armada`:
+
+- `workspace.json` holds boards, tiles, colors, sidebar arrangement, and font size. Delete it and you are back to a blank slate with all your conversations intact.
+- `armada.log` has one JSON line per event: every session spawn with its command line, every exit code, every hook event received or rejected, and any workspace file that failed validation. It rotates to `armada.log.1` past a megabyte.
+
+## Troubleshooting
+
+- **Tiles stay on idle and never change.** The hooks are not installed. Run `npm run hook` and start a new session in the tile.
+- **"… was not found on PATH"** names the exact file Armada looked for. Install it or fix your `PATH`, then relaunch.
+- **"Folder no longer exists"** means the project was moved or deleted. Archive it in the sidebar or restore the folder.
+- **"module was compiled against a different Node version"** on launch means the terminal module was not rebuilt for Electron. Run `npm install` again.
+- **Something else.** Open `%APPDATA%\armada\armada.log`; the last few lines usually say what happened.
 
 ## Development
 
