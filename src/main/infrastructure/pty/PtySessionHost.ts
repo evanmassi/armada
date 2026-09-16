@@ -10,13 +10,13 @@ import type {
 const INHERITED_LAUNCHER_NOISE = ['CLAUDECODE', 'CLAUDE_CODE_CHILD_SESSION', 'NO_COLOR', 'FORCE_COLOR', 'CI'];
 const TERMINAL_CAPABILITIES = { TERM: 'xterm-256color', COLORTERM: 'truecolor' };
 const ARMADA_TERMINAL_ID_ENV = 'ARMADA_TERMINAL_ID';
-const ARMADA_SESSION_INBOX_ENV = 'ARMADA_SESSION_INBOX';
+const ARMADA_HOOK_INBOX_ENV = 'ARMADA_HOOK_INBOX';
 
-function hostEnvironment(terminalId: string, sessionInboxDir: string): NodeJS.ProcessEnv {
+function hostEnvironment(terminalId: string, hookInboxDir: string): NodeJS.ProcessEnv {
   const env = { ...process.env };
   // PITFALL: a launcher's environment leaks into every tile: nested-claude markers block launch, NO_COLOR strips colors.
   for (const name of INHERITED_LAUNCHER_NOISE) delete env[name];
-  return { ...env, ...TERMINAL_CAPABILITIES, [ARMADA_TERMINAL_ID_ENV]: terminalId, [ARMADA_SESSION_INBOX_ENV]: sessionInboxDir };
+  return { ...env, ...TERMINAL_CAPABILITIES, [ARMADA_TERMINAL_ID_ENV]: terminalId, [ARMADA_HOOK_INBOX_ENV]: hookInboxDir };
 }
 
 export class PtySessionHost implements TerminalHost {
@@ -24,11 +24,11 @@ export class PtySessionHost implements TerminalHost {
   private outputListeners = new Set<TerminalOutputListener>();
   private exitListeners = new Set<TerminalExitListener>();
 
-  constructor(private sessionInboxDir: string) {}
+  constructor(private hookInboxDir: string) {}
 
   spawn({ command, args, cwd, cols, rows }: TerminalSpawnOptions): string {
     const terminalId = randomUUID();
-    const env = hostEnvironment(terminalId, this.sessionInboxDir);
+    const env = hostEnvironment(terminalId, this.hookInboxDir);
     const terminal = pty.spawn(command, args, { name: 'xterm-256color', cols, rows, cwd, env });
     terminal.onData((data) => this.outputListeners.forEach((listener) => listener(terminalId, data)));
     terminal.onExit(({ exitCode }) => {

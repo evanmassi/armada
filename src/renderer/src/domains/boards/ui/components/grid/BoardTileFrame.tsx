@@ -16,8 +16,7 @@ const PLATE_LABELS: Record<Tile['kind'], string> = { claude: 'idle', shell: 'she
 const plateLabel = (tile: Tile, activity: ActivityState | undefined): string =>
   tile.kind === 'claude' && activity ? activity : PLATE_LABELS[tile.kind];
 
-const plateTone = (activity: ActivityState | undefined): string =>
-  activity === 'working' ? 'text-accent' : activity === 'waiting' ? 'text-alert' : '';
+const PLATE_TONES: Record<ActivityState, string> = { working: 'text-accent', waiting: 'text-alert', approval: 'text-alert', idle: '' };
 
 const ARROW_KEYS: Record<string, ArrowDirection> = {
   ArrowLeft: 'left',
@@ -95,7 +94,7 @@ export function BoardTileFrame({
         {activity ? <ActivityDot state={activity} /> : <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: accentColor }} />}
         <span className="min-w-0 flex-1 truncate font-ui text-[13px] font-semibold tracking-wide text-fg">{title}</span>
         <span
-          className={`tile-project-plate readout shrink-0 text-[11px] transition-colors duration-500 ${plateTone(activity)}`}
+          className={`tile-project-plate readout shrink-0 text-[11px] transition-colors duration-500 ${activity ? PLATE_TONES[activity] : ''}`}
           style={activity ? undefined : { color: accentColor }}
           title={tile.kind === 'notes' ? undefined : tile.cwd}
         >

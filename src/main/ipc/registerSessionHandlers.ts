@@ -1,7 +1,7 @@
 import { ipcMain, type WebContents } from 'electron';
 import { IPC_CHANNELS } from '@shared/ipcChannels';
 import {
-  type ClaudeSessionStartedEvent,
+  type ClaudeHookEvent,
   openSessionRequestSchema,
   terminalRefSchema,
   terminalResizeRequestSchema,
@@ -11,7 +11,7 @@ import {
 } from '@shared/sessions/sessionSchemas';
 import type { ServiceContainer } from '@main/infrastructure/di/ServiceContainer';
 
-export function registerSessionHandlers({ sessionService, terminalHost, claudeSessionInbox }: ServiceContainer, renderer: WebContents): void {
+export function registerSessionHandlers({ sessionService, terminalHost, claudeHookInbox }: ServiceContainer, renderer: WebContents): void {
   ipcMain.handle(IPC_CHANNELS.sessionsOpen, (_event, payload: unknown) =>
     sessionService.open(openSessionRequestSchema.parse(payload)),
   );
@@ -37,8 +37,8 @@ export function registerSessionHandlers({ sessionService, terminalHost, claudeSe
     const event: TerminalExitEvent = { terminalId, exitCode };
     renderer.send(IPC_CHANNELS.sessionsExit, event);
   });
-  claudeSessionInbox.onSessionStarted((event: ClaudeSessionStartedEvent) => {
+  claudeHookInbox.onEvent((event: ClaudeHookEvent) => {
     if (renderer.isDestroyed()) return;
-    renderer.send(IPC_CHANNELS.sessionsClaudeStarted, event);
+    renderer.send(IPC_CHANNELS.sessionsClaudeHook, event);
   });
 }

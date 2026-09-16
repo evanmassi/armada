@@ -26,7 +26,7 @@ const armadaApi: ArmadaApi = {
     close: (request) => ipcRenderer.send(IPC_CHANNELS.sessionsClose, request),
     onOutput: (listener) => subscribe(IPC_CHANNELS.sessionsOutput, listener),
     onExit: (listener) => subscribe(IPC_CHANNELS.sessionsExit, listener),
-    onClaudeSessionStarted: (listener) => subscribe(IPC_CHANNELS.sessionsClaudeStarted, listener),
+    onClaudeHookEvent: (listener) => subscribe(IPC_CHANNELS.sessionsClaudeHook, listener),
   },
 };
 

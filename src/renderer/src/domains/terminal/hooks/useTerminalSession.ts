@@ -82,15 +82,17 @@ export function useTerminalSession(
           armadaClient.sessions.onOutput((event) => {
             if (event.terminalId !== terminalId) return;
             terminal.write(event.data);
-            activity.recordOutput(event.data);
           }),
           armadaClient.sessions.onExit((event) => {
             if (event.terminalId === terminalId) terminal.write(SESSION_ENDED_BANNER);
           }),
-          armadaClient.sessions.onClaudeSessionStarted((event) => {
-            if (event.terminalId !== terminalId || event.sessionId === boundSessionId) return;
-            boundSessionId = event.sessionId;
-            onSessionReboundRef.current(event.sessionId);
+          armadaClient.sessions.onClaudeHookEvent((event) => {
+            if (event.terminalId !== terminalId) return;
+            if (event.sessionId !== boundSessionId) {
+              boundSessionId = event.sessionId;
+              onSessionReboundRef.current(event.sessionId);
+            }
+            activity.recordHookEvent(event.kind);
           }),
         );
         terminal.onData((data) => {
@@ -113,7 +115,6 @@ export function useTerminalSession(
     return () => {
       isDisposed = true;
       window.clearTimeout(refitTimer);
-      activity.dispose();
       resizeObserver.disconnect();
       container.removeEventListener('contextmenu', onContextMenu);
       subscriptions.forEach((unsubscribe) => unsubscribe());

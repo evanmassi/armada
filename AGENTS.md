@@ -32,9 +32,10 @@ armada/
 | Testing | Vitest |
 
 Sessions are spawned as `claude` for a new conversation or `claude --resume <sessionId>` to continue one, always
-with an argv array, never a shell string. A `/clear` or `/resume` typed inside a tile rotates the Claude session id
-under the tile; `scripts/claudeSessionStartHook.cjs`, installed into `~/.claude/settings.json` by `npm run hook`, reports
-the new id through a file inbox under `userData` (`ClaudeSessionInbox`) and the tile rebinds to it.
+with an argv array, never a shell string. `scripts/claudeHookRelay.cjs`, installed into `~/.claude/settings.json` by
+`npm run hook` for SessionStart, UserPromptSubmit, Stop, and the permission Notification, reports each event through a
+file inbox under `userData` (`ClaudeHookInbox`). A `/clear` or `/resume` typed inside a tile rotates the Claude session
+id under the tile and the tile rebinds to it; the other events drive the tile's activity state.
 
 ---
 
@@ -109,7 +110,7 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   workspace. Board edits live in `domains/boards/model/boardEdits.ts`, color edits in
   `domains/conversations/model/projectColorEdits.ts`.
 - **UI state**: Zustand. `boardSelectionStore` (active board, opened boards, focused tile), `sessionActivityStore`
-  (per-tile working / waiting / idle, inferred in the terminal hook from output rate, a BEL byte, and user input),
+  (per-tile working / waiting / approval / idle, driven by Claude hook events plus Enter and Escape typed into the tile),
   `notificationStore`.
 - Never store main-owned data in Zustand.
 - **Terminal stream** is neither. Pty output arrives on a per-session IPC channel and is written straight into the
@@ -134,7 +135,7 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   with explicit x/y/w/h (`react-grid-layout`); reflow rewrites its positions from the tiling. Opening a
   conversation while another project's board is active routes it to that project's own board unless shift is held.
 - `terminal` renders one pty session, Claude or plain shell. It does not know which board it sits on. It owns the
-  activity heuristic and lets global shortcuts (`app/keyboardShortcuts.ts`) bubble past xterm.
+  activity tracker (`model/activityTracker.ts`) and lets global shortcuts (`app/keyboardShortcuts.ts`) bubble past xterm.
 
 ---
 
@@ -389,7 +390,7 @@ Commits: `audit: <directory scope> — <specific changes, comma-separated>`, no 
 npm run dev           # Electron with hot reload
 npm run build         # Production build (what the Start Menu shortcut launches)
 npm run shortcut      # Write the Start Menu shortcut (pin it to the taskbar from there)
-npm run hook          # Register the Claude SessionStart hook that keeps tiles on the live session id
+npm run hook          # Register the Claude hooks that drive tile activity and keep tiles on the live session id
 npm run typecheck     # Type check main, preload, renderer
 npm run lint          # Lint
 npm test              # Vitest

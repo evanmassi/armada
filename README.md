@@ -33,7 +33,7 @@ npm run shortcut
 npm run hook
 ```
 
-That writes an Armada entry to the Start Menu; pin it to the taskbar from there. The last command registers a Claude Code hook so a tile follows its conversation through `/clear` and `/resume`, which give the session a new id.
+That writes an Armada entry to the Start Menu; pin it to the taskbar from there. The last command registers Claude Code hooks that tell Armada when a session starts, when you send a prompt, when Claude finishes a turn, and when it is waiting on a permission. Without them, tiles cannot show what Claude is doing and lose track of a conversation after `/clear` or `/resume`, which give the session a new id.
 
 ## How it fits together
 
@@ -78,7 +78,7 @@ Every board has a layout mode.
 
 ### Activity: what each session is doing
 
-Every Claude tile carries a live status plate: **working** while output streams, **waiting** when Claude stops and needs you, **idle** once you have answered. The same dot shows on the sidebar row and in the lane header, so you can see across five sessions which one wants attention without reading any of them.
+Every Claude tile carries a live status plate, fed by Claude Code's own hooks rather than guessed from the output: **working** from the moment you send a prompt, **approval** when a permission prompt has been sitting unanswered, **waiting** when Claude finishes a turn, **idle** once you have answered. The same dot shows on the sidebar row and in the lane header, so you can see across five sessions which one wants attention without reading any of them.
 
 ### Terminal
 
@@ -99,7 +99,7 @@ Tiles, projects, groups, and boards are all reachable from the keyboard.
 
 ## Where your data lives
 
-Armada never writes to Claude Code's conversation files. It reads `~/.claude/projects` for conversations, adds one hook entry to `~/.claude/settings.json` when you run `npm run hook`, and keeps its own state in one JSON file in the app's user data folder: boards, tiles, colors, sidebar arrangement, and font size. Delete that file and you are back to a blank slate with all your conversations intact.
+Armada never writes to Claude Code's conversation files. It reads `~/.claude/projects` for conversations, adds its hook entries to `~/.claude/settings.json` when you run `npm run hook`, and keeps its own state in one JSON file in the app's user data folder: boards, tiles, colors, sidebar arrangement, and font size. Delete that file and you are back to a blank slate with all your conversations intact.
 
 ## Development
 

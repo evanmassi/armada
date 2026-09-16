@@ -1,57 +1,41 @@
+import type { ClaudeHookEventKind } from '@shared/sessions/sessionSchemas';
 import type { ActivityState } from '@renderer/app/stores/sessionActivityStore';
 
-const ECHO_GRACE_MS = 500;
-const WORKING_STREAK_MS = 1000;
-const SETTLE_MS = 2500;
-const BELL = '\x07';
 const ENTER = '\r';
+const ESCAPE = '\x1b';
+
+const STATE_BY_HOOK_EVENT: Record<ClaudeHookEventKind, ActivityState> = {
+  sessionStarted: 'idle',
+  promptSubmitted: 'working',
+  turnEnded: 'waiting',
+  permissionRequested: 'approval',
+};
 
 export interface ActivityTracker {
-  recordOutput(data: string): void;
+  recordHookEvent(kind: ClaudeHookEventKind): void;
   recordInput(data: string): void;
-  dispose(): void;
 }
 
 export function createActivityTracker(onChange: (state: ActivityState) => void): ActivityTracker {
   let state: ActivityState = 'idle';
-  let lastInputAt = Number.NEGATIVE_INFINITY;
-  let streakStartedAt: number | undefined;
-  let settleTimer: ReturnType<typeof setTimeout> | undefined;
 
-  const set = (next: ActivityState): void => {
-    if (next === state) return;
+  const set = (next: ActivityState, isForced = false): void => {
+    if (!isForced && next === state) return;
     state = next;
     onChange(next);
-  };
-
-  const settle = (): void => {
-    streakStartedAt = undefined;
-    if (state === 'working') set('waiting');
   };
 
   onChange(state);
 
   return {
-    recordOutput: (data) => {
-      const now = Date.now();
-      if (data.includes(BELL)) {
-        streakStartedAt = undefined;
-        set('waiting');
-        return;
-      }
-      if (now - lastInputAt < ECHO_GRACE_MS) return;
-      streakStartedAt ??= now;
-      if (now - streakStartedAt >= WORKING_STREAK_MS) set('working');
-      clearTimeout(settleTimer);
-      settleTimer = setTimeout(settle, SETTLE_MS);
-    },
+    // PITFALL: a session start after /clear re-emits idle even when already idle so the store republishes under the new session id.
+    recordHookEvent: (kind) => set(STATE_BY_HOOK_EVENT[kind], kind === 'sessionStarted'),
     recordInput: (data) => {
-      lastInputAt = Date.now();
-      if (data.includes(ENTER)) {
-        streakStartedAt = undefined;
-        set('idle');
-      }
+      const isEnter = data.includes(ENTER);
+      const isEscape = data === ESCAPE;
+      if (state === 'approval' && (isEnter || isEscape)) set('working');
+      else if (state === 'working' && isEscape) set('waiting');
+      else if (state === 'waiting' && isEnter) set('idle');
     },
-    dispose: () => clearTimeout(settleTimer),
   };
 }

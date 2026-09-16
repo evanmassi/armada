@@ -1,7 +1,7 @@
 import { watch, type FSWatcher } from 'node:fs';
 import { mkdir, readdir, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import { claudeSessionStartedEventSchema, type ClaudeSessionStartedEvent } from '@shared/sessions/sessionSchemas';
+import { claudeHookEventSchema, type ClaudeHookEvent } from '@shared/sessions/sessionSchemas';
 
 const EVENT_FILE_EXTENSION = '.json';
 
@@ -13,10 +13,10 @@ const parseJson = (raw: string): unknown => {
   }
 };
 
-export type ClaudeSessionStartedListener = (event: ClaudeSessionStartedEvent) => void;
+export type ClaudeHookListener = (event: ClaudeHookEvent) => void;
 
-export class ClaudeSessionInbox {
-  private listeners = new Set<ClaudeSessionStartedListener>();
+export class ClaudeHookInbox {
+  private listeners = new Set<ClaudeHookListener>();
   private watcher: FSWatcher | undefined;
   private isDraining = false;
   private hasPendingDrain = false;
@@ -34,7 +34,7 @@ export class ClaudeSessionInbox {
     this.watcher = undefined;
   }
 
-  onSessionStarted(listener: ClaudeSessionStartedListener): void {
+  onEvent(listener: ClaudeHookListener): void {
     this.listeners.add(listener);
   }
 
@@ -47,7 +47,8 @@ export class ClaudeSessionInbox {
     try {
       do {
         this.hasPendingDrain = false;
-        const names = (await readdir(this.inboxDir)).filter((name) => name.endsWith(EVENT_FILE_EXTENSION));
+        // PITFALL: readdir order is not guaranteed; the timestamp in the name keeps a terminal's events in the order they fired.
+        const names = (await readdir(this.inboxDir)).filter((name) => name.endsWith(EVENT_FILE_EXTENSION)).sort();
         for (const name of names) await this.consume(join(this.inboxDir, name));
       } while (this.hasPendingDrain);
     } finally {
@@ -63,7 +64,7 @@ export class ClaudeSessionInbox {
       return;
     }
     await rm(file, { force: true });
-    const parsed = claudeSessionStartedEventSchema.safeParse(parseJson(raw));
+    const parsed = claudeHookEventSchema.safeParse(parseJson(raw));
     if (!parsed.success) return;
     this.listeners.forEach((listener) => listener(parsed.data));
   }

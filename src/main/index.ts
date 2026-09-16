@@ -53,13 +53,13 @@ app.whenReady().then(() => {
   registerProjectHandlers(mainWindow);
   registerWorkspaceHandlers(container);
   registerSessionHandlers(container, mainWindow.webContents);
-  void container.claudeSessionInbox.start();
+  void container.claudeHookInbox.start();
 
   const killAllTerminals = (): void => container.terminalHost.killAll();
   mainWindow.webContents.on('did-start-navigation', killAllTerminals);
   mainWindow.on('close', () => {
     killAllTerminals();
-    container.claudeSessionInbox.stop();
+    container.claudeHookInbox.stop();
   });
 });
 

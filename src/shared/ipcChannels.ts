@@ -9,5 +9,5 @@ export const IPC_CHANNELS = {
   sessionsClose: 'sessions:close',
   sessionsOutput: 'sessions:output',
   sessionsExit: 'sessions:exit',
-  sessionsClaudeStarted: 'sessions:claudeStarted',
+  sessionsClaudeHook: 'sessions:claudeHook',
 } as const;

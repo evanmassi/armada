@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ActivityState = 'working' | 'waiting' | 'idle';
+export type ActivityState = 'working' | 'waiting' | 'approval' | 'idle';
 
 export interface ActivityEntry {
   sessionId: string | undefined;
@@ -17,7 +17,7 @@ export const useSessionActivityStore = create<SessionActivityState>((set) => ({
   byTileId: {},
   setActivity: (tileId, sessionId, state) =>
     set((current) =>
-      current.byTileId[tileId]?.state === state ? current : { byTileId: { ...current.byTileId, [tileId]: { sessionId, state } } },
+      current.byTileId[tileId]?.state === state && current.byTileId[tileId].sessionId === sessionId ? current : { byTileId: { ...current.byTileId, [tileId]: { sessionId, state } } },
     ),
   clearActivity: (tileId) =>
     set((current) => ({ byTileId: Object.fromEntries(Object.entries(current.byTileId).filter(([id]) => id !== tileId)) })),

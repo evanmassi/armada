@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { ActivityState } from '@renderer/app/stores/sessionActivityStore';
 import { createActivityTracker } from './activityTracker';
 
@@ -7,47 +7,45 @@ describe('createActivityTracker', () => {
   let tracker: ReturnType<typeof createActivityTracker>;
 
   beforeEach(() => {
-    vi.useFakeTimers();
     states.length = 0;
     tracker = createActivityTracker((state) => states.push(state));
   });
 
-  afterEach(() => {
-    tracker.dispose();
-    vi.useRealTimers();
+  it('follows the hook events through a turn', () => {
+    tracker.recordHookEvent('promptSubmitted');
+    tracker.recordHookEvent('permissionRequested');
+    tracker.recordInput('\r');
+    tracker.recordHookEvent('turnEnded');
+    expect(states).toEqual(['idle', 'working', 'approval', 'working', 'waiting']);
   });
 
-  it('ignores echo redraws while typing and only reacts to Enter', () => {
-    for (let i = 0; i < 10; i += 1) {
-      tracker.recordInput('a');
-      tracker.recordOutput('redraw');
-      vi.advanceTimersByTime(120);
-    }
-    expect(states).toEqual(['idle']);
-  });
-
-  it('marks working after a sustained streak, then waiting once output settles', () => {
-    tracker.recordInput('go\r');
-    vi.advanceTimersByTime(600);
-    for (let elapsed = 0; elapsed <= 1200; elapsed += 200) {
-      tracker.recordOutput('spinner');
-      vi.advanceTimersByTime(200);
-    }
+  it('treats Enter as answering only once Claude is waiting', () => {
+    tracker.recordHookEvent('promptSubmitted');
+    tracker.recordInput('queued\r');
     expect(states).toEqual(['idle', 'working']);
-    vi.advanceTimersByTime(2600);
-    expect(states).toEqual(['idle', 'working', 'waiting']);
+    tracker.recordHookEvent('turnEnded');
+    tracker.recordInput('next\r');
+    expect(states).toEqual(['idle', 'working', 'waiting', 'idle']);
   });
 
-  it('does not treat a lone status refresh as work', () => {
-    vi.advanceTimersByTime(1000);
-    tracker.recordOutput('clock tick');
-    vi.advanceTimersByTime(3000);
-    tracker.recordOutput('clock tick');
-    expect(states).toEqual(['idle']);
+  it('treats Escape as an interrupt while working and as an answer while approving', () => {
+    tracker.recordHookEvent('promptSubmitted');
+    tracker.recordInput('\x1b');
+    tracker.recordHookEvent('promptSubmitted');
+    tracker.recordHookEvent('permissionRequested');
+    tracker.recordInput('\x1b');
+    expect(states).toEqual(['idle', 'working', 'waiting', 'working', 'approval', 'working']);
   });
 
-  it('jumps to waiting on a bell', () => {
-    tracker.recordOutput('\x07');
+  it('ignores arrow keys and typing', () => {
+    tracker.recordHookEvent('turnEnded');
+    tracker.recordInput('\x1b[A');
+    tracker.recordInput('abc');
     expect(states).toEqual(['idle', 'waiting']);
+  });
+
+  it('re-emits idle on a session start so a rebound session is republished', () => {
+    tracker.recordHookEvent('sessionStarted');
+    expect(states).toEqual(['idle', 'idle']);
   });
 });

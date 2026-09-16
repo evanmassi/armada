@@ -6,4 +6,4 @@ export const getClaudeProjectsDir = (): string => join(homedir(), '.claude', 'pr
 
 export const getWorkspaceFilePath = (): string => join(app.getPath('userData'), 'workspace.json');
 
-export const getClaudeSessionInboxDir = (): string => join(app.getPath('userData'), 'claude-session-inbox');
+export const getClaudeHookInboxDir = (): string => join(app.getPath('userData'), 'claude-hook-inbox');
