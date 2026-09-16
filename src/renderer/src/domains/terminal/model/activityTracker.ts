@@ -14,13 +14,14 @@ const STATE_BY_HOOK_EVENT: Record<ClaudeHookEventKind, ActivityState> = {
 export interface ActivityTracker {
   recordHookEvent(kind: ClaudeHookEventKind): void;
   recordInput(data: string): void;
+  recordExit(): void;
 }
 
 export function createActivityTracker(onChange: (state: ActivityState) => void): ActivityTracker {
   let state: ActivityState = 'idle';
 
   const set = (next: ActivityState, isForced = false): void => {
-    if (!isForced && next === state) return;
+    if (state === 'exited' || (!isForced && next === state)) return;
     state = next;
     onChange(next);
   };
@@ -37,5 +38,6 @@ export function createActivityTracker(onChange: (state: ActivityState) => void):
       else if (state === 'working' && isEscape) set('waiting');
       else if (state === 'waiting' && isEnter) set('idle');
     },
+    recordExit: () => set('exited'),
   };
 }

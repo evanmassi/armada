@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ActivityState = 'working' | 'waiting' | 'approval' | 'idle';
+export type ActivityState = 'working' | 'waiting' | 'approval' | 'idle' | 'exited';
 
 export interface ActivityEntry {
   sessionId: string | undefined;

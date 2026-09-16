@@ -1,4 +1,4 @@
-import type { CSSProperties, DragEvent, KeyboardEvent } from 'react';
+import { useState, type CSSProperties, type DragEvent, type KeyboardEvent } from 'react';
 import type { Tile } from '@shared/workspace/workspaceSchemas';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useSessionActivityStore, type ActivityState } from '@renderer/app/stores/sessionActivityStore';
@@ -14,9 +14,9 @@ export type ArrowDirection = 'left' | 'right' | 'up' | 'down';
 const PLATE_LABELS: Record<Tile['kind'], string> = { claude: 'idle', shell: 'shell', notes: 'notes' };
 
 const plateLabel = (tile: Tile, activity: ActivityState | undefined): string =>
-  tile.kind === 'claude' && activity ? activity : PLATE_LABELS[tile.kind];
+  activity && (tile.kind === 'claude' || activity === 'exited') ? activity : PLATE_LABELS[tile.kind];
 
-const PLATE_TONES: Record<ActivityState, string> = { working: 'text-accent', waiting: 'text-alert', approval: 'text-alert', idle: '' };
+const PLATE_TONES: Record<ActivityState, string> = { working: 'text-accent', waiting: 'text-alert', approval: 'text-alert', idle: '', exited: 'text-muted' };
 
 const ARROW_KEYS: Record<string, ArrowDirection> = {
   ArrowLeft: 'left',
@@ -68,6 +68,7 @@ export function BoardTileFrame({
   const isDimmed = useBoardSelectionStore((state) => state.focusedTileId !== undefined && state.focusedTileId !== tile.id);
   const setFocusedTile = useBoardSelectionStore((state) => state.setFocusedTile);
   const activity = useSessionActivityStore((state) => state.byTileId[tile.id]?.state);
+  const [launchCount, setLaunchCount] = useState(0);
 
   const handleHeaderKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const direction = ARROW_KEYS[event.key];
@@ -100,6 +101,11 @@ export function BoardTileFrame({
         >
           {plateLabel(tile, activity)}
         </span>
+        {activity === 'exited' && (
+          <button type="button" className="px-1 text-muted hover:text-fg" onClick={() => setLaunchCount((count) => count + 1)} title="Relaunch" aria-label="Relaunch session">
+            ↻
+          </button>
+        )}
         {tile.kind === 'claude' && (
           <button type="button" className="px-1 font-bold text-muted hover:text-fg" onClick={onOpenShell} title="Open a shell in this folder" aria-label="Open a shell in this folder">
             {'>_'}
@@ -110,7 +116,7 @@ export function BoardTileFrame({
         </button>
       </div>
       <div className="min-h-0 flex-1">
-        <TileBody boardId={boardId} tile={tile} shouldMountTerminal={shouldMountTerminal} />
+        <TileBody key={launchCount} boardId={boardId} tile={tile} shouldMountTerminal={shouldMountTerminal} />
       </div>
     </div>
   );

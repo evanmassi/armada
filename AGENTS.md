@@ -110,7 +110,8 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   workspace. Board edits live in `domains/boards/model/boardEdits.ts`, color edits in
   `domains/conversations/model/projectColorEdits.ts`.
 - **UI state**: Zustand. `boardSelectionStore` (active board, opened boards, focused tile), `sessionActivityStore`
-  (per-tile working / waiting / approval / idle, driven by Claude hook events plus Enter and Escape typed into the tile),
+  (per-tile working / waiting / approval / idle / exited, driven by Claude hook events, Enter and Escape typed into the
+  tile, and process exit),
   `notificationStore`.
 - Never store main-owned data in Zustand.
 - **Terminal stream** is neither. Pty output arrives on a per-session IPC channel and is written straight into the

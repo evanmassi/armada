@@ -15,7 +15,7 @@ import { handleClipboardKey, handleContextMenu } from '../model/terminalClipboar
 
 const TERMINAL_THEME = { background: '#080a0f', foreground: '#d7dbe2', cursor: '#8fd3e8', selectionBackground: '#8fd3e844' };
 const TERMINAL_FONT = '"Cascadia Code", Consolas, monospace';
-const SESSION_ENDED_BANNER = '\r\n[session ended]\r\n';
+const exitBanner = (exitCode: number): string => `\r\n[exited with code ${exitCode}]\r\n`;
 const REFIT_DEBOUNCE_MS = 80;
 
 interface TerminalSessionOptions {
@@ -84,7 +84,9 @@ export function useTerminalSession(
             terminal.write(event.data);
           }),
           armadaClient.sessions.onExit((event) => {
-            if (event.terminalId === terminalId) terminal.write(SESSION_ENDED_BANNER);
+            if (event.terminalId !== terminalId) return;
+            terminal.write(exitBanner(event.exitCode));
+            activity.recordExit();
           }),
           armadaClient.sessions.onClaudeHookEvent((event) => {
             if (event.terminalId !== terminalId) return;

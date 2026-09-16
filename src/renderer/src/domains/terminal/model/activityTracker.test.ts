@@ -44,6 +44,14 @@ describe('createActivityTracker', () => {
     expect(states).toEqual(['idle', 'waiting']);
   });
 
+  it('stays exited once the process ends', () => {
+    tracker.recordHookEvent('promptSubmitted');
+    tracker.recordExit();
+    tracker.recordHookEvent('turnEnded');
+    tracker.recordInput('\r');
+    expect(states).toEqual(['idle', 'working', 'exited']);
+  });
+
   it('re-emits idle on a session start so a rebound session is republished', () => {
     tracker.recordHookEvent('sessionStarted');
     expect(states).toEqual(['idle', 'idle']);

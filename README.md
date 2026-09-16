@@ -78,7 +78,7 @@ Every board has a layout mode.
 
 ### Activity: what each session is doing
 
-Every Claude tile carries a live status plate, fed by Claude Code's own hooks rather than guessed from the output: **working** from the moment you send a prompt, **approval** when a permission prompt has been sitting unanswered, **waiting** when Claude finishes a turn, **idle** once you have answered. The same dot shows on the sidebar row and in the lane header, so you can see across five sessions which one wants attention without reading any of them.
+Every Claude tile carries a live status plate, fed by Claude Code's own hooks rather than guessed from the output: **working** from the moment you send a prompt, **approval** when a permission prompt has been sitting unanswered, **waiting** when Claude finishes a turn, **idle** once you have answered, **exited** when the process ends, with its exit code in the terminal and a ↻ in the title bar to relaunch it in place. The same dot shows on the sidebar row and in the lane header, so you can see across five sessions which one wants attention without reading any of them.
 
 ### Terminal
 
