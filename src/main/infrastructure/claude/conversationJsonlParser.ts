@@ -29,6 +29,15 @@ const extractPromptText = (content: string | Array<z.infer<typeof contentBlockSc
 
 const isHumanPrompt = (text: string): boolean => text.length > 0 && !text.startsWith('<');
 
+// PITFALL: a live session appends while we read, so a partial trailing line is normal and must not fail the file.
+const parseRecord = (line: string): unknown => {
+  try {
+    return JSON.parse(line);
+  } catch {
+    return undefined;
+  }
+};
+
 const truncate = (text: string): string =>
   text.length > MAX_TITLE_LENGTH ? `${text.slice(0, MAX_TITLE_LENGTH - 1)}…` : text;
 
@@ -39,7 +48,7 @@ export async function summarizeConversationLines(lines: AsyncIterable<string>): 
 
   for await (const line of lines) {
     if (line.length === 0) continue;
-    const parsed = recordSchema.safeParse(JSON.parse(line));
+    const parsed = recordSchema.safeParse(parseRecord(line));
     if (!parsed.success) continue;
     const record = parsed.data;
     cwd ??= record.cwd;

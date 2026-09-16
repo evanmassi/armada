@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { existsSync } from 'node:fs';
+import { delimiter, isAbsolute, join } from 'node:path';
 import * as pty from 'node-pty';
 import type {
   TerminalExitListener,
@@ -25,6 +27,17 @@ interface PtySessionHostDeps {
   logger: FileLogger;
 }
 
+// PITFALL: node-pty resolves a bare command by exact filename on PATH and fails with an empty "File not found: " otherwise.
+const isOnPath = (command: string): boolean =>
+  isAbsolute(command)
+    ? existsSync(command)
+    : (process.env['PATH'] ?? '').split(delimiter).some((dir) => dir.length > 0 && existsSync(join(dir, command)));
+
+function assertLaunchable(command: string, cwd: string): void {
+  if (!existsSync(cwd)) throw new Error(`Folder no longer exists: ${cwd}`);
+  if (!isOnPath(command)) throw new Error(`${command} was not found on PATH`);
+}
+
 export class PtySessionHost implements TerminalHost {
   private terminals = new Map<string, pty.IPty>();
   private outputListeners = new Set<TerminalOutputListener>();
@@ -37,6 +50,7 @@ export class PtySessionHost implements TerminalHost {
     const env = hostEnvironment(terminalId, this.deps.hookInboxDir);
     let terminal: pty.IPty;
     try {
+      assertLaunchable(command, cwd);
       terminal = pty.spawn(command, args, { name: 'xterm-256color', cols, rows, cwd, env });
     } catch (error) {
       this.deps.logger.error('terminal.spawnFailed', { terminalId, command, args, cwd, error });

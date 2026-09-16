@@ -61,7 +61,18 @@ export class ClaudeProjectsReader implements ConversationRepository {
     return existence.includes(true);
   }
 
+  // PITFALL: Claude Code deletes transcripts between our readdir and read; a vanished file is skipped, not an error.
   private async readConversation(file: string): Promise<Conversation | undefined> {
+    try {
+      return await this.readConversationOrThrow(file);
+    } catch (error) {
+      if (!isMissingPath(error)) throw error;
+      this.cache.delete(file);
+      return undefined;
+    }
+  }
+
+  private async readConversationOrThrow(file: string): Promise<Conversation | undefined> {
     const { mtimeMs, mtime } = await stat(file);
     const cached = this.cache.get(file);
     if (cached?.mtimeMs === mtimeMs) return cached.conversation;

@@ -28,6 +28,14 @@ describe('summarizeConversationLines', () => {
     expect(summary?.title).toBe('fix the build');
   });
 
+  it('skips a partial or malformed line instead of failing the file', async () => {
+    async function* withTornTail(): AsyncIterable<string> {
+      yield JSON.stringify({ type: 'user', cwd: 'C:\\dev\\x', message: { role: 'user', content: 'hello' } });
+      yield '{"type":"assistant","message":{"role":"assis';
+    }
+    expect(await summarizeConversationLines(withTornTail())).toEqual({ cwd: 'C:\\dev\\x', title: 'hello' });
+  });
+
   it('returns undefined when no record carries a cwd', async () => {
     expect(await summarizeConversationLines(lines({ type: 'mode', mode: 'normal' }))).toBeUndefined();
   });

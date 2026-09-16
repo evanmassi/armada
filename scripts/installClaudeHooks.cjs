@@ -1,6 +1,6 @@
-const { readFileSync, writeFileSync } = require('node:fs');
+const { existsSync, mkdirSync, readFileSync, writeFileSync } = require('node:fs');
 const { homedir } = require('node:os');
-const { join } = require('node:path');
+const { dirname, join } = require('node:path');
 
 const settingsPath = join(homedir(), '.claude', 'settings.json');
 const scriptCommand = (name) => `node "${join(__dirname, name).split('\\').join('/')}"`;
@@ -15,7 +15,7 @@ const MATCHER_BY_EVENT = {
 
 const isArmadaGroup = (group) => (group.hooks ?? []).every((hook) => ARMADA_COMMANDS.has(hook.command));
 
-const before = readFileSync(settingsPath, 'utf8');
+const before = existsSync(settingsPath) ? readFileSync(settingsPath, 'utf8') : '{}';
 const settings = JSON.parse(before);
 const hooks = (settings.hooks ??= {});
 for (const [event, matcher] of Object.entries(MATCHER_BY_EVENT)) {
@@ -27,6 +27,7 @@ const after = `${JSON.stringify(settings, null, 2)}\n`;
 if (after === before) {
   console.log(`Armada hooks already present in ${settingsPath}`);
 } else {
+  mkdirSync(dirname(settingsPath), { recursive: true });
   writeFileSync(settingsPath, after, 'utf8');
   console.log(`Armada hooks written to ${settingsPath} for ${Object.keys(MATCHER_BY_EVENT).join(', ')}`);
 }

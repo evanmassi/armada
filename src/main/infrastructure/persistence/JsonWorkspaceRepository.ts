@@ -9,12 +9,22 @@ const EMPTY_WORKSPACE: Workspace = workspaceSchema.parse({ boards: [], projectCo
 const isMissingFile = (error: unknown): boolean =>
   error instanceof Error && 'code' in error && error.code === 'ENOENT';
 
+const parseJson = (raw: string): unknown => {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return undefined;
+  }
+};
+
 interface JsonWorkspaceRepositoryDeps {
   filePath: string;
   logger: FileLogger;
 }
 
 export class JsonWorkspaceRepository implements WorkspaceRepository {
+  private lastSave: Promise<void> = Promise.resolve();
+
   constructor(private deps: JsonWorkspaceRepositoryDeps) {}
 
   async load(): Promise<Workspace> {
@@ -25,7 +35,7 @@ export class JsonWorkspaceRepository implements WorkspaceRepository {
       if (isMissingFile(error)) return EMPTY_WORKSPACE;
       throw error;
     }
-    const parsed = workspaceSchema.safeParse(JSON.parse(raw));
+    const parsed = workspaceSchema.safeParse(parseJson(raw));
     if (!parsed.success) {
       this.deps.logger.error('workspace.invalid', { filePath: this.deps.filePath, issues: parsed.error.issues });
       throw new Error(`Workspace file is invalid and was left untouched: ${this.deps.filePath}`);
@@ -33,7 +43,14 @@ export class JsonWorkspaceRepository implements WorkspaceRepository {
     return parsed.data;
   }
 
-  async save(workspace: Workspace): Promise<void> {
+  // PITFALL: saves are chained so two edits from one renderer tick never write the file concurrently.
+  save(workspace: Workspace): Promise<void> {
+    const save = this.lastSave.then(() => this.writeAtomically(workspace));
+    this.lastSave = save.catch(() => undefined);
+    return save;
+  }
+
+  private async writeAtomically(workspace: Workspace): Promise<void> {
     await mkdir(dirname(this.deps.filePath), { recursive: true });
     const stagingPath = `${this.deps.filePath}.tmp`;
     await writeFile(stagingPath, JSON.stringify(workspace, null, 2), 'utf8');
