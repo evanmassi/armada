@@ -17,8 +17,7 @@ armada/
 │   ├── renderer/    # React + Vite + TypeScript (domain-driven)
 │   └── shared/      # Zod schemas + IPC channel names (no runtime deps on either side)
 ├── docs/
-│   ├── audit-prompt.txt
-│   └── odysseus-agents-reference.md
+│   └── audit-prompt.txt
 └── AGENTS.md
 ```
 
@@ -310,9 +309,6 @@ The code documents itself through naming. If a comment feels needed, rename some
 
 **Sole exception**: one line containing `PITFALL:` for something a reader genuinely cannot infer from the code
 (a workaround, a spec quirk, a silent failure, an intentional overwrite).
-
-This overrides section 1 of `docs/audit-prompt.txt`. When auditing Armada, treat any comment other than a `PITFALL:`
-line as a finding for removal, and never flag a missing file header.
 
 ---
 
