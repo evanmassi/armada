@@ -59,7 +59,7 @@ export function ActionMenu({ label, entries }: ActionMenuProps) {
       <div key={entry.label} className="group relative">
         <button type="button" role="menuitem" aria-haspopup="menu" className={MENU_ITEM_CLASS}>
           <span className="flex-1">{entry.label}</span>
-          <span className="text-muted">▸</span>
+          <span className="text-muted">◂</span>
         </button>
         <div role="menu" className={`absolute top-0 right-full mr-px hidden group-hover:flex group-focus-within:flex ${MENU_SURFACE_CLASS}`}>
           {entry.items.map(renderItem)}
