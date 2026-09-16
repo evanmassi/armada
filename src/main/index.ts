@@ -42,6 +42,9 @@ if (!isPrimaryInstance) app.quit();
 app.whenReady().then(() => {
   if (!isPrimaryInstance) return;
   const container = createServiceContainer();
+  container.logger.info('app.started', { version: app.getVersion(), electron: process.versions.electron });
+  process.on('uncaughtException', (error) => container.logger.error('main.uncaughtException', { error }));
+  process.on('unhandledRejection', (reason) => container.logger.error('main.unhandledRejection', { error: reason }));
   const mainWindow = createMainWindow();
 
   app.on('second-instance', () => {
@@ -58,6 +61,7 @@ app.whenReady().then(() => {
   const killAllTerminals = (): void => container.terminalHost.killAll();
   mainWindow.webContents.on('did-start-navigation', killAllTerminals);
   mainWindow.on('close', () => {
+    container.logger.info('app.closing');
     killAllTerminals();
     container.claudeHookInbox.stop();
   });

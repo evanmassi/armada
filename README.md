@@ -101,6 +101,8 @@ Tiles, projects, groups, and boards are all reachable from the keyboard.
 
 Armada never writes to Claude Code's conversation files. It reads `~/.claude/projects` for conversations, adds its hook entries to `~/.claude/settings.json` when you run `npm run hook`, and keeps its own state in one JSON file in the app's user data folder: boards, tiles, colors, sidebar arrangement, and font size. Delete that file and you are back to a blank slate with all your conversations intact.
 
+Next to it sits `armada.log`, one JSON line per event: every session spawn with its command line, every exit code, every hook event received or rejected, and any workspace file that failed validation. It rotates to `armada.log.1` once it passes a megabyte. When a tile misbehaves, that file is the first place to look.
+
 ## Development
 
 ```

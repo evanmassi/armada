@@ -52,6 +52,7 @@ src/main/
 │   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser
 │   ├── persistence/  # JsonWorkspaceRepository (userData/workspace.json)
 │   ├── pty/          # PtySessionHost wraps node-pty
+│   ├── logging/      # FileLogger: JSON lines in userData/armada.log, rotated at startup
 │   ├── di/           # ServiceContainer
 │   └── paths.ts      # The only place userData and ~/.claude paths are built
 └── ipc/              # One register*Handlers file per concern

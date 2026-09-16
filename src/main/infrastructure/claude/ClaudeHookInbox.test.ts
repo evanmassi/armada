@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { ClaudeHookEvent } from '@shared/sessions/sessionSchemas';
+import { FileLogger } from '@main/infrastructure/logging/FileLogger';
 import { ClaudeHookInbox } from './ClaudeHookInbox';
 
 const TERMINAL_ID = '6f1c2a0e-5b7d-4c3e-9a8f-1d2e3f4a5b6c';
@@ -14,7 +15,7 @@ describe('ClaudeHookInbox', () => {
 
   beforeEach(async () => {
     inboxDir = await mkdtemp(join(tmpdir(), 'armada-inbox-'));
-    inbox = new ClaudeHookInbox(inboxDir);
+    inbox = new ClaudeHookInbox({ inboxDir, logger: new FileLogger(join(inboxDir, 'armada.log')) });
   });
 
   afterEach(async () => {

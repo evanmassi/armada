@@ -4,7 +4,8 @@ import type { WorkspaceRepository } from '@main/domain/repositories/WorkspaceRep
 import type { TerminalHost } from '@main/domain/terminals/TerminalHost';
 import { ClaudeProjectsReader } from '@main/infrastructure/claude/ClaudeProjectsReader';
 import { ClaudeHookInbox } from '@main/infrastructure/claude/ClaudeHookInbox';
-import { getClaudeProjectsDir, getClaudeHookInboxDir, getWorkspaceFilePath } from '@main/infrastructure/paths';
+import { FileLogger } from '@main/infrastructure/logging/FileLogger';
+import { getClaudeProjectsDir, getClaudeHookInboxDir, getLogFilePath, getWorkspaceFilePath } from '@main/infrastructure/paths';
 import { JsonWorkspaceRepository } from '@main/infrastructure/persistence/JsonWorkspaceRepository';
 import { PtySessionHost } from '@main/infrastructure/pty/PtySessionHost';
 
@@ -14,17 +15,20 @@ export interface ServiceContainer {
   workspaceRepository: WorkspaceRepository;
   terminalHost: TerminalHost;
   claudeHookInbox: ClaudeHookInbox;
+  logger: FileLogger;
 }
 
 export function createServiceContainer(): ServiceContainer {
+  const logger = new FileLogger(getLogFilePath());
   const conversationRepository = new ClaudeProjectsReader(getClaudeProjectsDir());
   const hookInboxDir = getClaudeHookInboxDir();
-  const terminalHost = new PtySessionHost(hookInboxDir);
+  const terminalHost = new PtySessionHost({ hookInboxDir, logger });
   return {
     conversationCatalogService: new ConversationCatalogService({ conversationRepository }),
     sessionService: new SessionService({ conversationRepository, terminalHost }),
-    workspaceRepository: new JsonWorkspaceRepository(getWorkspaceFilePath()),
+    workspaceRepository: new JsonWorkspaceRepository({ filePath: getWorkspaceFilePath(), logger }),
     terminalHost,
-    claudeHookInbox: new ClaudeHookInbox(hookInboxDir),
+    claudeHookInbox: new ClaudeHookInbox({ inboxDir: hookInboxDir, logger }),
+    logger,
   };
 }
