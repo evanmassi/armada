@@ -111,3 +111,7 @@ npm test
 ```
 
 Electron, React, TypeScript, xterm.js, node-pty. The architecture and the conventions the codebase holds itself to are in [AGENTS.md](AGENTS.md).
+
+## License
+
+MIT
