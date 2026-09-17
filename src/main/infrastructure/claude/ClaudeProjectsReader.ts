@@ -4,6 +4,7 @@ import { basename, join } from 'node:path';
 import { createInterface } from 'node:readline';
 import type { Conversation } from '@shared/conversations/conversationTypes';
 import type { ConversationRepository } from '@main/domain/repositories/ConversationRepository';
+import { isMissingPath } from '@main/infrastructure/fileErrors';
 import { summarizeConversationLines } from './conversationJsonlParser';
 
 const CONVERSATION_FILE_EXTENSION = '.jsonl';
@@ -12,9 +13,6 @@ interface CachedConversation {
   mtimeMs: number;
   conversation: Conversation | undefined;
 }
-
-const isMissingPath = (error: unknown): boolean =>
-  error instanceof Error && 'code' in error && error.code === 'ENOENT';
 
 async function listSubdirectories(dir: string): Promise<string[]> {
   try {

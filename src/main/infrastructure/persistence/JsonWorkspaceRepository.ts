@@ -2,12 +2,10 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { workspaceSchema, type Workspace } from '@shared/workspace/workspaceSchemas';
 import type { WorkspaceRepository } from '@main/domain/repositories/WorkspaceRepository';
+import { isMissingPath } from '@main/infrastructure/fileErrors';
 import type { FileLogger } from '@main/infrastructure/logging/FileLogger';
 
 const EMPTY_WORKSPACE: Workspace = workspaceSchema.parse({ boards: [], projectColors: {} });
-
-const isMissingFile = (error: unknown): boolean =>
-  error instanceof Error && 'code' in error && error.code === 'ENOENT';
 
 const parseJson = (raw: string): unknown => {
   try {
@@ -32,7 +30,7 @@ export class JsonWorkspaceRepository implements WorkspaceRepository {
     try {
       raw = await readFile(this.deps.filePath, 'utf8');
     } catch (error) {
-      if (isMissingFile(error)) return EMPTY_WORKSPACE;
+      if (isMissingPath(error)) return EMPTY_WORKSPACE;
       throw error;
     }
     const parsed = workspaceSchema.safeParse(parseJson(raw));
