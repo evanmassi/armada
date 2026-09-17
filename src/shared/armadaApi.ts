@@ -1,4 +1,5 @@
 import type { Project } from './conversations/conversationTypes';
+import type { ClaudeIntegrationStatus } from './integration/integrationTypes';
 import type { OpenLinkRequest } from './links/linkSchemas';
 import type { FolderRequest } from './projects/projectSchemas';
 import type {
@@ -39,6 +40,10 @@ export interface ArmadaApi {
     onOutput(listener: (event: TerminalOutputEvent) => void): Unsubscribe;
     onExit(listener: (event: TerminalExitEvent) => void): Unsubscribe;
     onClaudeHookEvent(listener: (event: ClaudeHookEvent) => void): Unsubscribe;
+  };
+  integration: {
+    check(): Promise<ClaudeIntegrationStatus>;
+    repair(): Promise<ClaudeIntegrationStatus>;
   };
   usage: {
     read(): Promise<ClaudeUsage | undefined>;

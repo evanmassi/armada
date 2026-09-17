@@ -4,6 +4,7 @@ import { GLOBAL_SHORTCUTS, isGlobalShortcut } from '@renderer/app/keyboardShortc
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { BoardLayoutModeControls, BoardPanel, BoardSwitcherBar, findClaudeTile, tileCwd, useBoardsEditor } from '@renderer/domains/boards';
 import { ConversationSidebarPanel, useProjectColors, useProjectNames } from '@renderer/domains/conversations';
+import { IntegrationBanner } from '@renderer/domains/integration';
 import { disposeLiveTerminalsExcept } from '@renderer/domains/terminal';
 import { UsageIndicator } from '@renderer/domains/usage';
 import { adjustTerminalFontSize, resetTerminalFontSize, useWorkspaceEditor, useWorkspaceQuery } from '@renderer/domains/workspace';
@@ -116,6 +117,7 @@ export function App() {
     <div className="flex h-full">
       <ConversationSidebarPanel footer={<UsageIndicator />} onOpenConversation={openConversation} onOpenProjectBoard={openProjectBoard} onStartSession={startSession} />
       <main className="flex min-w-0 flex-1 flex-col">
+        <IntegrationBanner />
         <BoardSwitcherBar
           boards={boards}
           activeBoardId={resolvedActiveBoardId}

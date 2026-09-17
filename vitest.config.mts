@@ -9,5 +9,5 @@ export default defineConfig({
       '@shared': resolve('src/shared'),
     },
   },
-  test: { include: ['src/**/*.test.ts', 'scripts/**/*.test.ts'] },
+  test: { include: ['src/**/*.test.ts'] },
 });

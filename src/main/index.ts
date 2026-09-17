@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { app, BrowserWindow, Menu } from 'electron';
 import { createServiceContainer } from '@main/infrastructure/di/ServiceContainer';
 import { registerConversationHandlers } from '@main/ipc/registerConversationHandlers';
+import { registerIntegrationHandlers } from '@main/ipc/registerIntegrationHandlers';
 import { registerLinkHandlers } from '@main/ipc/registerLinkHandlers';
 import { registerProjectHandlers } from '@main/ipc/registerProjectHandlers';
 import { registerSessionHandlers } from '@main/ipc/registerSessionHandlers';
@@ -56,6 +57,7 @@ app.whenReady().then(() => {
   });
 
   registerConversationHandlers(container);
+  registerIntegrationHandlers(container);
   registerProjectHandlers(container, mainWindow);
   registerLinkHandlers(container);
   registerWorkspaceHandlers(container);

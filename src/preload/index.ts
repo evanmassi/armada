@@ -33,6 +33,10 @@ const armadaApi: ArmadaApi = {
     onExit: (listener) => subscribe(IPC_CHANNELS.sessionsExit, listener),
     onClaudeHookEvent: (listener) => subscribe(IPC_CHANNELS.sessionsClaudeHook, listener),
   },
+  integration: {
+    check: () => ipcRenderer.invoke(IPC_CHANNELS.integrationCheck),
+    repair: () => ipcRenderer.invoke(IPC_CHANNELS.integrationRepair),
+  },
   usage: {
     read: () => ipcRenderer.invoke(IPC_CHANNELS.usageRead),
     onChanged: (listener) => subscribe(IPC_CHANNELS.usageChanged, listener),

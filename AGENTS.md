@@ -32,8 +32,8 @@ armada/
 | Testing | Vitest |
 
 Sessions are spawned as `claude` for a new conversation or `claude --resume <sessionId>` to continue one, always
-with an argv array, never a shell string. `scripts/claudeHookRelay.cjs`, installed into `~/.claude/settings.json` by
-`npm run hook` for SessionStart, UserPromptSubmit, Stop, and the permission Notification, reports each event through a
+with an argv array, never a shell string. `scripts/claudeHookRelay.cjs`, installed into `~/.claude/settings.json`
+for SessionStart, UserPromptSubmit, Stop, and the permission Notification, reports each event through a
 file inbox under `userData` (`ClaudeHookInbox`). A `/clear` or `/resume` typed inside a tile rotates the Claude session
 id under the tile and the tile rebinds to it; the other events drive the tile's activity state.
 
@@ -41,6 +41,13 @@ The same install wraps the user's `statusLine` command in `scripts/claudeStatusL
 base64-encoded as its argument. Only the status line input carries `rate_limits`; hooks do not. Inside a tile the relay
 writes the 5 hour and weekly numbers to `userData/claude-usage/usage.json` (latest value, replaced by rename), then runs
 the original command on the same input. `ClaudeUsageFile` watches that file and pushes each new report to the renderer.
+
+The app is the only installer. `claudeSettingsIntegration.ts` holds the pure edit (`integrateArmada`) and derives the
+status from it: a part of the settings is a gap when integrating would change it, so check and repair cannot disagree.
+Armada's entries are recognized by script name, not full command, which is what lets a moved repo folder get repointed
+instead of stacked. `ClaudeSettingsFile` checks on launch and writes only from the banner's Fix button; a settings file
+it cannot parse is an error shown to the user, never overwritten. The settings schema is passthrough at every level
+because the file belongs to the user and any key dropped on parse would be lost on save.
 
 ---
 
@@ -54,7 +61,7 @@ src/main/
 ├── application/
 │   └── services/     # ConversationCatalogService, SessionService
 ├── infrastructure/
-│   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser, ClaudeHookInbox, ClaudeUsageFile
+│   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser, ClaudeHookInbox, ClaudeUsageFile, ClaudeSettingsFile
 │   ├── persistence/  # JsonWorkspaceRepository (userData/workspace.json)
 │   ├── pty/          # PtySessionHost wraps node-pty
 │   ├── logging/      # FileLogger: JSON lines in userData/armada.log, rotated at startup
@@ -99,6 +106,7 @@ src/renderer/src/
 │   ├── conversations/ # Sidebar: projects and conversations, open/resume, project colors
 │   ├── boards/        # Board list, grid layout, tile placement
 │   ├── terminal/      # xterm tile bound to one pty session
+│   ├── integration/   # Banner that checks and repairs Armada's entries in Claude Code's settings
 │   └── usage/         # 5 hour and weekly limit readout in the sidebar footer
 ├── shared/           # Cross-cutting
 │   ├── ui/
@@ -182,7 +190,7 @@ Never define a boundary type inline in main or renderer.
   TypeScript type with `z.infer`. A schema nothing calls `.parse()` on is dead.
 - **Plain type** for main-to-renderer results and events. Validating in-process output is theater.
 
-**Modules**: `workspace/workspaceSchemas`, `sessions/sessionSchemas`, `links/linkSchemas`, `usage/usageSchemas`, `conversations/conversationTypes`, `ipcChannels`,
+**Modules**: `workspace/workspaceSchemas`, `sessions/sessionSchemas`, `links/linkSchemas`, `usage/usageSchemas`, `integration/integrationTypes`, `conversations/conversationTypes`, `ipcChannels`,
 `armadaApi` (the preload contract both sides implement against)
 
 ---
@@ -405,7 +413,6 @@ Commits: `audit: <directory scope> — <specific changes, comma-separated>`, no 
 npm run dev           # Electron with hot reload
 npm run build         # Production build (what the Start Menu shortcut launches)
 npm run shortcut      # Write the Start Menu shortcut (pin it to the taskbar from there)
-npm run hook          # Register the Claude hooks (tile activity, live session id) and the status line relay (usage)
 npm run typecheck     # Type check main, preload, renderer
 npm run lint          # Lint
 npm test              # Vitest

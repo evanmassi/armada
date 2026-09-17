@@ -23,13 +23,15 @@ Then:
 git clone https://github.com/evanmassi/armada.git
 cd armada
 npm install
-npm run hook
 npm run dev
 ```
 
-`npm run hook` registers Claude Code hooks that tell Armada when a session starts, when you send a prompt, when Claude finishes a turn, and when it is waiting on a permission. Without them, tiles cannot show what Claude is doing and lose track of a conversation after `/clear` or `/resume`, which give the session a new id. It is safe to run again; it never touches other hooks in your settings.
+On first launch a banner across the top says Armada is not connected to Claude Code yet. Click **Fix** and it adds two things to `~/.claude/settings.json`:
 
-It also routes your status line through a small relay so Armada can show your usage limits. Your existing status line command still runs and looks the same; the relay only copies the 5 hour and weekly numbers out on the way past. If you change your status line later, run `npm run hook` again.
+- Hooks that tell Armada when a session starts, when you send a prompt, when Claude finishes a turn, and when it is waiting on a permission. Without them, tiles cannot show what Claude is doing and lose track of a conversation after `/clear` or `/resume`, which give the session a new id.
+- A small relay around your status line so Armada can show your usage limits. Your existing status line command still runs and looks the same; the relay only copies the 5 hour and weekly numbers out on the way past.
+
+It never touches your other hooks or settings. Armada rechecks on every launch, so if you change your status line or move the Armada folder, the banner comes back and one click reconnects it.
 
 To launch Armada like a normal app instead of from a terminal:
 
@@ -125,7 +127,7 @@ Tiles, projects, groups, boards, and menus are all reachable from the keyboard.
 
 ## Where your data lives
 
-Armada never writes to Claude Code's conversation files. It reads `~/.claude/projects` for conversations and adds its hook entries and status line relay to `~/.claude/settings.json` when you run `npm run hook`.
+Armada never writes to Claude Code's conversation files. It reads `~/.claude/projects` for conversations and adds its hook entries and status line relay to `~/.claude/settings.json`, and only when you click Fix on the connection banner.
 
 Its own state lives in `%APPDATA%\armada`:
 
@@ -134,8 +136,7 @@ Its own state lives in `%APPDATA%\armada`:
 
 ## Troubleshooting
 
-- **Tiles stay on idle and never change.** The hooks are not installed. Run `npm run hook` and start a new session in the tile.
-- **No usage readout in the sidebar.** The status line relay is not installed, or no session has run since it was. Run `npm run hook` and send a prompt in any tile.
+- **Tiles stay on idle and never change**, or **no usage readout in the sidebar.** Armada is not connected to Claude Code. Relaunch to bring back the banner if you dismissed it, click Fix, then restart the session in the tile. The usage readout appears after the first prompt in any tile.
 - **"… was not found on PATH"** names the exact file Armada looked for. Install it or fix your `PATH`, then relaunch.
 - **"Folder no longer exists"** means the project was moved or deleted. Archive it in the sidebar or restore the folder.
 - **"module was compiled against a different Node version"** on launch means the terminal module was not rebuilt for Electron. Run `npm install` again.
