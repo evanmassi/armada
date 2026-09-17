@@ -10,4 +10,6 @@ export const getWorkspaceFilePath = (): string => join(app.getPath('userData'), 
 
 export const getClaudeHookInboxDir = (): string => join(app.getPath('userData'), 'claude-hook-inbox');
 
+export const getClaudeUsageFilePath = (): string => join(app.getPath('userData'), 'claude-usage', 'usage.json');
+
 export const getLogFilePath = (): string => join(app.getPath('userData'), 'armada.log');

@@ -5,6 +5,7 @@ import { registerConversationHandlers } from '@main/ipc/registerConversationHand
 import { registerLinkHandlers } from '@main/ipc/registerLinkHandlers';
 import { registerProjectHandlers } from '@main/ipc/registerProjectHandlers';
 import { registerSessionHandlers } from '@main/ipc/registerSessionHandlers';
+import { registerUsageHandlers } from '@main/ipc/registerUsageHandlers';
 import { registerWorkspaceHandlers } from '@main/ipc/registerWorkspaceHandlers';
 import appIdentity from '../../build/appIdentity.json';
 
@@ -59,7 +60,9 @@ app.whenReady().then(() => {
   registerLinkHandlers(container);
   registerWorkspaceHandlers(container);
   registerSessionHandlers(container, mainWindow.webContents);
+  registerUsageHandlers(container, mainWindow.webContents);
   void container.claudeHookInbox.start();
+  void container.claudeUsageFile.start();
 
   const killAllTerminals = (): void => container.terminalHost.killAll();
   mainWindow.webContents.on('did-start-navigation', killAllTerminals);
@@ -67,6 +70,7 @@ app.whenReady().then(() => {
     container.logger.info('app.closing');
     killAllTerminals();
     container.claudeHookInbox.stop();
+    container.claudeUsageFile.stop();
   });
 });
 

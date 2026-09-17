@@ -13,4 +13,6 @@ export const IPC_CHANNELS = {
   sessionsOutput: 'sessions:output',
   sessionsExit: 'sessions:exit',
   sessionsClaudeHook: 'sessions:claudeHook',
+  usageRead: 'usage:read',
+  usageChanged: 'usage:changed',
 } as const;

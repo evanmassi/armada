@@ -10,6 +10,7 @@ import type {
   TerminalResizeRequest,
   TerminalWriteRequest,
 } from './sessions/sessionSchemas';
+import type { ClaudeUsage } from './usage/usageSchemas';
 import type { Workspace } from './workspace/workspaceSchemas';
 
 export type Unsubscribe = () => void;
@@ -38,5 +39,9 @@ export interface ArmadaApi {
     onOutput(listener: (event: TerminalOutputEvent) => void): Unsubscribe;
     onExit(listener: (event: TerminalExitEvent) => void): Unsubscribe;
     onClaudeHookEvent(listener: (event: ClaudeHookEvent) => void): Unsubscribe;
+  };
+  usage: {
+    read(): Promise<ClaudeUsage | undefined>;
+    onChanged(listener: (usage: ClaudeUsage) => void): Unsubscribe;
   };
 }

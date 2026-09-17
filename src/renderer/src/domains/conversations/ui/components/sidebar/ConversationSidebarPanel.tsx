@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { type ReactNode, useMemo, useRef, useState } from 'react';
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
 import { selectActivityBySession, useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
 import armadaIcon from '@renderer/assets/armada-icon.png';
@@ -23,12 +23,13 @@ const MIN_WIDTH_PX = 200;
 const MAX_WIDTH_PX = 640;
 
 interface ConversationSidebarPanelProps {
+  footer: ReactNode;
   onOpenConversation(conversation: Conversation, keepOnCurrentBoard: boolean): void;
   onOpenProjectBoard(project: Project): void;
   onStartSession(cwd: string, keepOnCurrentBoard: boolean): void;
 }
 
-export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoard, onStartSession }: ConversationSidebarPanelProps) {
+export function ConversationSidebarPanel({ footer, onOpenConversation, onOpenProjectBoard, onStartSession }: ConversationSidebarPanelProps) {
   const { data: projects = [], isPending, isError, error } = useProjectsQuery();
   const workspace = useWorkspaceQuery().data;
   const sidebar = workspace?.sidebar;
@@ -214,6 +215,7 @@ export function ConversationSidebarPanel({ onOpenConversation, onOpenProjectBoar
           {sections.map(renderSection)}
           {isSearching && visibleProjects.length === 0 && <p className="px-3 py-2 text-muted">No matches.</p>}
         </div>
+        {footer}
       </div>
       <DragSplitter
         orientation="vertical"

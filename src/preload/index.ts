@@ -33,6 +33,10 @@ const armadaApi: ArmadaApi = {
     onExit: (listener) => subscribe(IPC_CHANNELS.sessionsExit, listener),
     onClaudeHookEvent: (listener) => subscribe(IPC_CHANNELS.sessionsClaudeHook, listener),
   },
+  usage: {
+    read: () => ipcRenderer.invoke(IPC_CHANNELS.usageRead),
+    onChanged: (listener) => subscribe(IPC_CHANNELS.usageChanged, listener),
+  },
 };
 
 contextBridge.exposeInMainWorld('armada', armadaApi);

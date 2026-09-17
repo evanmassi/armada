@@ -37,6 +37,11 @@ with an argv array, never a shell string. `scripts/claudeHookRelay.cjs`, install
 file inbox under `userData` (`ClaudeHookInbox`). A `/clear` or `/resume` typed inside a tile rotates the Claude session
 id under the tile and the tile rebinds to it; the other events drive the tile's activity state.
 
+The same install wraps the user's `statusLine` command in `scripts/claudeStatusLineRelay.cjs`, the original command
+base64-encoded as its argument. Only the status line input carries `rate_limits`; hooks do not. Inside a tile the relay
+writes the 5 hour and weekly numbers to `userData/claude-usage/usage.json` (latest value, replaced by rename), then runs
+the original command on the same input. `ClaudeUsageFile` watches that file and pushes each new report to the renderer.
+
 ---
 
 ## Main Process Architecture (Clean Architecture)
@@ -49,7 +54,7 @@ src/main/
 ├── application/
 │   └── services/     # ConversationCatalogService, SessionService
 ├── infrastructure/
-│   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser
+│   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser, ClaudeHookInbox, ClaudeUsageFile
 │   ├── persistence/  # JsonWorkspaceRepository (userData/workspace.json)
 │   ├── pty/          # PtySessionHost wraps node-pty
 │   ├── logging/      # FileLogger: JSON lines in userData/armada.log, rotated at startup
@@ -93,7 +98,8 @@ src/renderer/src/
 │   ├── workspace/     # The persisted document: query + the single edit/save path
 │   ├── conversations/ # Sidebar: projects and conversations, open/resume, project colors
 │   ├── boards/        # Board list, grid layout, tile placement
-│   └── terminal/      # xterm tile bound to one pty session
+│   ├── terminal/      # xterm tile bound to one pty session
+│   └── usage/         # 5 hour and weekly limit readout in the sidebar footer
 ├── shared/           # Cross-cutting
 │   ├── ui/
 │   └── utils/
@@ -176,7 +182,7 @@ Never define a boundary type inline in main or renderer.
   TypeScript type with `z.infer`. A schema nothing calls `.parse()` on is dead.
 - **Plain type** for main-to-renderer results and events. Validating in-process output is theater.
 
-**Modules**: `workspace/workspaceSchemas`, `sessions/sessionSchemas`, `links/linkSchemas`, `conversations/conversationTypes`, `ipcChannels`,
+**Modules**: `workspace/workspaceSchemas`, `sessions/sessionSchemas`, `links/linkSchemas`, `usage/usageSchemas`, `conversations/conversationTypes`, `ipcChannels`,
 `armadaApi` (the preload contract both sides implement against)
 
 ---
@@ -399,7 +405,7 @@ Commits: `audit: <directory scope> — <specific changes, comma-separated>`, no 
 npm run dev           # Electron with hot reload
 npm run build         # Production build (what the Start Menu shortcut launches)
 npm run shortcut      # Write the Start Menu shortcut (pin it to the taskbar from there)
-npm run hook          # Register the Claude hooks that drive tile activity and keep tiles on the live session id
+npm run hook          # Register the Claude hooks (tile activity, live session id) and the status line relay (usage)
 npm run typecheck     # Type check main, preload, renderer
 npm run lint          # Lint
 npm test              # Vitest
