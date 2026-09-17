@@ -92,7 +92,7 @@ export function BoardTileFrame({
       style={{ '--tile-accent': accentColor } as CSSProperties}
     >
       <div
-        className={`${TILE_DRAG_HANDLE_CLASS} tile-titlebar flex cursor-move items-center gap-2 border-b border-edge px-2 py-1 text-[11px] focus:outline-none focus:ring-1 focus:ring-accent/60`}
+        className={`${TILE_DRAG_HANDLE_CLASS} tile-titlebar relative z-20 flex cursor-move items-center gap-2 border-b border-edge px-2 py-1 text-[11px] focus:outline-none focus:ring-1 focus:ring-accent/60`}
         tabIndex={0}
         role="group"
         aria-label={`${title} tile. ${keyboardHint}`}
