@@ -10,7 +10,8 @@ import { assertLaunchable } from '@main/infrastructure/launchChecks';
 import type { FileLogger } from '@main/infrastructure/logging/FileLogger';
 
 const INHERITED_LAUNCHER_NOISE = ['CLAUDECODE', 'CLAUDE_CODE_CHILD_SESSION', 'NO_COLOR', 'FORCE_COLOR', 'CI'];
-const TERMINAL_CAPABILITIES = { TERM: 'xterm-256color', COLORTERM: 'truecolor' };
+// PITFALL: Claude Code only emits embedded hyperlinks for terminals it recognizes, and Armada is not one; FORCE_HYPERLINK opts in.
+const TERMINAL_CAPABILITIES = { TERM: 'xterm-256color', COLORTERM: 'truecolor', FORCE_HYPERLINK: '1' };
 const ARMADA_TERMINAL_ID_ENV = 'ARMADA_TERMINAL_ID';
 const ARMADA_HOOK_INBOX_ENV = 'ARMADA_HOOK_INBOX';
 

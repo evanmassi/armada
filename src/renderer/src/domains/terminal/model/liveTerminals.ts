@@ -10,6 +10,7 @@ import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
 import { getErrorMessage } from '@renderer/shared/utils/getErrorMessage';
 import { createActivityTracker } from './activityTracker';
 import { handleClipboardKey, handleContextMenu } from './terminalClipboard';
+import { enableTerminalLinks } from './terminalLinks';
 
 const TERMINAL_THEME = { background: '#080a0f', foreground: '#d7dbe2', cursor: '#8fd3e8', selectionBackground: '#8fd3e844' };
 const TERMINAL_FONT = '"Cascadia Code", Consolas, monospace';
@@ -67,7 +68,7 @@ class LiveTerminalEntry implements LiveTerminal {
     this.onSessionRebound = onSessionRebound;
     this.detach();
     const isFirstAttach = this.terminal.element === undefined;
-    if (isFirstAttach) this.terminal.open(container);
+    if (isFirstAttach) this.openTerminal(container);
     else container.appendChild(this.terminal.element!);
     this.fit.fit();
     const onContextMenu = (event: MouseEvent): void => handleContextMenu(this.terminal, event);
@@ -103,6 +104,15 @@ class LiveTerminalEntry implements LiveTerminal {
     if (this.terminalId) armadaClient.sessions.close({ terminalId: this.terminalId });
     useSessionActivityStore.getState().clearActivity(this.tileId);
     this.terminal.dispose();
+  }
+
+  private openTerminal(container: HTMLElement): void {
+    this.terminal.open(container);
+    enableTerminalLinks(this.terminal, (target) => {
+      armadaClient.links
+        .open({ target, cwd: this.launch.cwd })
+        .catch((error: unknown) => useNotificationStore.getState().notify(getErrorMessage(error)));
+    });
   }
 
   private scheduleRefit(): void {

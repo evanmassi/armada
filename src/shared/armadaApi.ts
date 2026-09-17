@@ -1,4 +1,5 @@
 import type { Project } from './conversations/conversationTypes';
+import type { OpenLinkRequest } from './links/linkSchemas';
 import type { FolderRequest } from './projects/projectSchemas';
 import type {
   ClaudeHookEvent,
@@ -21,6 +22,9 @@ export interface ArmadaApi {
     pickFolder(): Promise<string | undefined>;
     reveal(request: FolderRequest): Promise<void>;
     openInEditor(request: FolderRequest): Promise<void>;
+  };
+  links: {
+    open(request: OpenLinkRequest): Promise<void>;
   };
   workspace: {
     load(): Promise<Workspace>;

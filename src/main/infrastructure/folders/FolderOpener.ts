@@ -29,11 +29,12 @@ export class FolderOpener {
     if (failure) throw new Error(`Could not open folder: ${failure}`);
   }
 
-  openInEditor(cwd: string): void {
-    if (!existsSync(cwd)) throw new Error(`Folder no longer exists: ${cwd}`);
+  openInEditor(path: string, position?: string): void {
+    if (!existsSync(path)) throw new Error(`Path no longer exists: ${path}`);
     const executable = resolveEditorExecutable();
     if (!executable) throw new Error('VS Code was not found on PATH');
-    this.deps.logger.info('editor.opened', { executable, cwd });
-    spawn(executable, [cwd], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
+    const args = position ? ['--goto', `${path}:${position}`] : [path];
+    this.deps.logger.info('editor.opened', { executable, args });
+    spawn(executable, args, { detached: true, stdio: 'ignore', windowsHide: true }).unref();
   }
 }

@@ -5,6 +5,7 @@ import type { TerminalHost } from '@main/domain/terminals/TerminalHost';
 import { ClaudeProjectsReader } from '@main/infrastructure/claude/ClaudeProjectsReader';
 import { ClaudeHookInbox } from '@main/infrastructure/claude/ClaudeHookInbox';
 import { FolderOpener } from '@main/infrastructure/folders/FolderOpener';
+import { LinkOpener } from '@main/infrastructure/links/LinkOpener';
 import { FileLogger } from '@main/infrastructure/logging/FileLogger';
 import { getClaudeProjectsDir, getClaudeHookInboxDir, getLogFilePath, getWorkspaceFilePath } from '@main/infrastructure/paths';
 import { JsonWorkspaceRepository } from '@main/infrastructure/persistence/JsonWorkspaceRepository';
@@ -17,6 +18,7 @@ export interface ServiceContainer {
   terminalHost: TerminalHost;
   claudeHookInbox: ClaudeHookInbox;
   folderOpener: FolderOpener;
+  linkOpener: LinkOpener;
   logger: FileLogger;
 }
 
@@ -25,13 +27,15 @@ export function createServiceContainer(): ServiceContainer {
   const conversationRepository = new ClaudeProjectsReader(getClaudeProjectsDir());
   const hookInboxDir = getClaudeHookInboxDir();
   const terminalHost = new PtySessionHost({ hookInboxDir, logger });
+  const folderOpener = new FolderOpener({ logger });
   return {
     conversationCatalogService: new ConversationCatalogService({ conversationRepository }),
     sessionService: new SessionService({ conversationRepository, terminalHost }),
     workspaceRepository: new JsonWorkspaceRepository({ filePath: getWorkspaceFilePath(), logger }),
     terminalHost,
     claudeHookInbox: new ClaudeHookInbox({ inboxDir: hookInboxDir, logger }),
-    folderOpener: new FolderOpener({ logger }),
+    folderOpener,
+    linkOpener: new LinkOpener({ folderOpener, logger }),
     logger,
   };
 }

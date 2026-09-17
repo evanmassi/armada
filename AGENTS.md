@@ -141,7 +141,10 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   component attaches the existing terminal element on mount and detaches on unmount, so a layout change that
   remounts the tile never restarts the process. `App` disposes terminals whose tile has left the workspace. It owns
   the activity tracker (`model/activityTracker.ts`) and lets global shortcuts (`app/keyboardShortcuts.ts`) bubble
-  past xterm.
+  past xterm. Links (`model/terminalLinks.ts`) open on Ctrl+click from three sources: embedded hyperlinks Claude Code
+  emits because the pty sets `FORCE_HYPERLINK`, bare URLs, and file paths (`model/pathLinkMatcher.ts`). The renderer
+  sends the raw target and the tile's cwd; main's `LinkOpener` is the only judge of what opens and where. A Ctrl+click
+  on a link never reaches the pty, because fullscreen Claude Code would open the same link a second time.
 
 ---
 
@@ -173,7 +176,7 @@ Never define a boundary type inline in main or renderer.
   TypeScript type with `z.infer`. A schema nothing calls `.parse()` on is dead.
 - **Plain type** for main-to-renderer results and events. Validating in-process output is theater.
 
-**Modules**: `workspace/workspaceSchemas`, `sessions/sessionSchemas`, `conversations/conversationTypes`, `ipcChannels`,
+**Modules**: `workspace/workspaceSchemas`, `sessions/sessionSchemas`, `links/linkSchemas`, `conversations/conversationTypes`, `ipcChannels`,
 `armadaApi` (the preload contract both sides implement against)
 
 ---

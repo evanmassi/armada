@@ -17,6 +17,9 @@ const armadaApi: ArmadaApi = {
     reveal: (request) => ipcRenderer.invoke(IPC_CHANNELS.projectsReveal, request),
     openInEditor: (request) => ipcRenderer.invoke(IPC_CHANNELS.projectsOpenInEditor, request),
   },
+  links: {
+    open: (request) => ipcRenderer.invoke(IPC_CHANNELS.linksOpen, request),
+  },
   workspace: {
     load: () => ipcRenderer.invoke(IPC_CHANNELS.workspaceLoad),
     save: (workspace) => ipcRenderer.invoke(IPC_CHANNELS.workspaceSave, workspace),

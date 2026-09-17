@@ -3,6 +3,7 @@ export const IPC_CHANNELS = {
   projectsPickFolder: 'projects:pickFolder',
   projectsReveal: 'projects:reveal',
   projectsOpenInEditor: 'projects:openInEditor',
+  linksOpen: 'links:open',
   workspaceLoad: 'workspace:load',
   workspaceSave: 'workspace:save',
   sessionsOpen: 'sessions:open',

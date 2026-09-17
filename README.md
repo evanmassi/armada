@@ -102,6 +102,8 @@ Every Claude tile carries a live status plate, fed by Claude Code's own hooks ra
 
 Tiles are full terminals. Copy with Ctrl+C when text is selected (it still interrupts when nothing is), paste with Ctrl+V, or right-click to do whichever makes sense. Copied text has Claude's box-drawing borders stripped so it pastes clean.
 
+Ctrl+click a link to open it: web addresses go to your browser, folders to Explorer, and files to VS Code, at the line number when the path carries one. Relative paths resolve against the tile's project folder.
+
 ## Keyboard
 
 | Keys | Action |

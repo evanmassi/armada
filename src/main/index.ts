@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { app, BrowserWindow, Menu } from 'electron';
 import { createServiceContainer } from '@main/infrastructure/di/ServiceContainer';
 import { registerConversationHandlers } from '@main/ipc/registerConversationHandlers';
+import { registerLinkHandlers } from '@main/ipc/registerLinkHandlers';
 import { registerProjectHandlers } from '@main/ipc/registerProjectHandlers';
 import { registerSessionHandlers } from '@main/ipc/registerSessionHandlers';
 import { registerWorkspaceHandlers } from '@main/ipc/registerWorkspaceHandlers';
@@ -24,6 +25,7 @@ function createMainWindow(): BrowserWindow {
       sandbox: true,
     },
   });
+  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   const rendererDevServerUrl = process.env['ELECTRON_RENDERER_URL'];
   if (rendererDevServerUrl) {
     void mainWindow.loadURL(rendererDevServerUrl);
@@ -54,6 +56,7 @@ app.whenReady().then(() => {
 
   registerConversationHandlers(container);
   registerProjectHandlers(container, mainWindow);
+  registerLinkHandlers(container);
   registerWorkspaceHandlers(container);
   registerSessionHandlers(container, mainWindow.webContents);
   void container.claudeHookInbox.start();
