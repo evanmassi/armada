@@ -1,10 +1,10 @@
 import { watch, type FSWatcher } from 'node:fs';
 import { mkdir, readFile } from 'node:fs/promises';
 import { basename, dirname } from 'node:path';
-import { claudeUsageSchema, type ClaudeUsage } from '@shared/usage/usageSchemas';
+import { statusLineUsageSchema, type StatusLineUsage } from '@shared/usage/usageSchemas';
 import type { FileLogger } from '@main/infrastructure/logging/FileLogger';
 
-export type ClaudeUsageListener = (usage: ClaudeUsage) => void;
+export type ClaudeUsageListener = (usage: StatusLineUsage) => void;
 
 interface ClaudeUsageFileDeps {
   filePath: string;
@@ -14,7 +14,7 @@ interface ClaudeUsageFileDeps {
 export class ClaudeUsageFile {
   private listeners = new Set<ClaudeUsageListener>();
   private watcher: FSWatcher | undefined;
-  private latest: ClaudeUsage | undefined;
+  private latest: StatusLineUsage | undefined;
 
   constructor(private deps: ClaudeUsageFileDeps) {}
 
@@ -34,7 +34,7 @@ export class ClaudeUsageFile {
     this.watcher = undefined;
   }
 
-  read(): ClaudeUsage | undefined {
+  read(): StatusLineUsage | undefined {
     return this.latest;
   }
 
@@ -49,7 +49,7 @@ export class ClaudeUsageFile {
     } catch {
       return;
     }
-    const parsed = claudeUsageSchema.safeParse(reported);
+    const parsed = statusLineUsageSchema.safeParse(reported);
     if (!parsed.success) {
       this.deps.logger.error('usage.rejected', { reported, issues: parsed.error.issues });
       return;

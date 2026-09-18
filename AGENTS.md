@@ -40,7 +40,10 @@ id under the tile and the tile rebinds to it; the other events drive the tile's 
 The same install wraps the user's `statusLine` command in `scripts/claudeStatusLineRelay.cjs`, the original command
 base64-encoded as its argument. Only the status line input carries `rate_limits`; hooks do not. Inside a tile the relay
 writes the 5 hour and weekly numbers to `userData/claude-usage/usage.json` (latest value, replaced by rename), then runs
-the original command on the same input. `ClaudeUsageFile` watches that file and pushes each new report to the renderer.
+the original command on the same input. `ClaudeUsageFile` watches that file. Per-model weekly limits (the Fable limit) never
+reach the status line: `ClaudeUsageProbe` asks a headless `claude --print` for them with a `get_usage` control request, on
+launch, every three minutes, and after a status line report. `ClaudeUsageService` merges both sources into one picture,
+plan windows from whichever reported last and model windows from the probe, and pushes it to the renderer.
 
 The app is the only installer. `claudeSettingsIntegration.ts` holds the pure edit (`integrateArmada`) and derives the
 status from it: a part of the settings is a gap when integrating would change it, so check and repair cannot disagree.
@@ -61,7 +64,7 @@ src/main/
 ├── application/
 │   └── services/     # ConversationCatalogService, SessionService
 ├── infrastructure/
-│   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser, ClaudeHookInbox, ClaudeUsageFile, ClaudeSettingsFile
+│   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser, ClaudeHookInbox, ClaudeUsageFile, ClaudeUsageProbe, ClaudeSettingsFile
 │   ├── persistence/  # JsonWorkspaceRepository (userData/workspace.json)
 │   ├── pty/          # PtySessionHost wraps node-pty
 │   ├── logging/      # FileLogger: JSON lines in userData/armada.log, rotated at startup
@@ -107,7 +110,7 @@ src/renderer/src/
 │   ├── boards/        # Board list, grid layout, tile placement
 │   ├── terminal/      # xterm tile bound to one pty session
 │   ├── integration/   # Banner that checks and repairs Armada's entries in Claude Code's settings
-│   └── usage/         # 5 hour and weekly limit readout in the sidebar footer
+│   └── usage/         # 5 hour, weekly, and per-model limit readout in the sidebar footer
 ├── shared/           # Cross-cutting
 │   ├── ui/
 │   └── utils/

@@ -1,3 +1,4 @@
+import { ClaudeUsageService } from '@main/application/services/ClaudeUsageService';
 import { ConversationCatalogService } from '@main/application/services/ConversationCatalogService';
 import { SessionService } from '@main/application/services/SessionService';
 import type { WorkspaceRepository } from '@main/domain/repositories/WorkspaceRepository';
@@ -6,6 +7,7 @@ import { ClaudeProjectsReader } from '@main/infrastructure/claude/ClaudeProjects
 import { ClaudeHookInbox } from '@main/infrastructure/claude/ClaudeHookInbox';
 import { ClaudeSettingsFile } from '@main/infrastructure/claude/ClaudeSettingsFile';
 import { ClaudeUsageFile } from '@main/infrastructure/claude/ClaudeUsageFile';
+import { ClaudeUsageProbe } from '@main/infrastructure/claude/ClaudeUsageProbe';
 import { FolderOpener } from '@main/infrastructure/folders/FolderOpener';
 import { LinkOpener } from '@main/infrastructure/links/LinkOpener';
 import { FileLogger } from '@main/infrastructure/logging/FileLogger';
@@ -14,6 +16,7 @@ import {
   getClaudeProjectsDir,
   getClaudeSettingsFilePath,
   getClaudeUsageFilePath,
+  getHomeDir,
   getLogFilePath,
   getRelayScriptsDir,
   getWorkspaceFilePath,
@@ -28,6 +31,8 @@ export interface ServiceContainer {
   terminalHost: TerminalHost;
   claudeHookInbox: ClaudeHookInbox;
   claudeUsageFile: ClaudeUsageFile;
+  claudeUsageProbe: ClaudeUsageProbe;
+  claudeUsageService: ClaudeUsageService;
   claudeSettingsFile: ClaudeSettingsFile;
   folderOpener: FolderOpener;
   linkOpener: LinkOpener;
@@ -41,13 +46,17 @@ export function createServiceContainer(): ServiceContainer {
   const usageFilePath = getClaudeUsageFilePath();
   const terminalHost = new PtySessionHost({ hookInboxDir, usageFilePath, logger });
   const folderOpener = new FolderOpener({ logger });
+  const claudeUsageFile = new ClaudeUsageFile({ filePath: usageFilePath, logger });
+  const claudeUsageProbe = new ClaudeUsageProbe({ cwd: getHomeDir(), logger });
   return {
     conversationCatalogService: new ConversationCatalogService({ conversationRepository }),
     sessionService: new SessionService({ conversationRepository, terminalHost }),
     workspaceRepository: new JsonWorkspaceRepository({ filePath: getWorkspaceFilePath(), logger }),
     terminalHost,
     claudeHookInbox: new ClaudeHookInbox({ inboxDir: hookInboxDir, logger }),
-    claudeUsageFile: new ClaudeUsageFile({ filePath: usageFilePath, logger }),
+    claudeUsageFile,
+    claudeUsageProbe,
+    claudeUsageService: new ClaudeUsageService({ statusLine: claudeUsageFile, probe: claudeUsageProbe }),
     claudeSettingsFile: new ClaudeSettingsFile({ settingsPath: getClaudeSettingsFilePath(), scriptsDir: getRelayScriptsDir(), logger }),
     folderOpener,
     linkOpener: new LinkOpener({ folderOpener, logger }),

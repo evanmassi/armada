@@ -1,5 +1,6 @@
 import type { OpenSessionRequest, TerminalRef } from '@shared/sessions/sessionSchemas';
 import type { ConversationRepository } from '@main/domain/repositories/ConversationRepository';
+import { CLAUDE_COMMAND } from '@main/domain/claude/claudeCommand';
 import type { TerminalHost } from '@main/domain/terminals/TerminalHost';
 
 interface SessionServiceDeps {
@@ -12,7 +13,6 @@ interface Launch {
   args: string[];
 }
 
-const CLAUDE_COMMAND = process.platform === 'win32' ? 'claude.exe' : 'claude';
 const SHELL_COMMAND = process.platform === 'win32' ? 'pwsh.exe' : (process.env['SHELL'] ?? 'bash');
 
 export class SessionService {

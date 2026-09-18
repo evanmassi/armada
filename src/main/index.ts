@@ -65,6 +65,7 @@ app.whenReady().then(() => {
   registerUsageHandlers(container, mainWindow.webContents);
   void container.claudeHookInbox.start();
   void container.claudeUsageFile.start();
+  container.claudeUsageProbe.start();
 
   const killAllTerminals = (): void => container.terminalHost.killAll();
   mainWindow.webContents.on('did-start-navigation', killAllTerminals);
@@ -73,6 +74,7 @@ app.whenReady().then(() => {
     killAllTerminals();
     container.claudeHookInbox.stop();
     container.claudeUsageFile.stop();
+    container.claudeUsageProbe.stop();
   });
 });
 

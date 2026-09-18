@@ -46,16 +46,19 @@ export function UsageIndicator() {
     return () => clearInterval(clock);
   }, []);
 
-  if (!usage || (!usage.fiveHour && !usage.sevenDay)) return null;
+  if (!usage || (!usage.fiveHour && !usage.sevenDay && !usage.modelScoped?.length)) return null;
   const isStale = isStaleReport(usage.reportedAt, now);
 
   return (
     <footer
       className={`readout grid grid-cols-[auto_1fr_auto] items-baseline gap-x-2.5 gap-y-1 border-t border-edge bg-panel/80 px-3 py-2 transition-opacity ${isStale ? 'opacity-50' : ''}`}
-      title={isStale ? 'Usage as last reported; it refreshes when a session is active' : 'Claude usage: 5 hour and weekly limits, with time until reset'}
+      title={isStale ? 'Usage as last reported; it refreshes when a session is active' : 'Claude usage: 5 hour, weekly, and per-model limits, with time until reset'}
     >
       {usage.fiveHour && <UsageWindowReadout label="5h" usageWindow={usage.fiveHour} now={now} />}
       {usage.sevenDay && <UsageWindowReadout label="week" usageWindow={usage.sevenDay} now={now} />}
+      {usage.modelScoped?.map((modelWindow) => (
+        <UsageWindowReadout key={modelWindow.displayName} label={modelWindow.displayName} usageWindow={modelWindow} now={now} />
+      ))}
     </footer>
   );
 }
