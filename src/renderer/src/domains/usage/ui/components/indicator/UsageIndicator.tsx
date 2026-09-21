@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import type { UsageWindow } from '@shared/usage/usageSchemas';
 import { useClaudeUsageQuery } from '../../../hooks/useClaudeUsageQuery';
 import { formatCountdown, headroomColor, isStaleReport } from '../../../model/usageReadout';
 
 const CLOCK_TICK_MS = 30_000;
+const METER_SEGMENTS = 20;
 
 interface UsageWindowReadoutProps {
   label: string;
@@ -13,21 +14,25 @@ interface UsageWindowReadoutProps {
 
 function UsageWindowReadout({ label, usageWindow, now }: UsageWindowReadoutProps) {
   const usedPercentage = Math.min(100, Math.max(0, Math.round(usageWindow.usedPercentage)));
-  const color = headroomColor(usedPercentage);
+  const litSegments = Math.round((usedPercentage / 100) * METER_SEGMENTS);
+  const meterStyle = { '--meter-color': headroomColor(usedPercentage), color: headroomColor(usedPercentage) } as CSSProperties;
   return (
     <>
       <span className="text-muted">{label}</span>
       <div
-        className="h-1.5 self-center bg-edge"
+        className="meter-track self-center"
+        style={meterStyle}
         role="meter"
         aria-label={`${label} usage`}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={usedPercentage}
       >
-        <div className="h-full transition-[width]" style={{ width: `${usedPercentage}%`, backgroundColor: color }} />
+        {Array.from({ length: METER_SEGMENTS }, (_, index) => (
+          <span key={index} className={`meter-segment ${index < litSegments ? 'is-lit' : ''} ${index === litSegments - 1 ? 'is-tip' : ''}`} />
+        ))}
       </div>
-      <span className="text-right" style={{ color }}>
+      <span className="meter-value text-right" style={meterStyle}>
         {usedPercentage}%
       </span>
       {usageWindow.resetsAt !== undefined && (

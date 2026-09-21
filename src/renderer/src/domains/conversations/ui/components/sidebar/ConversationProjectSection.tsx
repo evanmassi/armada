@@ -1,4 +1,4 @@
-import { useState, type DragEvent, type KeyboardEvent } from 'react';
+import { useState, type CSSProperties, type DragEvent, type KeyboardEvent } from 'react';
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
 import type { ActivityState } from '@renderer/app/stores/sessionActivityStore';
 import { selectIsSidebarDragging, useSidebarDragStore } from '@renderer/app/stores/sidebarDragStore';
@@ -136,8 +136,8 @@ export function ConversationProjectSection({
       onDrop={handleDrop}
     >
       <header
-        className="flex cursor-grab items-center gap-1 border-l-2 px-2 py-1 active:cursor-grabbing"
-        style={{ borderLeftColor: accentFor(project.cwd) }}
+        className="project-header flex cursor-grab items-center gap-1 px-2 py-1 active:cursor-grabbing"
+        style={{ '--project-accent': accentFor(project.cwd) } as CSSProperties}
         draggable
         onDragStart={handleDragStart}
         onDragEnd={endDrag}
@@ -171,7 +171,7 @@ export function ConversationProjectSection({
             aria-expanded={isOpen}
             title={`${project.cwd}\nF2 renames. Ctrl+Up/Down moves.`}
           >
-            <span className="truncate font-ui text-[15px] font-semibold tracking-wide">{displayName}</span>
+            <span className="project-name truncate font-ui text-[15px] font-semibold tracking-wide">{displayName}</span>
             <span className="shrink-0 text-muted" aria-hidden="true">·</span>
             <span className="readout shrink-0 text-[12px] text-fg">{active.length}</span>
           </button>

@@ -5,9 +5,9 @@ interface ActivityDotProps {
 }
 
 const ACTIVITY_STYLES: Record<ActivityState, { className: string; label: string }> = {
-  working: { className: 'bg-accent animate-pulse shadow-[0_0_8px_var(--color-accent)]', label: 'Claude is working' },
+  working: { className: 'bg-accent activity-pin-working shadow-[0_0_8px_var(--color-accent)]', label: 'Claude is working' },
   waiting: { className: 'bg-alert shadow-[0_0_8px_var(--color-alert)]', label: 'Waiting for you' },
-  approval: { className: 'bg-alert animate-pulse shadow-[0_0_8px_var(--color-alert)]', label: 'Needs your approval' },
+  approval: { className: 'bg-alert activity-pin-approval shadow-[0_0_8px_var(--color-alert)]', label: 'Needs your approval' },
   idle: { className: 'bg-muted', label: 'Open' },
   exited: { className: 'border border-muted', label: 'Session exited' },
 };

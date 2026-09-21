@@ -64,6 +64,33 @@ body,
   background: var(--color-edge);
 }
 
+@keyframes hud-flicker-in {
+  0% { opacity: 0; }
+  42% { opacity: 0.6; }
+  54% { opacity: 0.16; }
+  64% { opacity: 0.58; }
+  100% { opacity: 0.5; }
+}
+
+@keyframes hud-pin-flicker {
+  0%, 100% { opacity: 0.8; }
+  40% { opacity: 0.85; }
+  42% { opacity: 0.5; }
+  45% { opacity: 0.86; }
+  49% { opacity: 0.7; }
+}
+
+@keyframes hud-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+:root {
+  --scanline-ground: repeating-linear-gradient(rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px);
+  --flicker-primary: 3100ms;
+  --flicker-warning: 3800ms;
+}
+
 .tile-frame {
   border: 1px solid color-mix(in srgb, var(--tile-accent) 35%, transparent);
   border-left: 4px solid var(--tile-accent);
@@ -72,7 +99,16 @@ body,
 .tile-frame.tile-focused {
   border-color: color-mix(in srgb, var(--tile-accent) 80%, transparent);
   border-left-color: var(--tile-accent);
-  box-shadow: 0 0 22px color-mix(in srgb, var(--tile-accent) 25%, transparent);
+}
+
+.tile-frame.tile-focused::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  box-shadow: 0 0 22px color-mix(in srgb, var(--tile-accent) 50%, transparent);
+  animation: hud-flicker-in 340ms cubic-bezier(0.16, 0.9, 0.3, 1) both;
 }
 
 .tile-titlebar {
@@ -82,11 +118,13 @@ body,
   background-color: var(--color-panel);
   background-image:
     linear-gradient(90deg, var(--bar-accent-glint), transparent 60%),
+    var(--scanline-ground),
     repeating-linear-gradient(-60deg, var(--bar-accent-hatch) 0 1px, transparent 1px 7px),
     linear-gradient(90deg, var(--bar-accent-soft), color-mix(in srgb, var(--tile-accent) 8%, transparent) 30%, transparent 55%);
   background-repeat: no-repeat;
   background-size:
     100% 1px,
+    100% 100%,
     32% 100%,
     100% 100%;
   background-position: top left;
@@ -99,12 +137,77 @@ body,
   background-color: var(--color-panel);
   background-image:
     linear-gradient(90deg, var(--bar-accent-glint), transparent 60%),
+    var(--scanline-ground),
     linear-gradient(90deg, var(--bar-accent-soft), color-mix(in srgb, var(--tile-accent) 8%, transparent) 30%, transparent 55%);
   background-repeat: no-repeat;
   background-size:
     100% 1px,
+    100% 100%,
     100% 100%;
   background-position: top left;
+}
+
+.activity-pin-working {
+  animation: hud-pin-flicker var(--flicker-primary) linear infinite;
+}
+
+.activity-pin-approval {
+  animation: hud-pin-flicker var(--flicker-warning) linear infinite;
+}
+
+.glow-accent {
+  text-shadow: 0 0 10px color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+
+.project-header {
+  --project-accent: var(--color-accent);
+  border-left: 2px solid var(--project-accent);
+  box-shadow: inset 3px 0 8px -3px color-mix(in srgb, var(--project-accent) 70%, transparent);
+}
+
+.project-header .project-name {
+  text-shadow: 0 0 10px color-mix(in srgb, var(--project-accent) 60%, transparent);
+}
+
+.meter-track {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--color-edge);
+  background: var(--color-panel);
+}
+
+.meter-segment {
+  flex: 1;
+  height: 6px;
+  background: rgba(231, 234, 238, 0.08);
+}
+
+.meter-segment.is-lit {
+  background: var(--meter-color);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--meter-color) 80%, transparent);
+}
+
+.meter-segment.is-tip {
+  opacity: 0.75;
+  animation: hud-blink 900ms steps(1, end) infinite;
+}
+
+.meter-value {
+  text-shadow: 0 0 10px color-mix(in srgb, var(--meter-color) 80%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile-frame.tile-focused::after,
+  .activity-pin-working,
+  .activity-pin-approval,
+  .meter-segment.is-tip {
+    animation: none;
+  }
+
+  .meter-segment.is-tip {
+    opacity: 1;
+  }
 }
 
 .tile-focused .tile-titlebar {
