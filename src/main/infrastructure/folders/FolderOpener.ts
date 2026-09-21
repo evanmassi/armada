@@ -35,6 +35,7 @@ export class FolderOpener {
     if (!executable) throw new Error('VS Code was not found on PATH');
     const args = position ? ['--goto', `${path}:${position}`] : [path];
     this.deps.logger.info('editor.opened', { executable, args });
-    spawn(executable, args, { detached: true, stdio: 'ignore', windowsHide: true }).unref();
+    // PITFALL: windowsHide tells a GUI app to start with its window hidden; VS Code obeys and then swallows every later open.
+    spawn(executable, args, { detached: true, stdio: 'ignore' }).unref();
   }
 }
