@@ -64,6 +64,7 @@ app.whenReady().then(() => {
   registerSessionHandlers(container, mainWindow.webContents);
   registerUsageHandlers(container, mainWindow.webContents);
   void container.claudeHookInbox.start();
+  void container.claudeSessionStatusFiles.start();
   void container.claudeUsageFile.start();
   container.claudeUsageProbe.start();
 
@@ -73,6 +74,7 @@ app.whenReady().then(() => {
     container.logger.info('app.closing');
     killAllTerminals();
     container.claudeHookInbox.stop();
+    container.claudeSessionStatusFiles.stop();
     container.claudeUsageFile.stop();
     container.claudeUsageProbe.stop();
   });

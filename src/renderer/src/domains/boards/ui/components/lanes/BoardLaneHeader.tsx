@@ -4,6 +4,7 @@ import { useSessionActivityStore } from '@renderer/app/stores/sessionActivitySto
 import { ActivityDot } from '@renderer/shared/ui/components/ActivityDot';
 import { applyDragGhost } from '@renderer/shared/utils/dragGhost';
 import type { Lane } from '../../../model/lanes';
+import { BoardProjectChangesIndicator } from '../changes/BoardProjectChangesIndicator';
 
 export const LANE_DRAG_MIME = 'application/x-armada-lane';
 
@@ -51,6 +52,7 @@ export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggl
       </button>
       <span className={`truncate text-[12px] ${lane.isCollapsed ? '[writing-mode:vertical-rl]' : 'tile-project-plate'}`}>{name}</span>
       {!lane.isCollapsed && <span className="flex-1" />}
+      {!lane.isCollapsed && <BoardProjectChangesIndicator cwd={lane.key} />}
       <span className={`flex gap-1 ${lane.isCollapsed ? 'flex-col' : ''}`}>
         {activities.map((activity, index) => (activity ? <ActivityDot key={index} state={activity} /> : null))}
       </span>

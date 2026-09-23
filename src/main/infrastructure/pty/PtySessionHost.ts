@@ -15,14 +15,16 @@ const TERMINAL_CAPABILITIES = { TERM: 'xterm-256color', COLORTERM: 'truecolor', 
 const ARMADA_TERMINAL_ID_ENV = 'ARMADA_TERMINAL_ID';
 const ARMADA_HOOK_INBOX_ENV = 'ARMADA_HOOK_INBOX';
 const ARMADA_USAGE_FILE_ENV = 'ARMADA_USAGE_FILE';
+const ARMADA_SESSION_STATUS_DIR_ENV = 'ARMADA_SESSION_STATUS_DIR';
 
 interface PtySessionHostDeps {
   hookInboxDir: string;
   usageFilePath: string;
+  sessionStatusDir: string;
   logger: FileLogger;
 }
 
-function hostEnvironment(terminalId: string, { hookInboxDir, usageFilePath }: PtySessionHostDeps): NodeJS.ProcessEnv {
+function hostEnvironment(terminalId: string, { hookInboxDir, usageFilePath, sessionStatusDir }: PtySessionHostDeps): NodeJS.ProcessEnv {
   const env = { ...process.env };
   // PITFALL: a launcher's environment leaks into every tile: nested-claude markers block launch, NO_COLOR strips colors.
   for (const name of INHERITED_LAUNCHER_NOISE) delete env[name];
@@ -32,6 +34,7 @@ function hostEnvironment(terminalId: string, { hookInboxDir, usageFilePath }: Pt
     [ARMADA_TERMINAL_ID_ENV]: terminalId,
     [ARMADA_HOOK_INBOX_ENV]: hookInboxDir,
     [ARMADA_USAGE_FILE_ENV]: usageFilePath,
+    [ARMADA_SESSION_STATUS_DIR_ENV]: sessionStatusDir,
   };
 }
 

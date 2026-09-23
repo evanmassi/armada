@@ -9,6 +9,7 @@ import { tileCwd } from '../../../model/boardQueries';
 import { ActivityDot } from '@renderer/shared/ui/components/ActivityDot';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
 import { BoardNotesTile } from '../notes/BoardNotesTile';
+import { BoardTileSessionIndicator } from './BoardTileSessionIndicator';
 
 export const TILE_DRAG_HANDLE_CLASS = 'tile-drag-handle';
 
@@ -103,6 +104,7 @@ export function BoardTileFrame({
       >
         {activity ? <ActivityDot state={activity} /> : <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: accentColor }} />}
         <span className="min-w-0 flex-1 truncate font-ui text-[13px] font-semibold tracking-wide text-fg">{title}</span>
+        {tile.kind === 'claude' && <BoardTileSessionIndicator tileId={tile.id} projectCwd={tile.cwd} />}
         <span
           className={`tile-project-plate readout shrink-0 text-[11px] transition-colors duration-500 ${activity ? PLATE_TONES[activity] : ''}`}
           style={activity ? undefined : { color: accentColor }}

@@ -1,6 +1,8 @@
 import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { Board } from '@shared/workspace/workspaceSchemas';
 import { useProjectAccents } from '@renderer/domains/conversations';
+import { soleProjectCwd } from '../../../model/lanes';
+import { BoardProjectChangesIndicator } from '../changes/BoardProjectChangesIndicator';
 
 interface BoardSwitcherBarProps {
   boards: Board[];
@@ -42,6 +44,7 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
     <nav className="flex items-center gap-1 border-b border-edge bg-panel/80 px-2 py-1 backdrop-blur" aria-label="Boards">
       {boards.map((board) => {
         const isActive = board.id === activeBoardId;
+        const projectCwd = soleProjectCwd(board);
         return (
           <div
             key={board.id}
@@ -70,6 +73,7 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
                 {board.name}
               </button>
             )}
+            {projectCwd !== undefined && <BoardProjectChangesIndicator cwd={projectCwd} />}
             {isActive && (
               <button type="button" className="px-1 text-muted hover:text-fg" onClick={() => confirmRemove(board)} aria-label="Remove board">
                 ×

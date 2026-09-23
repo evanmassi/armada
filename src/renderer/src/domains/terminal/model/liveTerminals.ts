@@ -6,6 +6,7 @@ import { isGlobalShortcut } from '@renderer/app/keyboardShortcuts';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useNotificationStore } from '@renderer/app/stores/notificationStore';
 import { useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
+import { useSessionStatusStore } from '@renderer/app/stores/sessionStatusStore';
 import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
 import { getErrorMessage } from '@renderer/shared/utils/getErrorMessage';
 import { createActivityTracker } from './activityTracker';
@@ -103,6 +104,7 @@ class LiveTerminalEntry implements LiveTerminal {
     this.subscriptions.forEach((unsubscribe) => unsubscribe());
     if (this.terminalId) armadaClient.sessions.close({ terminalId: this.terminalId });
     useSessionActivityStore.getState().clearActivity(this.tileId);
+    useSessionStatusStore.getState().clearStatus(this.tileId);
     this.terminal.dispose();
   }
 
@@ -124,6 +126,7 @@ class LiveTerminalEntry implements LiveTerminal {
     const { terminal, tileId } = this;
     terminal.textarea?.addEventListener('focus', () => useBoardSelectionStore.getState().setFocusedTile(tileId));
     const { setActivity } = useSessionActivityStore.getState();
+    const { setStatus, clearStatus } = useSessionStatusStore.getState();
     let boundSessionId = this.launch.kind === 'claude' ? this.launch.sessionId : undefined;
     const activity = createActivityTracker((state) => setActivity(tileId, boundSessionId, state));
     const size = { cols: terminal.cols, rows: terminal.rows };
@@ -147,6 +150,7 @@ class LiveTerminalEntry implements LiveTerminal {
             if (event.terminalId !== terminalId) return;
             terminal.write(exitBanner(event.exitCode));
             activity.recordExit();
+            clearStatus(tileId);
           }),
           armadaClient.sessions.onClaudeHookEvent((event) => {
             if (event.terminalId !== terminalId) return;
@@ -156,6 +160,9 @@ class LiveTerminalEntry implements LiveTerminal {
               this.onSessionRebound(event.sessionId);
             }
             activity.recordHookEvent(event.kind);
+          }),
+          armadaClient.sessions.onStatus((status) => {
+            if (status.terminalId === terminalId && status.sessionId === boundSessionId) setStatus(tileId, status);
           }),
         );
         terminal.onData((data) => {

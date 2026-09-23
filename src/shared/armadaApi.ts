@@ -1,10 +1,11 @@
 import type { Project } from './conversations/conversationTypes';
 import type { ClaudeIntegrationStatus } from './integration/integrationTypes';
 import type { OpenLinkRequest } from './links/linkSchemas';
-import type { FolderRequest } from './projects/projectSchemas';
+import type { FolderRequest, ProjectLineChanges } from './projects/projectSchemas';
 import type {
   ClaudeHookEvent,
   OpenSessionRequest,
+  SessionStatus,
   TerminalExitEvent,
   TerminalOutputEvent,
   TerminalRef,
@@ -24,6 +25,7 @@ export interface ArmadaApi {
     pickFolder(): Promise<string | undefined>;
     reveal(request: FolderRequest): Promise<void>;
     openInEditor(request: FolderRequest): Promise<void>;
+    countLineChanges(request: FolderRequest): Promise<ProjectLineChanges | undefined>;
   };
   links: {
     open(request: OpenLinkRequest): Promise<void>;
@@ -40,6 +42,7 @@ export interface ArmadaApi {
     onOutput(listener: (event: TerminalOutputEvent) => void): Unsubscribe;
     onExit(listener: (event: TerminalExitEvent) => void): Unsubscribe;
     onClaudeHookEvent(listener: (event: ClaudeHookEvent) => void): Unsubscribe;
+    onStatus(listener: (status: SessionStatus) => void): Unsubscribe;
   };
   integration: {
     check(): Promise<ClaudeIntegrationStatus>;

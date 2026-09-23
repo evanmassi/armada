@@ -39,8 +39,11 @@ id under the tile and the tile rebinds to it; the other events drive the tile's 
 
 The same install wraps the user's `statusLine` command in `scripts/claudeStatusLineRelay.cjs`, the original command
 base64-encoded as its argument. Only the status line input carries `rate_limits`; hooks do not. Inside a tile the relay
-writes the 5 hour and weekly numbers to `userData/claude-usage/usage.json` (latest value, replaced by rename), then runs
-the original command on the same input. `ClaudeUsageFile` watches that file. Per-model weekly limits (the Fable limit) never
+writes the 5 hour and weekly numbers to `userData/claude-usage/usage.json` (latest value, replaced by rename) and the
+session's model, effort, context window, and folder to `userData/claude-session-status/<terminalId>.json`, and draws
+nothing: the tile title bar shows that instead. Outside a tile it runs the original command on the same input.
+`ClaudeUsageFile` watches the usage file; `ClaudeSessionStatusFiles` watches the status folder, clears it on launch, and
+pushes each report to the renderer, which keeps it only while the session id matches the tile's. Per-model weekly limits (the Fable limit) never
 reach the status line: `ClaudeUsageProbe` asks a headless `claude --print` for them with a `get_usage` control request, on
 launch, every three minutes, and after a status line report. `ClaudeUsageService` merges both sources into one picture,
 plan windows from whichever reported last and model windows from the probe, and pushes it to the renderer.
@@ -64,7 +67,8 @@ src/main/
 ├── application/
 │   └── services/     # ConversationCatalogService, SessionService
 ├── infrastructure/
-│   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser, ClaudeHookInbox, ClaudeUsageFile, ClaudeUsageProbe, ClaudeSettingsFile
+│   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser, ClaudeHookInbox, ClaudeUsageFile, ClaudeSessionStatusFiles, ClaudeUsageProbe, ClaudeSettingsFile
+│   ├── git/          # GitChangeCounter: uncommitted lines added and removed under a project folder
 │   ├── persistence/  # JsonWorkspaceRepository (userData/workspace.json)
 │   ├── pty/          # PtySessionHost wraps node-pty
 │   ├── logging/      # FileLogger: JSON lines in userData/armada.log, rotated at startup
@@ -130,7 +134,7 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
 - **UI state**: Zustand. `boardSelectionStore` (active board, opened boards, focused tile), `sessionActivityStore`
   (per-tile working / waiting / approval / idle / exited, driven by Claude hook events, Enter and Escape typed into the
   tile, and process exit),
-  `notificationStore`.
+  `sessionStatusStore` (per-tile model, effort, context window, and folder from the status line relay), `notificationStore`.
 - Never store main-owned data in Zustand.
 - **Terminal stream** is neither. Pty output arrives on a per-session IPC channel and is written straight into the
   xterm instance. It is never held in React state.
@@ -151,7 +155,10 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   weights); a board spanning more than one project renders lanes (`model/lanes.ts`), one column per project keyed
   by cwd with tiles stacked inside, lane order, width, and collapse saved on the board. A notes tile with a cwd lives in
   that project's lane; one without is board-wide and renders in a collapsible strip on the right, outside any layout. `free` is a scrolling grid
-  with explicit x/y/w/h (`react-grid-layout`); reflow rewrites its positions from the tiling. Opening a
+  with explicit x/y/w/h (`react-grid-layout`); reflow rewrites its positions from the tiling. A Claude tile's title bar shows model and effort, context left before
+  auto-compact as a draining bar, and the session's folder only when it has left the project folder. Uncommitted +/- per
+  project (`useProjectLineChangesQuery`, refetched when a turn ends) sits on the lane header, or on the board tab when the
+  board holds one project. Opening a
   conversation while another project's board is active routes it to that project's own board unless shift is held.
 - `terminal` renders one pty session, Claude or plain shell. It does not know which board it sits on. The xterm
   instance and its pty live in `model/liveTerminals.ts`, keyed by tile id and independent of the React tree: a tile

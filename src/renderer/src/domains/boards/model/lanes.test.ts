@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Board, Tile } from '@shared/workspace/workspaceSchemas';
-import { boardWideNotes, computeLanes, hasMultipleLanes } from './lanes';
+import { boardWideNotes, computeLanes, hasMultipleLanes, soleProjectCwd } from './lanes';
 
 const claude = (id: string, cwd: string): Tile => ({ kind: 'claude', id, sessionId: id, cwd, layout: { x: 0, y: 0, w: 1, h: 1 }, weight: 1 });
 const notes = (id: string, cwd?: string): Tile => ({ kind: 'notes', id, text: '', cwd, layout: { x: 0, y: 0, w: 1, h: 1 }, weight: 1 });
@@ -44,5 +44,11 @@ describe('hasMultipleLanes and boardWideNotes', () => {
     expect(hasMultipleLanes(board([claude('a', 'C:\\one'), notes('n')]))).toBe(false);
     expect(hasMultipleLanes(board([claude('a', 'C:\\one'), notes('n', 'C:\\two')]))).toBe(true);
     expect(boardWideNotes(board([claude('a', 'C:\\one'), notes('n'), notes('m', 'C:\\one')])).map((tile) => tile.id)).toEqual(['n']);
+  });
+
+  it('names the one project a board holds, and none when it holds several or none', () => {
+    expect(soleProjectCwd(board([claude('a', 'C:\\one'), notes('n'), claude('b', 'C:\\one')]))).toBe('C:\\one');
+    expect(soleProjectCwd(board([claude('a', 'C:\\one'), claude('b', 'C:\\two')]))).toBeUndefined();
+    expect(soleProjectCwd(board([notes('n')]))).toBeUndefined();
   });
 });

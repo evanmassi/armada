@@ -16,4 +16,6 @@ export const getClaudeHookInboxDir = (): string => join(app.getPath('userData'),
 
 export const getClaudeUsageFilePath = (): string => join(app.getPath('userData'), 'claude-usage', 'usage.json');
 
+export const getClaudeSessionStatusDir = (): string => join(app.getPath('userData'), 'claude-session-status');
+
 export const getLogFilePath = (): string => join(app.getPath('userData'), 'armada.log');

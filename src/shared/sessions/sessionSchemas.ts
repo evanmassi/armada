@@ -41,6 +41,15 @@ export const claudeHookEventSchema = terminalRefSchema.extend({
   source: z.enum(SESSION_START_SOURCES).optional(),
 });
 
+export const sessionStatusSchema = terminalRefSchema.extend({
+  sessionId: z.string().uuid(),
+  modelName: z.string().optional(),
+  effortLevel: z.string().optional(),
+  contextWindow: z.object({ remainingPercentage: z.number(), size: z.number().positive() }).optional(),
+  cwd: z.string().optional(),
+  reportedAt: z.number(),
+});
+
 export type SessionLaunch = z.infer<typeof claudeLaunchSchema> | z.infer<typeof shellLaunchSchema>;
 export type TerminalRef = z.infer<typeof terminalRefSchema>;
 export type OpenSessionRequest = z.infer<typeof openSessionRequestSchema>;
@@ -48,6 +57,7 @@ export type TerminalWriteRequest = z.infer<typeof terminalWriteRequestSchema>;
 export type TerminalResizeRequest = z.infer<typeof terminalResizeRequestSchema>;
 export type ClaudeHookEvent = z.infer<typeof claudeHookEventSchema>;
 export type ClaudeHookEventKind = ClaudeHookEvent['kind'];
+export type SessionStatus = z.infer<typeof sessionStatusSchema>;
 
 export interface TerminalOutputEvent {
   terminalId: string;

@@ -5,15 +5,18 @@ import type { WorkspaceRepository } from '@main/domain/repositories/WorkspaceRep
 import type { TerminalHost } from '@main/domain/terminals/TerminalHost';
 import { ClaudeProjectsReader } from '@main/infrastructure/claude/ClaudeProjectsReader';
 import { ClaudeHookInbox } from '@main/infrastructure/claude/ClaudeHookInbox';
+import { ClaudeSessionStatusFiles } from '@main/infrastructure/claude/ClaudeSessionStatusFiles';
 import { ClaudeSettingsFile } from '@main/infrastructure/claude/ClaudeSettingsFile';
 import { ClaudeUsageFile } from '@main/infrastructure/claude/ClaudeUsageFile';
 import { ClaudeUsageProbe } from '@main/infrastructure/claude/ClaudeUsageProbe';
 import { FolderOpener } from '@main/infrastructure/folders/FolderOpener';
+import { GitChangeCounter } from '@main/infrastructure/git/GitChangeCounter';
 import { LinkOpener } from '@main/infrastructure/links/LinkOpener';
 import { FileLogger } from '@main/infrastructure/logging/FileLogger';
 import {
   getClaudeHookInboxDir,
   getClaudeProjectsDir,
+  getClaudeSessionStatusDir,
   getClaudeSettingsFilePath,
   getClaudeUsageFilePath,
   getHomeDir,
@@ -30,11 +33,13 @@ export interface ServiceContainer {
   workspaceRepository: WorkspaceRepository;
   terminalHost: TerminalHost;
   claudeHookInbox: ClaudeHookInbox;
+  claudeSessionStatusFiles: ClaudeSessionStatusFiles;
   claudeUsageFile: ClaudeUsageFile;
   claudeUsageProbe: ClaudeUsageProbe;
   claudeUsageService: ClaudeUsageService;
   claudeSettingsFile: ClaudeSettingsFile;
   folderOpener: FolderOpener;
+  gitChangeCounter: GitChangeCounter;
   linkOpener: LinkOpener;
   logger: FileLogger;
 }
@@ -44,7 +49,8 @@ export function createServiceContainer(): ServiceContainer {
   const conversationRepository = new ClaudeProjectsReader(getClaudeProjectsDir());
   const hookInboxDir = getClaudeHookInboxDir();
   const usageFilePath = getClaudeUsageFilePath();
-  const terminalHost = new PtySessionHost({ hookInboxDir, usageFilePath, logger });
+  const sessionStatusDir = getClaudeSessionStatusDir();
+  const terminalHost = new PtySessionHost({ hookInboxDir, usageFilePath, sessionStatusDir, logger });
   const folderOpener = new FolderOpener({ logger });
   const claudeUsageFile = new ClaudeUsageFile({ filePath: usageFilePath, logger });
   const claudeUsageProbe = new ClaudeUsageProbe({ cwd: getHomeDir(), logger });
@@ -54,11 +60,13 @@ export function createServiceContainer(): ServiceContainer {
     workspaceRepository: new JsonWorkspaceRepository({ filePath: getWorkspaceFilePath(), logger }),
     terminalHost,
     claudeHookInbox: new ClaudeHookInbox({ inboxDir: hookInboxDir, logger }),
+    claudeSessionStatusFiles: new ClaudeSessionStatusFiles({ statusDir: sessionStatusDir, logger }),
     claudeUsageFile,
     claudeUsageProbe,
     claudeUsageService: new ClaudeUsageService({ statusLine: claudeUsageFile, probe: claudeUsageProbe }),
     claudeSettingsFile: new ClaudeSettingsFile({ settingsPath: getClaudeSettingsFilePath(), scriptsDir: getRelayScriptsDir(), logger }),
     folderOpener,
+    gitChangeCounter: new GitChangeCounter(),
     linkOpener: new LinkOpener({ folderOpener, logger }),
     logger,
   };

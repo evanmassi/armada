@@ -16,6 +16,7 @@ const armadaApi: ArmadaApi = {
     pickFolder: () => ipcRenderer.invoke(IPC_CHANNELS.projectsPickFolder),
     reveal: (request) => ipcRenderer.invoke(IPC_CHANNELS.projectsReveal, request),
     openInEditor: (request) => ipcRenderer.invoke(IPC_CHANNELS.projectsOpenInEditor, request),
+    countLineChanges: (request) => ipcRenderer.invoke(IPC_CHANNELS.projectsCountLineChanges, request),
   },
   links: {
     open: (request) => ipcRenderer.invoke(IPC_CHANNELS.linksOpen, request),
@@ -32,6 +33,7 @@ const armadaApi: ArmadaApi = {
     onOutput: (listener) => subscribe(IPC_CHANNELS.sessionsOutput, listener),
     onExit: (listener) => subscribe(IPC_CHANNELS.sessionsExit, listener),
     onClaudeHookEvent: (listener) => subscribe(IPC_CHANNELS.sessionsClaudeHook, listener),
+    onStatus: (listener) => subscribe(IPC_CHANNELS.sessionsStatus, listener),
   },
   integration: {
     check: () => ipcRenderer.invoke(IPC_CHANNELS.integrationCheck),

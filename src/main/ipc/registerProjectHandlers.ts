@@ -3,7 +3,7 @@ import { IPC_CHANNELS } from '@shared/ipcChannels';
 import { folderRequestSchema } from '@shared/projects/projectSchemas';
 import type { ServiceContainer } from '@main/infrastructure/di/ServiceContainer';
 
-export function registerProjectHandlers({ folderOpener }: ServiceContainer, mainWindow: BrowserWindow): void {
+export function registerProjectHandlers({ folderOpener, gitChangeCounter }: ServiceContainer, mainWindow: BrowserWindow): void {
   ipcMain.handle(IPC_CHANNELS.projectsPickFolder, async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
       title: 'Start a session in a folder',
@@ -16,5 +16,8 @@ export function registerProjectHandlers({ folderOpener }: ServiceContainer, main
   );
   ipcMain.handle(IPC_CHANNELS.projectsOpenInEditor, (_event, payload: unknown) =>
     folderOpener.openInEditor(folderRequestSchema.parse(payload).cwd),
+  );
+  ipcMain.handle(IPC_CHANNELS.projectsCountLineChanges, (_event, payload: unknown) =>
+    gitChangeCounter.count(folderRequestSchema.parse(payload).cwd),
   );
 }
