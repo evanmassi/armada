@@ -17,9 +17,10 @@ interface BoardLanesPanelProps {
   board: Board;
   shouldMountTerminals: boolean;
   onOpenShell(cwd: string, afterTileId: string): void;
+  onStartSession(cwd: string): void;
 }
 
-export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell }: BoardLanesPanelProps) {
+export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onStartSession }: BoardLanesPanelProps) {
   const presentationOf = useTilePresentation();
   const nameOf = useProjectNames();
   const accentFor = useProjectAccents();
@@ -144,6 +145,7 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell }: Bo
               accentColor={laneAccent(lane)}
               isDropTarget={dropTargetLaneKey === lane.key}
               onToggleCollapsed={() => editor.toggleLaneCollapsed(board.id, lane.key)}
+              onStartSession={() => onStartSession(lane.key)}
               onAddNotes={() => editor.addTile(board.id, { kind: 'notes', text: '', cwd: lane.key })}
               onDragOver={(event) => handleLaneDragOver(lane, event)}
               onDragLeave={() => setDropTargetLaneKey((current) => (current === lane.key ? undefined : current))}

@@ -149,6 +149,7 @@ export function App() {
               isActive={board.id === resolvedActiveBoardId}
               shouldMountTerminals={openedBoardIds.includes(board.id)}
               onOpenShell={openShell}
+              onStartSession={(cwd) => startSession(cwd, true)}
             />
           ))}
         </div>

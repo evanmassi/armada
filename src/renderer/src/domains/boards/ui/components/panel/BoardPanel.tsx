@@ -10,9 +10,10 @@ interface BoardPanelProps {
   isActive: boolean;
   shouldMountTerminals: boolean;
   onOpenShell(cwd: string, afterTileId: string): void;
+  onStartSession(cwd: string): void;
 }
 
-export function BoardPanel({ board, isActive, shouldMountTerminals, onOpenShell }: BoardPanelProps) {
+export function BoardPanel({ board, isActive, shouldMountTerminals, onOpenShell, onStartSession }: BoardPanelProps) {
   const notes = board.layoutMode === 'free' ? [] : boardWideNotes(board);
   const hasLanedTiles = lanedTiles(board).length > 0;
   return (
@@ -23,7 +24,7 @@ export function BoardPanel({ board, isActive, shouldMountTerminals, onOpenShell 
         ) : !hasLanedTiles ? (
           <p className="readout p-8 text-muted">Pick a conversation on the left, or press + on a project to start a new one.</p>
         ) : hasMultipleLanes(board) ? (
-          <BoardLanesPanel board={board} shouldMountTerminals={shouldMountTerminals} onOpenShell={onOpenShell} />
+          <BoardLanesPanel board={board} shouldMountTerminals={shouldMountTerminals} onOpenShell={onOpenShell} onStartSession={onStartSession} />
         ) : (
           <BoardTilingPanel board={board} shouldMountTerminals={shouldMountTerminals} onOpenShell={onOpenShell} />
         )}

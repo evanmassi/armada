@@ -14,14 +14,17 @@ interface BoardLaneHeaderProps {
   accentColor: string;
   isDropTarget: boolean;
   onToggleCollapsed(): void;
+  onStartSession(): void;
   onAddNotes(): void;
   onDragOver(event: DragEvent<HTMLElement>): void;
   onDrop(event: DragEvent<HTMLElement>): void;
   onDragLeave(): void;
 }
 
-export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggleCollapsed, onAddNotes, onDragOver, onDrop, onDragLeave }: BoardLaneHeaderProps) {
+export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggleCollapsed, onStartSession, onAddNotes, onDragOver, onDrop, onDragLeave }: BoardLaneHeaderProps) {
   const activities = useSessionActivityStore(useShallow((state) => lane.tiles.map((tile) => state.byTileId[tile.id]?.state)));
+
+  const activityDots = activities.map((activity, index) => (activity ? <ActivityDot key={index} state={activity} /> : null));
 
   const handleDragStart = (event: DragEvent<HTMLElement>): void => {
     event.dataTransfer.setData(LANE_DRAG_MIME, lane.key);
@@ -51,16 +54,24 @@ export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggl
         {lane.isCollapsed ? '▸' : '◂'}
       </button>
       <span className={`truncate text-[12px] ${lane.isCollapsed ? '[writing-mode:vertical-rl]' : 'tile-project-plate'}`}>{name}</span>
-      {!lane.isCollapsed && <span className="flex-1" />}
-      {!lane.isCollapsed && <BoardProjectChangesIndicator cwd={lane.key} />}
-      <span className={`flex gap-1 ${lane.isCollapsed ? 'flex-col' : ''}`}>
-        {activities.map((activity, index) => (activity ? <ActivityDot key={index} state={activity} /> : null))}
-      </span>
-      {!lane.isCollapsed && <span className="text-edge-strong">{lane.tiles.length}</span>}
-      {!lane.isCollapsed && (
-        <button type="button" className="px-1 hover:text-white" onClick={onAddNotes} title="Add notes to this lane" aria-label={`Add notes to ${name}`}>
-          + notes
-        </button>
+      {lane.isCollapsed ? (
+        <span className="flex flex-col gap-1">{activityDots}</span>
+      ) : (
+        <span className="divided-readouts ml-auto flex shrink-0 items-center gap-2">
+          <BoardProjectChangesIndicator cwd={lane.key} />
+          <span className="flex items-center gap-1">
+            {activityDots}
+            <span className="ml-1 text-edge-strong">{lane.tiles.length}</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <button type="button" className="px-1 hover:text-white" onClick={onStartSession} title="New session in this project" aria-label={`New session in ${name}`}>
+              + session
+            </button>
+            <button type="button" className="px-1 hover:text-white" onClick={onAddNotes} title="Add notes to this lane" aria-label={`Add notes to ${name}`}>
+              + notes
+            </button>
+          </span>
+        </span>
       )}
     </header>
   );

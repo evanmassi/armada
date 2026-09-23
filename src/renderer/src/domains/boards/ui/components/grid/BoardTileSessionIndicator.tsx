@@ -17,14 +17,14 @@ export function BoardTileSessionIndicator({ tileId, projectCwd }: BoardTileSessi
 
   return (
     <>
-      {folder && (
-        <span className="min-w-0 max-w-[35%] truncate font-mono text-[11px] text-muted" title={status.cwd}>
-          {folder}
-        </span>
-      )}
-      {model && <span className="readout min-w-0 truncate text-muted">{model}</span>}
-      {contextLeft !== undefined && (
-        <>
+      <span className="divided-readouts flex min-w-0 items-center gap-2">
+        {folder && (
+          <span className="min-w-0 max-w-[18ch] truncate font-mono text-[11px] text-muted" title={status.cwd}>
+            {folder}
+          </span>
+        )}
+        {model && <span className="readout min-w-0 truncate text-muted">{model}</span>}
+        {contextLeft !== undefined && (
           <span
             className="readout shrink-0"
             style={{ color: contextColor }}
@@ -37,11 +37,13 @@ export function BoardTileSessionIndicator({ tileId, projectCwd }: BoardTileSessi
           >
             {contextLeft}%
           </span>
-          <span
-            className="pointer-events-none absolute bottom-0 left-0 h-[2px] transition-[width,background-color] duration-500"
-            style={{ width: `${contextLeft}%`, background: contextColor, boxShadow: `0 0 6px ${contextColor}` }}
-          />
-        </>
+        )}
+      </span>
+      {contextLeft !== undefined && (
+        <span
+          className="pointer-events-none absolute bottom-0 left-0 h-[2px] transition-[width,background-color] duration-500"
+          style={{ width: `${contextLeft}%`, background: contextColor, boxShadow: `0 0 6px ${contextColor}` }}
+        />
       )}
     </>
   );
