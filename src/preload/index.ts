@@ -47,6 +47,11 @@ const armadaApi: ArmadaApi = {
     read: () => ipcRenderer.invoke(IPC_CHANNELS.usageRead),
     onChanged: (listener) => subscribe(IPC_CHANNELS.usageChanged, listener),
   },
+  updates: {
+    read: () => ipcRenderer.invoke(IPC_CHANNELS.updatesRead),
+    install: () => ipcRenderer.invoke(IPC_CHANNELS.updatesInstall),
+    onChanged: (listener) => subscribe(IPC_CHANNELS.updatesChanged, listener),
+  },
 };
 
 contextBridge.exposeInMainWorld('armada', armadaApi);

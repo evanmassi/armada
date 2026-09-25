@@ -20,4 +20,7 @@ export const IPC_CHANNELS = {
   integrationRepair: 'integration:repair',
   usageRead: 'usage:read',
   usageChanged: 'usage:changed',
+  updatesRead: 'updates:read',
+  updatesInstall: 'updates:install',
+  updatesChanged: 'updates:changed',
 } as const;

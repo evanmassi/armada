@@ -120,7 +120,8 @@ src/renderer/src/
 │   ├── boards/        # Board list, grid layout, tile placement
 │   ├── terminal/      # xterm tile bound to one pty session
 │   ├── integration/   # Banner that checks and repairs Armada's entries in Claude Code's settings
-│   └── usage/         # 5 hour, weekly, and per-model limit readout in the sidebar footer
+│   ├── usage/         # 5 hour, weekly, and per-model limit readout in the sidebar footer
+│   └── updates/       # Update-ready banner with Restart now, and the running version under the usage readout
 ├── shared/           # Cross-cutting
 │   ├── ui/
 │   └── utils/
@@ -209,7 +210,7 @@ Never define a boundary type inline in main or renderer.
   TypeScript type with `z.infer`. A schema nothing calls `.parse()` on is dead.
 - **Plain type** for main-to-renderer results and events. Validating in-process output is theater.
 
-**Modules**: `workspace/workspaceSchemas`, `sessions/sessionSchemas`, `links/linkSchemas`, `usage/usageSchemas`, `integration/integrationTypes`, `conversations/conversationTypes`, `ipcChannels`,
+**Modules**: `workspace/workspaceSchemas`, `sessions/sessionSchemas`, `links/linkSchemas`, `usage/usageSchemas`, `updates/updateTypes`, `integration/integrationTypes`, `conversations/conversationTypes`, `ipcChannels`,
 `armadaApi` (the preload contract both sides implement against)
 
 ---
@@ -431,7 +432,8 @@ Commits: `audit: <directory scope> — <specific changes, comma-separated>`, no 
 `dependencies`; everything the renderer uses is bundled by Vite and stays in `devDependencies`, out of the installer.
 Pushing a `v*` tag runs `.github/workflows/release.yml`, which typechecks, tests, builds, and publishes the installer
 and `latest.yml` to a GitHub Release. The packaged app checks that release on launch, downloads in the background, and
-installs on quit. An unpackaged run (`npm run dev`, or `electron .`) is **Armada Dev**: its own `userData`
+installs on quit. `AppUpdater` pushes the downloaded version to the renderer, whose banner offers **Restart now**
+(`quitAndInstall`, relaunching after a silent install). An unpackaged run (`npm run dev`, or `electron .`) is **Armada Dev**: its own `userData`
 (`armada-dev`), window title, and AppUserModelID, set by `separateDevDataFolder` before anything reads a path, so it
 runs beside the installed copy.
 

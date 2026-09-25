@@ -6,6 +6,7 @@ import { BoardLayoutModeControls, BoardPanel, BoardSwitcherBar, findClaudeTile, 
 import { ConversationSidebarPanel, useProjectColors, useProjectNames } from '@renderer/domains/conversations';
 import { IntegrationBanner } from '@renderer/domains/integration';
 import { disposeLiveTerminalsExcept } from '@renderer/domains/terminal';
+import { AppUpdateBanner, AppVersionIndicator } from '@renderer/domains/updates';
 import { UsageIndicator } from '@renderer/domains/usage';
 import { adjustTerminalFontSize, resetTerminalFontSize, useWorkspaceEditor, useWorkspaceQuery } from '@renderer/domains/workspace';
 import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
@@ -115,8 +116,14 @@ export function App() {
 
   return (
     <div className="flex h-full">
-      <ConversationSidebarPanel footer={<UsageIndicator />} onOpenConversation={openConversation} onOpenProjectBoard={openProjectBoard} onStartSession={startSession} />
+      <ConversationSidebarPanel footer={
+          <>
+            <UsageIndicator />
+            <AppVersionIndicator />
+          </>
+        } onOpenConversation={openConversation} onOpenProjectBoard={openProjectBoard} onStartSession={startSession} />
       <main className="flex min-w-0 flex-1 flex-col">
+        <AppUpdateBanner />
         <IntegrationBanner />
         <BoardSwitcherBar
           boards={boards}

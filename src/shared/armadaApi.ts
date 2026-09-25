@@ -12,6 +12,7 @@ import type {
   TerminalResizeRequest,
   TerminalWriteRequest,
 } from './sessions/sessionSchemas';
+import type { AppUpdateStatus } from './updates/updateTypes';
 import type { ClaudeUsage } from './usage/usageSchemas';
 import type { Workspace } from './workspace/workspaceSchemas';
 
@@ -55,5 +56,10 @@ export interface ArmadaApi {
   usage: {
     read(): Promise<ClaudeUsage | undefined>;
     onChanged(listener: (usage: ClaudeUsage) => void): Unsubscribe;
+  };
+  updates: {
+    read(): Promise<AppUpdateStatus>;
+    install(): Promise<void>;
+    onChanged(listener: (status: AppUpdateStatus) => void): Unsubscribe;
   };
 }

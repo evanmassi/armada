@@ -8,6 +8,7 @@ import { registerIntegrationHandlers } from '@main/ipc/registerIntegrationHandle
 import { registerLinkHandlers } from '@main/ipc/registerLinkHandlers';
 import { registerProjectHandlers } from '@main/ipc/registerProjectHandlers';
 import { registerSessionHandlers } from '@main/ipc/registerSessionHandlers';
+import { registerUpdateHandlers } from '@main/ipc/registerUpdateHandlers';
 import { registerUsageHandlers } from '@main/ipc/registerUsageHandlers';
 import { registerWorkspaceHandlers } from '@main/ipc/registerWorkspaceHandlers';
 import appIdentity from '../../build/appIdentity.json';
@@ -74,6 +75,7 @@ app.whenReady().then(() => {
   registerWorkspaceHandlers(container);
   registerSessionHandlers(container, mainWindow.webContents);
   registerUsageHandlers(container, mainWindow.webContents);
+  registerUpdateHandlers(container, mainWindow.webContents);
   void container.claudeHookInbox.start();
   void container.claudeSessionStatusFiles.start();
   void container.claudeUsageFile.start();
