@@ -1,11 +1,9 @@
 import { useState, type DragEvent } from 'react';
-import { useSidebarDragStore } from '@renderer/app/stores/sidebarDragStore';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
 import { applyDragGhost, placementFromPointer, PLACEMENT_LINE_CLASS, type DropPlacement } from '@renderer/shared/utils/dragGhost';
+import { GROUP_DRAG_MIME, PROJECT_DRAG_MIME } from '../../../model/sidebarDragTypes';
+import { useSidebarDragStore } from '../../../stores/sidebarDragStore';
 import { UNCOLORED_ACCENT } from '../../projectColorPalette';
-import { PROJECT_DRAG_MIME } from './ConversationProjectSection';
-
-const GROUP_DRAG_MIME = 'application/x-armada-group';
 
 interface SidebarGroupHeaderProps {
   name: string;

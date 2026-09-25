@@ -3,10 +3,9 @@ import { useShallow } from 'zustand/react/shallow';
 import { useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
 import { ActivityDot } from '@renderer/shared/ui/components/ActivityDot';
 import { applyDragGhost } from '@renderer/shared/utils/dragGhost';
+import { LANE_DRAG_MIME } from '../../../model/boardDragTypes';
 import type { Lane } from '../../../model/lanes';
 import { BoardProjectChangesIndicator } from '../changes/BoardProjectChangesIndicator';
-
-export const LANE_DRAG_MIME = 'application/x-armada-lane';
 
 interface BoardLaneHeaderProps {
   lane: Lane;

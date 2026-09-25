@@ -115,7 +115,7 @@ Verified against the on-disk format. Re-verify before relying on anything not li
 ```
 src/renderer/src/
 ├── app/              # App shell
-│   ├── stores/       # Global Zustand stores (board selection, notifications)
+│   ├── stores/       # Global Zustand stores (board selection, notifications, session activity and status)
 │   ├── styles/       # Tailwind entry and design tokens
 │   ├── App.tsx
 │   ├── queryClient.ts
@@ -201,9 +201,15 @@ side trust is zero, same as an HTTP server.
 
 **Error text**: main owns it. A handler rejects with a message that is already user-ready. The renderer shows it
 verbatim through the single resolver `getErrorMessage` in `shared/utils/getErrorMessage.ts` and never rewrites it.
-One toaster in `queryClient.ts`: `MutationCache.onError` for every failed mutation. A failed query stays silent and
-the component renders its own error state from `isError`. A mutation hook's own `onError` never toasts; it does
-cache reactions only. Session-open failures inside the terminal hook notify through the same store.
+Every error toast goes through `notifyError` in `app/stores/notificationStore.ts`. `MutationCache.onError` in
+`queryClient.ts` calls it for every failed mutation. A failed query stays silent and the component renders its own
+error state from `isError`. A mutation hook's own `onError` never toasts; it does cache reactions only. The only
+other callers are the terminal model's fire-and-forget IPC calls, which live outside React: session open, link open,
+and saving a clipboard image.
+
+**Design tokens**: colors and fonts live once, in `app/styles/index.css` under `@theme static`. Code that needs a
+literal value (the xterm theme, the drag ghost) reads the CSS variable; `static` keeps every token emitted even when
+no utility class uses it.
 
 ---
 
@@ -231,7 +237,7 @@ not silently replaced. There is no migration system until a second schema versio
 
 ## Exemplar Reference Files
 
-Pattern new code after these. None has been through an audit pass yet; the first audit replaces this line.
+Pattern new code after these. All of them passed the first full audit (v0.9.5).
 
 | Layer | Exemplar |
 |-------|----------|

@@ -1,8 +1,9 @@
 import { create } from 'zustand';
+import { getErrorMessage } from '@renderer/shared/utils/getErrorMessage';
 
 const NOTICE_LIFETIME_MS = 6000;
 
-export interface Notice {
+interface Notice {
   id: string;
   message: string;
 }
@@ -22,3 +23,5 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
   dismiss: (id) => set((state) => ({ notices: state.notices.filter((notice) => notice.id !== id) })),
 }));
+
+export const notifyError = (error: unknown): void => useNotificationStore.getState().notify(getErrorMessage(error));

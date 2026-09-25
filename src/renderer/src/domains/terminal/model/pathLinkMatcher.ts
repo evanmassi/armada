@@ -1,4 +1,4 @@
-export interface PathLinkMatch {
+interface PathLinkMatch {
   text: string;
   startIndex: number;
 }

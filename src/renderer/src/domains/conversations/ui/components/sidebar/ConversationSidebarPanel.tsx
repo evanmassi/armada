@@ -1,6 +1,6 @@
 import { type ReactNode, useMemo, useRef, useState } from 'react';
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
-import { MAX_SIDEBAR_WIDTH_PX, MIN_SIDEBAR_WIDTH_PX } from '@shared/workspace/workspaceSchemas';
+import { DEFAULT_SIDEBAR_WIDTH_PX, MAX_SIDEBAR_WIDTH_PX, MIN_SIDEBAR_WIDTH_PX } from '@shared/workspace/workspaceSchemas';
 import { selectActivityBySession, useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
 import armadaIcon from '@renderer/assets/armada-icon.png';
 import { useWorkspaceQuery } from '@renderer/domains/workspace';
@@ -49,7 +49,7 @@ export function ConversationSidebarPanel({ footer, onOpenConversation, onOpenPro
   const pinnedConversations = useMemo(() => findPinnedConversations(projects, pinnedSessionIds), [projects, pinnedSessionIds]);
   const sections = useMemo(() => (sidebar ? arrangeSidebar(visibleProjects, sidebar) : []), [visibleProjects, sidebar]);
   const isSearching = query.trim().length > 0;
-  const width = draftWidth ?? sidebar?.width ?? 288;
+  const width = draftWidth ?? sidebar?.width ?? DEFAULT_SIDEBAR_WIDTH_PX;
 
   // PITFALL: the persisted order comes from every project, not the search-filtered ones, or a move while searching would drop the hidden ones.
   const otherOrder = useMemo(
@@ -193,7 +193,7 @@ export function ConversationSidebarPanel({ footer, onOpenConversation, onOpenPro
         />
         <div className="min-h-0 flex-1 overflow-y-auto">
           {isPending && <p className="px-3 py-2 text-muted">Reading conversations…</p>}
-          {isError && <p className="px-3 py-2 text-red-400">{getErrorMessage(error)}</p>}
+          {isError && <p className="px-3 py-2 text-alert">{getErrorMessage(error)}</p>}
           {!isSearching && pinnedConversations.length > 0 && (
             <section className="border-b border-edge pb-1">
               <h2 className="readout rule-label px-3 py-1.5 text-muted">Pinned</h2>
@@ -222,7 +222,7 @@ export function ConversationSidebarPanel({ footer, onOpenConversation, onOpenPro
           widthAtDragStart.current = width;
         }}
         onDragMove={(deltaPx) => {
-          liveWidth.current = Math.min(MAX_SIDEBAR_WIDTH_PX, Math.max(MIN_SIDEBAR_WIDTH_PX,widthAtDragStart.current + deltaPx));
+          liveWidth.current = Math.min(MAX_SIDEBAR_WIDTH_PX, Math.max(MIN_SIDEBAR_WIDTH_PX, widthAtDragStart.current + deltaPx));
           setDraftWidth(liveWidth.current);
         }}
         onDragEnd={() => {

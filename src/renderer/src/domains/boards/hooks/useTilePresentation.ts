@@ -5,7 +5,7 @@ const NEW_SESSION_TITLE = 'New session';
 const SHELL_TITLE = 'shell';
 const NOTES_TITLE = 'notes';
 
-export interface TilePresentation {
+interface TilePresentation {
   title: string;
   accentColor: string;
 }

@@ -3,7 +3,6 @@ import type { Conversation, Project } from '@shared/conversations/conversationTy
 const STALE_AFTER_DAYS = 14;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-
 const matches = (haystack: string, needle: string): boolean => haystack.toLowerCase().includes(needle);
 
 export function filterProjects(projects: Project[], query: string, nameOf: (cwd: string) => string): Project[] {

@@ -1,17 +1,16 @@
 import { useState, type CSSProperties, type DragEvent, type KeyboardEvent } from 'react';
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
 import type { ActivityState } from '@renderer/app/stores/sessionActivityStore';
-import { selectIsSidebarDragging, useSidebarDragStore } from '@renderer/app/stores/sidebarDragStore';
 import { ActionMenu, type ActionMenuEntry, type ActionMenuItem } from '@renderer/shared/ui/components/ActionMenu';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
 import { applyDragGhost, placementFromPointer, PLACEMENT_LINE_CLASS, type DropPlacement } from '@renderer/shared/utils/dragGhost';
 import { useFolderActions } from '../../../hooks/useFolderActions';
 import { useProjectAccents, useProjectColors } from '../../../hooks/useProjectColors';
 import { splitArchivedConversations } from '../../../model/conversationSearch';
+import { PROJECT_DRAG_MIME } from '../../../model/sidebarDragTypes';
+import { selectIsSidebarDragging, useSidebarDragStore } from '../../../stores/sidebarDragStore';
 import { ConversationRow } from './ConversationRow';
 import { ProjectColorSelector } from './ProjectColorSelector';
-
-export const PROJECT_DRAG_MIME = 'application/x-armada-project';
 
 interface ConversationProjectSectionProps {
   project: Project;

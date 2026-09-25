@@ -4,7 +4,7 @@
 @import '@fontsource/rajdhani/latin-500.css';
 @import '@fontsource/rajdhani/latin-600.css';
 
-@theme {
+@theme static {
   --color-ink: #07090d;
   --color-panel: #0b0e14;
   --color-field: #10141b;

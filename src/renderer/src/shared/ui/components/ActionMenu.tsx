@@ -6,7 +6,7 @@ export interface ActionMenuItem {
   onSelect(): void;
 }
 
-export interface ActionMenuSubmenu {
+interface ActionMenuSubmenu {
   label: string;
   items: ActionMenuItem[];
 }

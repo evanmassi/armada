@@ -1,4 +1,5 @@
 import type { Sidebar, SidebarGroup, Workspace } from '@shared/workspace/workspaceSchemas';
+import { withoutKey } from '@renderer/shared/utils/withoutKey';
 
 export interface ProjectDropTarget {
   groupId: string | undefined;
@@ -17,6 +18,8 @@ const updateGroup = (workspace: Workspace, groupId: string, transform: (group: S
   }));
 
 const without = (list: string[], value: string): string[] => list.filter((item) => item !== value);
+
+const withMembership = (list: string[], value: string, isMember: boolean): string[] => (isMember ? [...without(list, value), value] : without(list, value));
 
 const insertBefore = (list: string[], value: string, beforeValue: string | undefined): string[] => {
   const index = beforeValue ? list.indexOf(beforeValue) : -1;
@@ -87,18 +90,18 @@ export const removeSidebarGroup = (workspace: Workspace, groupId: string): Works
 export const setProjectArchived = (workspace: Workspace, cwd: string, isArchived: boolean): Workspace =>
   updateSidebar(workspace, (sidebar) => ({
     ...sidebar,
-    archivedProjectCwds: isArchived ? [...without(sidebar.archivedProjectCwds, cwd), cwd] : without(sidebar.archivedProjectCwds, cwd),
+    archivedProjectCwds: withMembership(sidebar.archivedProjectCwds, cwd, isArchived),
   }));
 
 export const setConversationArchived = (workspace: Workspace, sessionId: string, isArchived: boolean): Workspace =>
   updateSidebar(workspace, (sidebar) => ({
     ...sidebar,
-    archivedSessionIds: isArchived ? [...without(sidebar.archivedSessionIds, sessionId), sessionId] : without(sidebar.archivedSessionIds, sessionId),
+    archivedSessionIds: withMembership(sidebar.archivedSessionIds, sessionId, isArchived),
   }));
 
 export const setProjectAlias = (workspace: Workspace, cwd: string, alias: string | undefined): Workspace =>
   updateSidebar(workspace, (sidebar) => {
-    const projectAliases = Object.fromEntries(Object.entries(sidebar.projectAliases).filter(([existing]) => existing !== cwd));
+    const projectAliases = withoutKey(sidebar.projectAliases, cwd);
     if (alias) projectAliases[cwd] = alias;
     return { ...sidebar, projectAliases };
   });

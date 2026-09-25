@@ -1,6 +1,7 @@
-import { useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { Board } from '@shared/workspace/workspaceSchemas';
 import { useProjectAccents } from '@renderer/domains/conversations';
+import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
 import { soleProjectCwd } from '../../../model/lanes';
 import { BoardProjectChangesIndicator } from '../changes/BoardProjectChangesIndicator';
 
@@ -16,23 +17,7 @@ interface BoardSwitcherBarProps {
 
 export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, onRename, onRemove, children }: BoardSwitcherBarProps) {
   const [editingBoardId, setEditingBoardId] = useState<string>();
-  const [draftName, setDraftName] = useState('');
   const accentFor = useProjectAccents();
-
-  const beginRename = (board: Board): void => {
-    setEditingBoardId(board.id);
-    setDraftName(board.name);
-  };
-
-  const commitRename = (): void => {
-    if (editingBoardId && draftName.trim()) onRename(editingBoardId, draftName.trim());
-    setEditingBoardId(undefined);
-  };
-
-  const handleRenameKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
-    if (event.key === 'Enter') commitRename();
-    if (event.key === 'Escape') setEditingBoardId(undefined);
-  };
 
   const confirmRemove = (board: Board): void => {
     if (board.tiles.length === 0 || window.confirm(`Remove board "${board.name}" and its ${board.tiles.length} tiles?`)) {
@@ -52,21 +37,21 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
             style={{ borderLeftColor: accentFor(board.projectCwd), borderBottomColor: isActive ? 'var(--color-accent)' : undefined }}
           >
             {editingBoardId === board.id ? (
-              <input
-                className="w-32 bg-ink px-1 text-fg outline-none"
-                value={draftName}
-                autoFocus
-                onChange={(event) => setDraftName(event.target.value)}
-                onBlur={commitRename}
-                onKeyDown={handleRenameKeyDown}
-                aria-label="Board name"
+              <InlineRenameInput
+                initialValue={board.name}
+                label="Board name"
+                onCommit={(name) => {
+                  onRename(board.id, name);
+                  setEditingBoardId(undefined);
+                }}
+                onCancel={() => setEditingBoardId(undefined)}
               />
             ) : (
               <button
                 type="button"
                 onClick={() => onSelect(board.id)}
-                onDoubleClick={() => beginRename(board)}
-                onKeyDown={(event) => event.key === 'F2' && beginRename(board)}
+                onDoubleClick={() => setEditingBoardId(board.id)}
+                onKeyDown={(event) => event.key === 'F2' && setEditingBoardId(board.id)}
                 aria-current={isActive ? 'page' : undefined}
                 title="Double-click or F2 to rename"
               >

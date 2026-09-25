@@ -5,7 +5,7 @@ export type DropPlacement = 'before' | 'after';
 export function applyDragGhost(event: DragEvent<HTMLElement>, label: string, accentColor: string): void {
   const ghost = document.createElement('div');
   ghost.textContent = label;
-  ghost.style.cssText = `position:fixed;top:-100px;left:-100px;padding:3px 10px 3px 22px;border-radius:999px;background:#15181d;color:#d6d8dc;border:1px solid ${accentColor};font:12px "Cascadia Code",Consolas,monospace;white-space:nowrap;`;
+  ghost.style.cssText = `position:fixed;top:-100px;left:-100px;padding:3px 10px 3px 22px;border-radius:999px;background:var(--color-field);color:var(--color-fg);border:1px solid ${accentColor};font:12px var(--font-mono);white-space:nowrap;`;
   const dot = document.createElement('span');
   dot.style.cssText = `position:absolute;left:8px;top:7px;width:8px;height:8px;border-radius:999px;background:${accentColor};`;
   ghost.appendChild(dot);

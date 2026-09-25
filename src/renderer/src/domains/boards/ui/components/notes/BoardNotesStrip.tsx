@@ -1,6 +1,5 @@
 import type { Board, NotesTile } from '@shared/workspace/workspaceSchemas';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
-import { useTilePresentation } from '../../../hooks/useTilePresentation';
 import { NOTES_STRIP_KEY } from '../../../model/lanes';
 import { BoardTileFrame } from '../grid/BoardTileFrame';
 
@@ -13,7 +12,6 @@ interface BoardNotesStripProps {
 
 export function BoardNotesStrip({ board, notes }: BoardNotesStripProps) {
   const editor = useBoardsEditor();
-  const presentationOf = useTilePresentation();
   const isCollapsed = board.lanes[NOTES_STRIP_KEY]?.isCollapsed ?? false;
 
   return (
@@ -31,11 +29,8 @@ export function BoardNotesStrip({ board, notes }: BoardNotesStripProps) {
             <BoardTileFrame
               boardId={board.id}
               tile={note}
-              {...presentationOf(note)}
               shouldMountTerminal={false}
               keyboardHint={KEYBOARD_HINT}
-              onClose={() => editor.removeTile(board.id, note.id)}
-              onOpenShell={() => undefined}
               onArrow={(direction) => {
                 const neighbor = notes[index + (direction === 'up' ? -1 : direction === 'down' ? 1 : 0)];
                 if (neighbor && neighbor.id !== note.id) editor.swapTiles(board.id, note.id, neighbor.id);

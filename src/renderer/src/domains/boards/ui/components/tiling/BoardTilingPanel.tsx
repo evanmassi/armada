@@ -1,15 +1,18 @@
-import { useRef, useState, type DragEvent } from 'react';
+import { useState, type DragEvent } from 'react';
 import type { Board, Tile } from '@shared/workspace/workspaceSchemas';
+import { DragSplitter } from '@renderer/shared/ui/components/DragSplitter';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
-import { useSeamDrag, type SeamDrag } from '../../../hooks/useSeamDrag';
-import { useTilePresentation } from '../../../hooks/useTilePresentation';
+import { useElementRegistry } from '../../../hooks/useElementRegistry';
+import { useSeamDrag } from '../../../hooks/useSeamDrag';
+import { TILE_DRAG_MIME } from '../../../model/boardDragTypes';
+import { WEIGHT_STEP } from '../../../model/boardEdits';
 import { computeTiling } from '../../../model/tiling';
 import { BoardTileFrame, type ArrowDirection } from '../grid/BoardTileFrame';
-import { DragSplitter } from '@renderer/shared/ui/components/DragSplitter';
 
 const KEYBOARD_HINT = 'Arrow keys reorder, shift with left or right resizes.';
-const WEIGHT_STEP = 1.15;
-const DRAG_MIME = 'application/x-armada-tile';
+
+const withAdjacentWeights = (weights: number[], firstIndex: number, firstWeight: number, secondWeight: number): number[] =>
+  weights.map((weight, index) => (index === firstIndex ? firstWeight : index === firstIndex + 1 ? secondWeight : weight));
 
 interface BoardTilingPanelProps {
   board: Board;
@@ -18,10 +21,9 @@ interface BoardTilingPanelProps {
 }
 
 export function BoardTilingPanel({ board, shouldMountTerminals, onOpenShell }: BoardTilingPanelProps) {
-  const presentationOf = useTilePresentation();
   const editor = useBoardsEditor();
-  const tileElements = useRef(new Map<string, HTMLDivElement>());
-  const rowElements = useRef(new Map<number, HTMLDivElement>());
+  const tileElements = useElementRegistry<string>();
+  const rowElements = useElementRegistry<number>();
   const seam = useSeamDrag();
   const [draftTileWeights, setDraftTileWeights] = useState<Record<string, number>>({});
   const [draftRowWeights, setDraftRowWeights] = useState<number[]>();
@@ -31,39 +33,28 @@ export function BoardTilingPanel({ board, shouldMountTerminals, onOpenShell }: B
   const rowWeights = draftRowWeights ?? rows.map((row) => row.weight);
   const weightOf = (tile: Tile): number => draftTileWeights[tile.id] ?? tile.weight;
 
-  const beginSeamDrag = (drag: SeamDrag): void => seam.begin(drag);
-  const moveSeam = seam.move;
-  const endSeamDrag = (): void => {
+  const endSeam = (): void => {
     seam.end();
     setDraftTileWeights({});
     setDraftRowWeights(undefined);
   };
 
   const beginTileSeam = (first: Tile, second: Tile): void =>
-    beginSeamDrag({
-      firstPx: tileElements.current.get(first.id)?.offsetWidth ?? 1,
-      secondPx: tileElements.current.get(second.id)?.offsetWidth ?? 1,
+    seam.begin({
+      firstPx: tileElements.elementOf(first.id)?.offsetWidth ?? 1,
+      secondPx: tileElements.elementOf(second.id)?.offsetWidth ?? 1,
       totalWeight: weightOf(first) + weightOf(second),
       apply: (firstWeight, secondWeight) => setDraftTileWeights({ [first.id]: firstWeight, [second.id]: secondWeight }),
-      commit: () =>
-        setDraftTileWeights((weights) => {
-          if (Object.keys(weights).length > 0) editor.setTileWeights(board.id, weights);
-          return {};
-        }),
+      commit: (firstWeight, secondWeight) => editor.setTileWeights(board.id, { [first.id]: firstWeight, [second.id]: secondWeight }),
     });
 
   const beginRowSeam = (rowIndex: number): void =>
-    beginSeamDrag({
-      firstPx: rowElements.current.get(rowIndex)?.offsetHeight ?? 1,
-      secondPx: rowElements.current.get(rowIndex + 1)?.offsetHeight ?? 1,
+    seam.begin({
+      firstPx: rowElements.elementOf(rowIndex)?.offsetHeight ?? 1,
+      secondPx: rowElements.elementOf(rowIndex + 1)?.offsetHeight ?? 1,
       totalWeight: rowWeights[rowIndex]! + rowWeights[rowIndex + 1]!,
-      apply: (firstWeight, secondWeight) =>
-        setDraftRowWeights(rowWeights.map((weight, index) => (index === rowIndex ? firstWeight : index === rowIndex + 1 ? secondWeight : weight))),
-      commit: () =>
-        setDraftRowWeights((weights) => {
-          if (weights) editor.setRowWeights(board.id, weights);
-          return undefined;
-        }),
+      apply: (firstWeight, secondWeight) => setDraftRowWeights(withAdjacentWeights(rowWeights, rowIndex, firstWeight, secondWeight)),
+      commit: (firstWeight, secondWeight) => editor.setRowWeights(board.id, withAdjacentWeights(rowWeights, rowIndex, firstWeight, secondWeight)),
     });
 
   const handleArrow = (tile: Tile, direction: ArrowDirection, isShift: boolean): void => {
@@ -76,12 +67,12 @@ export function BoardTilingPanel({ board, shouldMountTerminals, onOpenShell }: B
   };
 
   const handleDragStart = (tile: Tile, event: DragEvent<HTMLDivElement>): void => {
-    event.dataTransfer.setData(DRAG_MIME, tile.id);
+    event.dataTransfer.setData(TILE_DRAG_MIME, tile.id);
     event.dataTransfer.effectAllowed = 'move';
   };
 
   const handleDragOver = (tile: Tile, event: DragEvent<HTMLDivElement>): void => {
-    if (!event.dataTransfer.types.includes(DRAG_MIME)) return;
+    if (!event.dataTransfer.types.includes(TILE_DRAG_MIME)) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
     if (dropTargetId !== tile.id) setDropTargetId(tile.id);
@@ -89,7 +80,7 @@ export function BoardTilingPanel({ board, shouldMountTerminals, onOpenShell }: B
 
   const handleDrop = (tile: Tile, event: DragEvent<HTMLDivElement>): void => {
     event.preventDefault();
-    const draggedId = event.dataTransfer.getData(DRAG_MIME);
+    const draggedId = event.dataTransfer.getData(TILE_DRAG_MIME);
     setDropTargetId(undefined);
     if (draggedId && draggedId !== tile.id) editor.swapTiles(board.id, draggedId, tile.id);
   };
@@ -98,14 +89,9 @@ export function BoardTilingPanel({ board, shouldMountTerminals, onOpenShell }: B
     <div className={`flex h-full flex-col gap-1 p-2 ${seam.isDragging ? 'select-none [&_*]:transition-none' : ''}`}>
       {rows.map((row, rowIndex) => (
         <div key={rowIndex} className="contents">
-          {rowIndex > 0 && (
-            <DragSplitter orientation="horizontal" onDragStart={() => beginRowSeam(rowIndex - 1)} onDragMove={moveSeam} onDragEnd={endSeamDrag} />
-          )}
+          {rowIndex > 0 && <DragSplitter orientation="horizontal" onDragStart={() => beginRowSeam(rowIndex - 1)} onDragMove={seam.move} onDragEnd={endSeam} />}
           <div
-            ref={(element) => {
-              if (element) rowElements.current.set(rowIndex, element);
-              else rowElements.current.delete(rowIndex);
-            }}
+            ref={rowElements.refFor(rowIndex)}
             className="flex min-h-0 gap-1 transition-[flex-grow] duration-200"
             style={{ flexGrow: rowWeights[rowIndex], flexBasis: 0 }}
           >
@@ -115,15 +101,12 @@ export function BoardTilingPanel({ board, shouldMountTerminals, onOpenShell }: B
                   <DragSplitter
                     orientation="vertical"
                     onDragStart={() => beginTileSeam(row.tiles[tileIndex - 1]!, tile)}
-                    onDragMove={moveSeam}
-                    onDragEnd={endSeamDrag}
+                    onDragMove={seam.move}
+                    onDragEnd={endSeam}
                   />
                 )}
                 <div
-                  ref={(element) => {
-                    if (element) tileElements.current.set(tile.id, element);
-                    else tileElements.current.delete(tile.id);
-                  }}
+                  ref={tileElements.refFor(tile.id)}
                   className={`min-w-0 transition-[flex-grow] duration-200 ${dropTargetId === tile.id ? 'rounded-md ring-2 ring-white/70' : ''}`}
                   style={{ flexGrow: weightOf(tile), flexBasis: 0 }}
                   onDragOver={(event) => handleDragOver(tile, event)}
@@ -133,11 +116,9 @@ export function BoardTilingPanel({ board, shouldMountTerminals, onOpenShell }: B
                   <BoardTileFrame
                     boardId={board.id}
                     tile={tile}
-                    {...presentationOf(tile)}
                     shouldMountTerminal={shouldMountTerminals}
                     keyboardHint={KEYBOARD_HINT}
-                    onClose={() => editor.removeTile(board.id, tile.id)}
-                    onOpenShell={() => tile.kind !== 'notes' && onOpenShell(tile.cwd, tile.id)}
+                    onOpenShell={onOpenShell}
                     onArrow={(direction, isShift) => handleArrow(tile, direction, isShift)}
                     onDragStart={(event) => handleDragStart(tile, event)}
                   />

@@ -1,5 +1,4 @@
 import type { Board, LaneState, LayoutMode, Tile, TileLayout, Workspace } from '@shared/workspace/workspaceSchemas';
-import { tileCwd } from './boardQueries';
 import { lanedTiles } from './lanes';
 import { tilingToCells } from './tiling';
 
@@ -12,6 +11,7 @@ const MIN_TILE_WIDTH = 3;
 const MIN_TILE_HEIGHT = 6;
 const MIN_WEIGHT = 0.25;
 const MAX_WEIGHT = 4;
+export const WEIGHT_STEP = 1.15;
 
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 
@@ -41,7 +41,7 @@ export function findFreePosition(tiles: Tile[], w: number, h: number): { x: numb
   return { x: 0, y: bottom };
 }
 
-export const visibleGridRows = (containerHeightPx: number): number =>
+const visibleGridRows = (containerHeightPx: number): number =>
   Math.max(MIN_TILE_HEIGHT, Math.floor((containerHeightPx - GRID_MARGIN_PX) / (GRID_ROW_HEIGHT_PX + GRID_MARGIN_PX)));
 
 const clampLayout = (layout: TileLayout): TileLayout => ({
@@ -52,6 +52,11 @@ const clampLayout = (layout: TileLayout): TileLayout => ({
 });
 
 const clampWeight = (weight: number): number => Math.min(MAX_WEIGHT, Math.max(MIN_WEIGHT, weight));
+
+const findBoard = (workspace: Workspace, boardId: string): Board | undefined => workspace.boards.find((board) => board.id === boardId);
+
+const findTile = (workspace: Workspace, boardId: string, tileId: string): Tile | undefined =>
+  findBoard(workspace, boardId)?.tiles.find((tile) => tile.id === tileId);
 
 const updateBoard = (workspace: Workspace, boardId: string, transform: (board: Board) => Board): Workspace => ({
   ...workspace,
@@ -64,13 +69,11 @@ const updateTile = (workspace: Workspace, boardId: string, tileId: string, trans
     tiles: board.tiles.map((tile) => (tile.id === tileId ? transform(tile) : tile)),
   }));
 
-const seedCwd = (seed: TileSeed): string | undefined => seed.cwd;
-
 const insertionIndex = (tiles: Tile[], seed: TileSeed, afterTileId: string | undefined): number => {
   const anchorIndex = afterTileId ? tiles.findIndex((tile) => tile.id === afterTileId) : -1;
   if (anchorIndex >= 0) return anchorIndex + 1;
-  const cwd = seedCwd(seed);
-  const lastSiblingIndex = cwd ? tiles.findLastIndex((tile) => tileCwd(tile) === cwd) : -1;
+  const { cwd } = seed;
+  const lastSiblingIndex = cwd ? tiles.findLastIndex((tile) => tile.cwd === cwd) : -1;
   return lastSiblingIndex >= 0 ? lastSiblingIndex + 1 : tiles.length;
 };
 
@@ -117,13 +120,13 @@ export const removeTile = (workspace: Workspace, boardId: string, tileId: string
   updateBoard(workspace, boardId, (board) => ({ ...board, tiles: board.tiles.filter((tile) => tile.id !== tileId) }));
 
 export const rebindClaudeTile = (workspace: Workspace, boardId: string, tileId: string, sessionId: string): Workspace => {
-  const tile = workspace.boards.find((board) => board.id === boardId)?.tiles.find((item) => item.id === tileId);
+  const tile = findTile(workspace, boardId, tileId);
   if (tile?.kind !== 'claude' || tile.sessionId === sessionId) return workspace;
   return updateTile(workspace, boardId, tileId, (current) => ({ ...current, sessionId }));
 };
 
 export const setNotesText = (workspace: Workspace, boardId: string, tileId: string, text: string): Workspace => {
-  const tile = workspace.boards.find((board) => board.id === boardId)?.tiles.find((item) => item.id === tileId);
+  const tile = findTile(workspace, boardId, tileId);
   if (tile?.kind !== 'notes' || tile.text === text) return workspace;
   return updateTile(workspace, boardId, tileId, (current) => ({ ...current, text }));
 };
@@ -140,7 +143,7 @@ export const swapTiles = (workspace: Workspace, boardId: string, tileIdA: string
 
 // PITFALL: neighbors come from the laid-out tiles, so a board-wide note in the strip is never the swap partner.
 export const moveTile = (workspace: Workspace, boardId: string, tileId: string, step: -1 | 1): Workspace => {
-  const board = workspace.boards.find((item) => item.id === boardId);
+  const board = findBoard(workspace, boardId);
   const laidOut = board ? lanedTiles(board) : [];
   const neighbor = laidOut[laidOut.findIndex((tile) => tile.id === tileId) + step];
   return neighbor ? swapTiles(workspace, boardId, tileId, neighbor.id) : workspace;
@@ -189,7 +192,7 @@ export const applyLayouts = (workspace: Workspace, boardId: string, layouts: Pos
 };
 
 export const reflowFreeLayout = (workspace: Workspace, boardId: string, containerHeightPx: number): Workspace => {
-  const board = workspace.boards.find((item) => item.id === boardId);
+  const board = findBoard(workspace, boardId);
   if (!board) return workspace;
   const cells = tilingToCells(board, GRID_COLUMNS, visibleGridRows(containerHeightPx));
   return applyLayouts(workspace, boardId, cells.map(({ tileId, ...layout }) => ({ i: tileId, ...layout })));

@@ -4,24 +4,32 @@ import type { Unsubscribe } from '@shared/armadaApi';
 import type { ClaudeHookEvent, OpenSessionRequest, SessionLaunch } from '@shared/sessions/sessionSchemas';
 import { isGlobalShortcut } from '@renderer/app/keyboardShortcuts';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
-import { useNotificationStore } from '@renderer/app/stores/notificationStore';
+import { notifyError } from '@renderer/app/stores/notificationStore';
 import { useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
 import { useSessionStatusStore } from '@renderer/app/stores/sessionStatusStore';
 import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
-import { getErrorMessage } from '@renderer/shared/utils/getErrorMessage';
 import { createActivityTracker } from './activityTracker';
 import { handleClipboardKey, handleContextMenu } from './terminalClipboard';
 import { enableTerminalLinks } from './terminalLinks';
 import { quotePathForInput } from './terminalPathInput';
 
-const TERMINAL_THEME = { background: '#080a0f', foreground: '#d7dbe2', cursor: '#8fd3e8', selectionBackground: '#8fd3e844' };
-const TERMINAL_FONT = '"Cascadia Code", Consolas, monospace';
+const SELECTION_ALPHA_HEX = '44';
 const REFIT_DEBOUNCE_MS = 80;
 
 const DROPPED_FILES_TYPE = 'Files';
 
 // PITFALL: Claude Code attaches every image path in a paste only when each sits on its own line; a shell would run each line.
 const DROPPED_PATH_SEPARATOR: Record<SessionLaunch['kind'], string> = { claude: '\n', shell: ' ' };
+
+const readDesignToken = (name: string): string => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+const terminalAppearance = () => {
+  const accent = readDesignToken('--color-accent');
+  return {
+    theme: { background: readDesignToken('--color-tile'), foreground: readDesignToken('--color-fg'), cursor: accent, selectionBackground: `${accent}${SELECTION_ALPHA_HEX}` },
+    fontFamily: readDesignToken('--font-mono'),
+  };
+};
 
 const exitBanner = (exitCode: number): string => `\r\n[exited with code ${exitCode}]\r\n`;
 
@@ -31,7 +39,7 @@ const SESSION_ROTATION_SOURCES = new Set<string>(['clear', 'resume', 'fork']);
 const isSessionRotation = (event: ClaudeHookEvent): boolean =>
   event.kind === 'sessionStarted' && event.source !== undefined && SESSION_ROTATION_SOURCES.has(event.source);
 
-export type SessionReboundHandler = (sessionId: string) => void;
+type SessionReboundHandler = (sessionId: string) => void;
 
 export interface LiveTerminal {
   attach(container: HTMLElement, onSessionRebound: SessionReboundHandler): void;
@@ -65,7 +73,7 @@ class LiveTerminalEntry implements LiveTerminal {
     private launch: SessionLaunch,
     fontSize: number,
   ) {
-    this.terminal = new Terminal({ theme: TERMINAL_THEME, fontFamily: TERMINAL_FONT, fontSize, cursorBlink: true });
+    this.terminal = new Terminal({ ...terminalAppearance(), fontSize, cursorBlink: true });
     this.terminal.loadAddon(this.fit);
     this.terminal.attachCustomKeyEventHandler((event) => !isGlobalShortcut(event) && !handleClipboardKey(this.terminal, event));
   }
@@ -121,7 +129,7 @@ class LiveTerminalEntry implements LiveTerminal {
     enableTerminalLinks(this.terminal, (target) => {
       armadaClient.links
         .open({ target, cwd: this.launch.cwd })
-        .catch((error: unknown) => useNotificationStore.getState().notify(getErrorMessage(error)));
+        .catch(notifyError);
     });
   }
 
@@ -194,7 +202,7 @@ class LiveTerminalEntry implements LiveTerminal {
         terminal.onResize(({ cols, rows }) => armadaClient.sessions.resize({ terminalId, cols, rows }));
         terminal.focus();
       })
-      .catch((error: unknown) => useNotificationStore.getState().notify(getErrorMessage(error)));
+      .catch(notifyError);
   }
 }
 

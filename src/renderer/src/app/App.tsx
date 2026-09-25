@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
 import { GLOBAL_SHORTCUTS, isGlobalShortcut } from '@renderer/app/keyboardShortcuts';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
-import { BoardLayoutModeControls, BoardPanel, BoardSwitcherBar, findClaudeTile, tileCwd, useBoardsEditor } from '@renderer/domains/boards';
+import { BoardLayoutModeControls, BoardPanel, BoardSwitcherBar, findClaudeTile, useBoardsEditor } from '@renderer/domains/boards';
 import { ConversationSidebarPanel, useProjectColors, useProjectNames } from '@renderer/domains/conversations';
 import { IntegrationBanner } from '@renderer/domains/integration';
 import { disposeLiveTerminalsExcept } from '@renderer/domains/terminal';
@@ -28,6 +28,8 @@ export function App() {
   const boards = workspace?.boards ?? [];
   const activeBoard = boards.find((board) => board.id === activeBoardId) ?? boards[0];
   const resolvedActiveBoardId = activeBoard?.id;
+  const focusedTile = activeBoard?.tiles.find((tile) => tile.id === focusedTileId);
+  const focusedCwd = focusedTile?.cwd ?? activeBoard?.projectCwd;
 
   useEffect(() => {
     if (resolvedActiveBoardId && resolvedActiveBoardId !== activeBoardId) selectBoard(resolvedActiveBoardId);
@@ -84,15 +86,10 @@ export function App() {
 
   const createBoard = (): void => selectBoard(editor.createBoard({ name: `${DEFAULT_BOARD_NAME} ${boards.length + 1}` }));
 
-  const addNotes = (): void => {
-    const focusedTile = activeBoard?.tiles.find((tile) => tile.id === focusedTileId);
-    const cwd = (focusedTile && tileCwd(focusedTile)) ?? activeBoard?.projectCwd;
-    editor.addTile(ensureActiveBoard(), { kind: 'notes', text: '', cwd });
-  };
+  const addNotes = (): void => editor.addTile(ensureActiveBoard(), { kind: 'notes', text: '', cwd: focusedCwd });
 
   const startSessionNearFocus = async (): Promise<void> => {
-    const focusedTile = activeBoard?.tiles.find((tile) => tile.id === focusedTileId);
-    const cwd = (focusedTile && tileCwd(focusedTile)) ?? activeBoard?.projectCwd ?? activeBoard?.tiles.map(tileCwd).find(Boolean);
+    const cwd = focusedCwd ?? activeBoard?.tiles.map((tile) => tile.cwd).find(Boolean);
     if (cwd) {
       startSession(cwd, true, focusedTile?.id);
       return;
@@ -116,12 +113,17 @@ export function App() {
 
   return (
     <div className="flex h-full">
-      <ConversationSidebarPanel footer={
+      <ConversationSidebarPanel
+        footer={
           <>
             <UsageIndicator />
             <AppVersionIndicator />
           </>
-        } onOpenConversation={openConversation} onOpenProjectBoard={openProjectBoard} onStartSession={startSession} />
+        }
+        onOpenConversation={openConversation}
+        onOpenProjectBoard={openProjectBoard}
+        onStartSession={startSession}
+      />
       <main className="flex min-w-0 flex-1 flex-col">
         <AppUpdateBanner />
         <IntegrationBanner />
@@ -148,7 +150,7 @@ export function App() {
         </BoardSwitcherBar>
         <div ref={boardAreaRef} className="surface-field relative min-h-0 flex-1">
           {isPending && <p className="p-6 text-muted">Loading workspace…</p>}
-          {isError && <p className="p-6 text-red-400">{getErrorMessage(error)}</p>}
+          {isError && <p className="p-6 text-alert">{getErrorMessage(error)}</p>}
           {boards.map((board) => (
             <BoardPanel
               key={board.id}

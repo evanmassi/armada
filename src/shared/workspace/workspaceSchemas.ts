@@ -28,6 +28,7 @@ export const DEFAULT_TERMINAL_FONT_SIZE = 13;
 export const MIN_TERMINAL_FONT_SIZE = 8;
 export const MAX_TERMINAL_FONT_SIZE = 32;
 
+export const DEFAULT_SIDEBAR_WIDTH_PX = 288;
 export const MIN_SIDEBAR_WIDTH_PX = 200;
 export const MAX_SIDEBAR_WIDTH_PX = 640;
 
@@ -106,7 +107,7 @@ const sidebarGroupSchema = z.object({
 });
 
 const sidebarSchema = z.object({
-  width: z.number().int().min(MIN_SIDEBAR_WIDTH_PX).max(MAX_SIDEBAR_WIDTH_PX).default(288),
+  width: z.number().int().min(MIN_SIDEBAR_WIDTH_PX).max(MAX_SIDEBAR_WIDTH_PX).default(DEFAULT_SIDEBAR_WIDTH_PX),
   groups: z.array(sidebarGroupSchema).default([]),
   projectOrder: z.array(z.string().min(1)).default([]),
   archivedProjectCwds: z.array(z.string().min(1)).default([]),

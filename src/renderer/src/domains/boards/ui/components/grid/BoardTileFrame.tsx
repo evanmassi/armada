@@ -5,9 +5,9 @@ import { useSessionActivityStore, type ActivityState } from '@renderer/app/store
 import { useFolderActions } from '@renderer/domains/conversations';
 import { disposeLiveTerminal, TerminalSessionTile } from '@renderer/domains/terminal';
 import { ActionMenu } from '@renderer/shared/ui/components/ActionMenu';
-import { tileCwd } from '../../../model/boardQueries';
 import { ActivityDot } from '@renderer/shared/ui/components/ActivityDot';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
+import { useTilePresentation } from '../../../hooks/useTilePresentation';
 import { BoardNotesTile } from '../notes/BoardNotesTile';
 import { BoardTileSessionIndicator } from './BoardTileSessionIndicator';
 
@@ -32,12 +32,9 @@ const ARROW_KEYS: Record<string, ArrowDirection> = {
 interface BoardTileFrameProps {
   boardId: string;
   tile: Tile;
-  title: string;
-  accentColor: string;
   shouldMountTerminal: boolean;
   keyboardHint: string;
-  onClose(): void;
-  onOpenShell(): void;
+  onOpenShell?(cwd: string, afterTileId: string): void;
   onArrow(direction: ArrowDirection, isShift: boolean): void;
   onDragStart?(event: DragEvent<HTMLDivElement>): void;
 }
@@ -56,25 +53,16 @@ function TileBody({ boardId, tile, shouldMountTerminal }: Pick<BoardTileFramePro
   );
 }
 
-export function BoardTileFrame({
-  boardId,
-  tile,
-  title,
-  accentColor,
-  shouldMountTerminal,
-  keyboardHint,
-  onClose,
-  onOpenShell,
-  onArrow,
-  onDragStart,
-}: BoardTileFrameProps) {
+export function BoardTileFrame({ boardId, tile, shouldMountTerminal, keyboardHint, onOpenShell, onArrow, onDragStart }: BoardTileFrameProps) {
   const isFocused = useBoardSelectionStore((state) => state.focusedTileId === tile.id);
   const isDimmed = useBoardSelectionStore((state) => state.focusedTileId !== undefined && state.focusedTileId !== tile.id);
   const setFocusedTile = useBoardSelectionStore((state) => state.setFocusedTile);
   const activity = useSessionActivityStore((state) => state.byTileId[tile.id]?.state);
   const [launchCount, setLaunchCount] = useState(0);
   const { revealInExplorer, openInEditor } = useFolderActions();
-  const cwd = tileCwd(tile);
+  const editor = useBoardsEditor();
+  const { title, accentColor } = useTilePresentation()(tile);
+  const { cwd } = tile;
   const relaunch = (): void => {
     disposeLiveTerminal(tile.id);
     setLaunchCount((count) => count + 1);
@@ -108,7 +96,7 @@ export function BoardTileFrame({
         <span
           className={`tile-project-plate readout shrink-0 text-[11px] transition-colors duration-500 ${activity ? PLATE_TONES[activity] : ''}`}
           style={activity ? undefined : { color: accentColor }}
-          title={tile.kind === 'notes' ? undefined : tile.cwd}
+          title={cwd}
         >
           {plateLabel(tile, activity)}
         </span>
@@ -117,8 +105,14 @@ export function BoardTileFrame({
             ↻
           </button>
         )}
-        {tile.kind === 'claude' && (
-          <button type="button" className="px-1 font-bold text-muted hover:text-fg" onClick={onOpenShell} title="Open a shell in this folder" aria-label="Open a shell in this folder">
+        {tile.kind === 'claude' && onOpenShell && (
+          <button
+            type="button"
+            className="px-1 font-bold text-muted hover:text-fg"
+            onClick={() => onOpenShell(tile.cwd, tile.id)}
+            title="Open a shell in this folder"
+            aria-label="Open a shell in this folder"
+          >
             {'>_'}
           </button>
         )}
@@ -131,7 +125,7 @@ export function BoardTileFrame({
             ]}
           />
         )}
-        <button type="button" className="px-1 text-muted hover:text-fg" onClick={onClose} aria-label="Close tile">
+        <button type="button" className="px-1 text-muted hover:text-fg" onClick={() => editor.removeTile(boardId, tile.id)} aria-label="Close tile">
           ×
         </button>
       </div>

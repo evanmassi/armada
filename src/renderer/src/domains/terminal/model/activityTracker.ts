@@ -11,7 +11,7 @@ const STATE_BY_HOOK_EVENT: Record<ClaudeHookEventKind, ActivityState> = {
   permissionRequested: 'approval',
 };
 
-export interface ActivityTracker {
+interface ActivityTracker {
   recordHookEvent(kind: ClaudeHookEventKind): void;
   recordInput(data: string): void;
   recordExit(): void;

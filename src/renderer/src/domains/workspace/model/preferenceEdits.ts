@@ -9,7 +9,7 @@ export const adjustTerminalFontSize = (workspace: Workspace, delta: number): Wor
   ...workspace,
   preferences: {
     ...workspace.preferences,
-    terminalFontSize: Math.min(MAX_TERMINAL_FONT_SIZE, Math.max(MIN_TERMINAL_FONT_SIZE,workspace.preferences.terminalFontSize + delta)),
+    terminalFontSize: Math.min(MAX_TERMINAL_FONT_SIZE, Math.max(MIN_TERMINAL_FONT_SIZE, workspace.preferences.terminalFontSize + delta)),
   },
 });
 

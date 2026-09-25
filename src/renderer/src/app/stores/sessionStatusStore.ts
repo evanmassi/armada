@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { SessionStatus } from '@shared/sessions/sessionSchemas';
+import { withoutKey } from '@renderer/shared/utils/withoutKey';
 
 interface SessionStatusState {
   byTileId: Record<string, SessionStatus>;
@@ -11,5 +12,5 @@ export const useSessionStatusStore = create<SessionStatusState>((set) => ({
   byTileId: {},
   setStatus: (tileId, status) => set((current) => ({ byTileId: { ...current.byTileId, [tileId]: status } })),
   clearStatus: (tileId) =>
-    set((current) => (tileId in current.byTileId ? { byTileId: Object.fromEntries(Object.entries(current.byTileId).filter(([id]) => id !== tileId)) } : current)),
+    set((current) => (tileId in current.byTileId ? { byTileId: withoutKey(current.byTileId, tileId) } : current)),
 }));

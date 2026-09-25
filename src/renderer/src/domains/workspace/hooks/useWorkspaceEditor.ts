@@ -3,7 +3,7 @@ import type { Workspace } from '@shared/workspace/workspaceSchemas';
 import { queryKeys } from '@renderer/app/queryKeys';
 import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
 
-export type WorkspaceEdit = (workspace: Workspace) => Workspace;
+type WorkspaceEdit = (workspace: Workspace) => Workspace;
 
 export function useWorkspaceEditor() {
   const queryClient = useQueryClient();

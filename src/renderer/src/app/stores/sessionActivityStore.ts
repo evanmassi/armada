@@ -1,8 +1,9 @@
 import { create } from 'zustand';
+import { withoutKey } from '@renderer/shared/utils/withoutKey';
 
 export type ActivityState = 'working' | 'waiting' | 'approval' | 'idle' | 'exited';
 
-export interface ActivityEntry {
+interface ActivityEntry {
   sessionId: string | undefined;
   state: ActivityState;
 }
@@ -20,7 +21,7 @@ export const useSessionActivityStore = create<SessionActivityState>((set) => ({
       current.byTileId[tileId]?.state === state && current.byTileId[tileId].sessionId === sessionId ? current : { byTileId: { ...current.byTileId, [tileId]: { sessionId, state } } },
     ),
   clearActivity: (tileId) =>
-    set((current) => ({ byTileId: Object.fromEntries(Object.entries(current.byTileId).filter(([id]) => id !== tileId)) })),
+    set((current) => ({ byTileId: withoutKey(current.byTileId, tileId) })),
 }));
 
 export const selectActivityBySession = (byTileId: Record<string, ActivityEntry>): Map<string, ActivityState> =>

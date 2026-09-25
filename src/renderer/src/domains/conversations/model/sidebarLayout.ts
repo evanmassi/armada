@@ -1,7 +1,7 @@
 import type { Project } from '@shared/conversations/conversationTypes';
 import type { Sidebar, SidebarGroup } from '@shared/workspace/workspaceSchemas';
 
-export type SidebarSectionKind = 'group' | 'other' | 'archived';
+type SidebarSectionKind = 'group' | 'other' | 'archived';
 
 export interface SidebarSection {
   key: string;

@@ -1,7 +1,7 @@
 import type { Board, Tile } from '@shared/workspace/workspaceSchemas';
 import { lanedTiles } from './lanes';
 
-export interface TilingRow {
+interface TilingRow {
   tiles: Tile[];
   weight: number;
 }
@@ -12,14 +12,14 @@ export const columnsFor = (tileCount: number): number => {
   return 3;
 };
 
-export const chunkTilesIntoRows = (tiles: Tile[]): Tile[][] => {
+const chunkTilesIntoRows = (tiles: Tile[]): Tile[][] => {
   const columns = columnsFor(tiles.length);
   const rows: Tile[][] = [];
   for (let start = 0; start < tiles.length; start += columns) rows.push(tiles.slice(start, start + columns));
   return rows;
 };
 
-export const normalizeRowWeights = (rowWeights: number[], rowCount: number): number[] =>
+const normalizeRowWeights = (rowWeights: number[], rowCount: number): number[] =>
   rowWeights.length === rowCount ? rowWeights : Array.from({ length: rowCount }, () => 1);
 
 export const computeTiling = (board: Board): TilingRow[] => {
@@ -30,7 +30,7 @@ export const computeTiling = (board: Board): TilingRow[] => {
 
 const sum = (values: number[]): number => values.reduce((total, value) => total + value, 0);
 
-export interface CellSpan {
+interface CellSpan {
   tileId: string;
   x: number;
   y: number;

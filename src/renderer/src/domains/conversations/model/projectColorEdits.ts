@@ -1,10 +1,11 @@
 import type { Workspace } from '@shared/workspace/workspaceSchemas';
+import { withoutKey } from '@renderer/shared/utils/withoutKey';
 import { AUTO_ASSIGN_ORDER } from '../ui/projectColorPalette';
 
 const normalize = (color: string): string => color.toLowerCase();
 
 export const setProjectColor = (workspace: Workspace, cwd: string, color: string | undefined): Workspace => {
-  const projectColors = Object.fromEntries(Object.entries(workspace.projectColors).filter(([existingCwd]) => existingCwd !== cwd));
+  const projectColors = withoutKey(workspace.projectColors, cwd);
   if (color) projectColors[cwd] = normalize(color);
   return { ...workspace, projectColors };
 };

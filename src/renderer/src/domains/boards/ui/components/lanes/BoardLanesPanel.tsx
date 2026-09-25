@@ -1,17 +1,17 @@
-import { useRef, useState, type DragEvent } from 'react';
+import { useState, type DragEvent } from 'react';
 import type { Board, Tile } from '@shared/workspace/workspaceSchemas';
 import { useProjectAccents, useProjectNames } from '@renderer/domains/conversations';
 import { DragSplitter } from '@renderer/shared/ui/components/DragSplitter';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
+import { useElementRegistry } from '../../../hooks/useElementRegistry';
 import { useSeamDrag } from '../../../hooks/useSeamDrag';
-import { useTilePresentation } from '../../../hooks/useTilePresentation';
+import { LANE_DRAG_MIME, TILE_DRAG_MIME } from '../../../model/boardDragTypes';
+import { WEIGHT_STEP } from '../../../model/boardEdits';
 import { computeLanes, type Lane } from '../../../model/lanes';
 import { BoardTileFrame, type ArrowDirection } from '../grid/BoardTileFrame';
-import { BoardLaneHeader, LANE_DRAG_MIME } from './BoardLaneHeader';
+import { BoardLaneHeader } from './BoardLaneHeader';
 
 const KEYBOARD_HINT = 'Up and down reorder within the lane. Shift with up or down resizes the tile, shift with left or right resizes the lane.';
-const WEIGHT_STEP = 1.15;
-const TILE_DRAG_MIME = 'application/x-armada-tile';
 
 interface BoardLanesPanelProps {
   board: Board;
@@ -21,13 +21,12 @@ interface BoardLanesPanelProps {
 }
 
 export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onStartSession }: BoardLanesPanelProps) {
-  const presentationOf = useTilePresentation();
   const nameOf = useProjectNames();
   const accentFor = useProjectAccents();
   const editor = useBoardsEditor();
   const seam = useSeamDrag();
-  const tileElements = useRef(new Map<string, HTMLDivElement>());
-  const laneElements = useRef(new Map<string, HTMLDivElement>());
+  const tileElements = useElementRegistry<string>();
+  const laneElements = useElementRegistry<string>();
   const [draftTileWeights, setDraftTileWeights] = useState<Record<string, number>>({});
   const [draftLaneWeights, setDraftLaneWeights] = useState<Record<string, number>>({});
   const [dropTargetTileId, setDropTargetTileId] = useState<string>();
@@ -47,28 +46,20 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
 
   const beginTileSeam = (first: Tile, second: Tile): void =>
     seam.begin({
-      firstPx: tileElements.current.get(first.id)?.offsetHeight ?? 1,
-      secondPx: tileElements.current.get(second.id)?.offsetHeight ?? 1,
+      firstPx: tileElements.elementOf(first.id)?.offsetHeight ?? 1,
+      secondPx: tileElements.elementOf(second.id)?.offsetHeight ?? 1,
       totalWeight: tileWeightOf(first) + tileWeightOf(second),
       apply: (firstWeight, secondWeight) => setDraftTileWeights({ [first.id]: firstWeight, [second.id]: secondWeight }),
-      commit: () =>
-        setDraftTileWeights((weights) => {
-          if (Object.keys(weights).length > 0) editor.setTileWeights(board.id, weights);
-          return {};
-        }),
+      commit: (firstWeight, secondWeight) => editor.setTileWeights(board.id, { [first.id]: firstWeight, [second.id]: secondWeight }),
     });
 
   const beginLaneSeam = (first: Lane, second: Lane): void =>
     seam.begin({
-      firstPx: laneElements.current.get(first.key)?.offsetWidth ?? 1,
-      secondPx: laneElements.current.get(second.key)?.offsetWidth ?? 1,
+      firstPx: laneElements.elementOf(first.key)?.offsetWidth ?? 1,
+      secondPx: laneElements.elementOf(second.key)?.offsetWidth ?? 1,
       totalWeight: laneWeightOf(first) + laneWeightOf(second),
       apply: (firstWeight, secondWeight) => setDraftLaneWeights({ [first.key]: firstWeight, [second.key]: secondWeight }),
-      commit: () =>
-        setDraftLaneWeights((weights) => {
-          if (Object.keys(weights).length > 0) editor.setLaneWeights(board.id, weights);
-          return {};
-        }),
+      commit: (firstWeight, secondWeight) => editor.setLaneWeights(board.id, { [first.key]: firstWeight, [second.key]: secondWeight }),
     });
 
   const handleArrow = (lane: Lane, tile: Tile, direction: ArrowDirection, isShift: boolean): void => {
@@ -128,10 +119,7 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
             <DragSplitter orientation="vertical" onDragStart={() => beginLaneSeam(lanes[laneIndex - 1]!, lane)} onDragMove={seam.move} onDragEnd={endSeam} />
           )}
           <div
-            ref={(element) => {
-              if (element) laneElements.current.set(lane.key, element);
-              else laneElements.current.delete(lane.key);
-            }}
+            ref={laneElements.refFor(lane.key)}
             className={`flex min-w-0 flex-col border transition-[flex-grow] duration-200 ${lane.isCollapsed ? 'w-8 shrink-0' : ''}`}
             style={{
               flexGrow: lane.isCollapsed ? 0 : laneWeightOf(lane),
@@ -158,10 +146,7 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
                     <DragSplitter orientation="horizontal" onDragStart={() => beginTileSeam(lane.tiles[tileIndex - 1]!, tile)} onDragMove={seam.move} onDragEnd={endSeam} />
                   )}
                   <div
-                    ref={(element) => {
-                      if (element) tileElements.current.set(tile.id, element);
-                      else tileElements.current.delete(tile.id);
-                    }}
+                    ref={tileElements.refFor(tile.id)}
                     className={`min-h-0 transition-[flex-grow] duration-200 ${dropTargetTileId === tile.id ? 'ring-2 ring-accent/70' : ''}`}
                     style={{ flexGrow: tileWeightOf(tile), flexBasis: 0 }}
                     onDragOver={(event) => handleTileDragOver(tile, event)}
@@ -171,11 +156,9 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
                     <BoardTileFrame
                       boardId={board.id}
                       tile={tile}
-                      {...presentationOf(tile)}
                       shouldMountTerminal={shouldMountTerminals}
                       keyboardHint={KEYBOARD_HINT}
-                      onClose={() => editor.removeTile(board.id, tile.id)}
-                      onOpenShell={() => tile.kind !== 'notes' && onOpenShell(tile.cwd, tile.id)}
+                      onOpenShell={onOpenShell}
                       onArrow={(direction, isShift) => handleArrow(lane, tile, direction, isShift)}
                       onDragStart={(event) => handleTileDragStart(tile, event)}
                     />
