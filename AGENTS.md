@@ -431,7 +431,9 @@ Commits: `audit: <directory scope> — <specific changes, comma-separated>`, no 
 `electron-builder.config.cjs` packages a per-user NSIS installer. Only `node-pty`, `zod`, and `electron-updater` are runtime
 `dependencies`; everything the renderer uses is bundled by Vite and stays in `devDependencies`, out of the installer.
 Pushing a `v*` tag runs `.github/workflows/release.yml`, which typechecks, tests, builds, and publishes the installer
-and `latest.yml` to a GitHub Release. The packaged app checks that release on launch, downloads in the background, and
+and `latest.yml` to a GitHub Release, then fails if either is missing from it: electron-builder once reported success
+with only the blockmap uploaded. Re-running a release whose GitHub Release already exists publishes nothing, so a
+broken release is fixed by the next version, not a re-run. The packaged app checks that release on launch, downloads in the background, and
 installs on quit. `AppUpdater` pushes the downloaded version to the renderer, whose banner offers **Restart now**
 (`quitAndInstall`, relaunching after a silent install). An unpackaged run (`npm run dev`, or `electron .`) is **Armada Dev**: its own `userData`
 (`armada-dev`), window title, and AppUserModelID, set by `separateDevDataFolder` before anything reads a path, so it

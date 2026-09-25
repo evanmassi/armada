@@ -23,3 +23,13 @@ jobs:
       - run: npx electron-builder --win --config electron-builder.config.cjs --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Confirm the installer and update manifest reached the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          assets=$(gh release view "v$version" --json assets --jq '.assets[] | select(.state == "uploaded") | .name')
+          for asset in "Armada-Setup-$version.exe" latest.yml; do
+            grep -qx "$asset" <<< "$assets" || { echo "::error::Release v$version is missing $asset"; exit 1; }
+          done
