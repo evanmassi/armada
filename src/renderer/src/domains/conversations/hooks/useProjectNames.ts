@@ -1,5 +1,5 @@
 import { useWorkspaceQuery } from '@renderer/domains/workspace';
-import { folderName } from '../model/conversationSearch';
+import { folderName } from '@shared/projects/folderName';
 
 export function useProjectNames(): (cwd: string) => string {
   const aliases = useWorkspaceQuery().data?.sidebar.projectAliases ?? {};

@@ -5,7 +5,6 @@ import type { ClaudeIntegrationGap } from '@shared/integration/integrationTypes'
 
 const HOOK_RELAY_SCRIPT = 'claudeHookRelay.cjs';
 const STATUS_LINE_RELAY_SCRIPT = 'claudeStatusLineRelay.cjs';
-const ARMADA_HOOK_SCRIPTS = [HOOK_RELAY_SCRIPT, 'claudeSessionStartHook.cjs'];
 export const RELAY_SCRIPTS = [HOOK_RELAY_SCRIPT, STATUS_LINE_RELAY_SCRIPT];
 const MATCHER_BY_EVENT: Record<string, string | undefined> = {
   SessionStart: undefined,
@@ -34,10 +33,10 @@ type HookGroup = z.infer<typeof hookGroupSchema>;
 
 const scriptCommand = (scriptsDir: string, script: string): string => `node "${join(scriptsDir, script).split('\\').join('/')}"`;
 
-// PITFALL: matched by script name, not full command, so a relay left behind by a moved or renamed repo folder is replaced instead of kept firing.
+// PITFALL: matched by script name, not full command, so a relay left at an older location (a moved repo, the pre-installer scripts folder) is replaced instead of kept firing.
 const isArmadaGroup = (group: HookGroup): boolean => {
   const commands = (group.hooks ?? []).map((hook) => hook.command ?? '');
-  return commands.length > 0 && commands.every((command) => ARMADA_HOOK_SCRIPTS.some((script) => command.includes(script)));
+  return commands.length > 0 && commands.every((command) => command.includes(HOOK_RELAY_SCRIPT));
 };
 
 function withArmadaGroup(groups: HookGroup[], armadaGroup: HookGroup): HookGroup[] {

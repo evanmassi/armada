@@ -1,4 +1,5 @@
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
+import { folderName } from '@shared/projects/folderName';
 import type { ConversationRepository } from '@main/domain/repositories/ConversationRepository';
 
 interface ConversationCatalogServiceDeps {
@@ -7,10 +8,8 @@ interface ConversationCatalogServiceDeps {
 
 const byMostRecent = (a: Conversation, b: Conversation): number => b.lastActiveAt.localeCompare(a.lastActiveAt);
 
-const projectDisplayName = (cwd: string): string => cwd.split(/[\\/]/).filter(Boolean).at(-1) ?? cwd;
-
-const byDisplayNameThenPath = (a: Project, b: Project): number =>
-  projectDisplayName(a.cwd).localeCompare(projectDisplayName(b.cwd), undefined, { sensitivity: 'base' }) ||
+const byFolderNameThenPath = (a: Project, b: Project): number =>
+  folderName(a.cwd).localeCompare(folderName(b.cwd), undefined, { sensitivity: 'base' }) ||
   a.cwd.localeCompare(b.cwd);
 
 export function groupConversationsIntoProjects(conversations: Conversation[]): Project[] {
@@ -22,7 +21,7 @@ export function groupConversationsIntoProjects(conversations: Conversation[]): P
   }
   return [...byCwd.entries()]
     .map(([cwd, projectConversations]) => ({ cwd, conversations: projectConversations.sort(byMostRecent) }))
-    .sort(byDisplayNameThenPath);
+    .sort(byFolderNameThenPath);
 }
 
 export class ConversationCatalogService {

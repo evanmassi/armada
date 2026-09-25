@@ -4,16 +4,9 @@ import { workspaceSchema, type Workspace } from '@shared/workspace/workspaceSche
 import type { WorkspaceRepository } from '@main/domain/repositories/WorkspaceRepository';
 import { isMissingPath } from '@main/infrastructure/fileErrors';
 import type { FileLogger } from '@main/infrastructure/logging/FileLogger';
+import { parseJsonOrUndefined } from '@main/infrastructure/safeJson';
 
 const EMPTY_WORKSPACE: Workspace = workspaceSchema.parse({ boards: [], projectColors: {} });
-
-const parseJson = (raw: string): unknown => {
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return undefined;
-  }
-};
 
 interface JsonWorkspaceRepositoryDeps {
   filePath: string;
@@ -33,7 +26,7 @@ export class JsonWorkspaceRepository implements WorkspaceRepository {
       if (isMissingPath(error)) return EMPTY_WORKSPACE;
       throw error;
     }
-    const parsed = workspaceSchema.safeParse(parseJson(raw));
+    const parsed = workspaceSchema.safeParse(parseJsonOrUndefined(raw));
     if (!parsed.success) {
       this.deps.logger.error('workspace.invalid', { filePath: this.deps.filePath, issues: parsed.error.issues });
       throw new Error(`Workspace file is invalid and was left untouched: ${this.deps.filePath}`);

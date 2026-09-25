@@ -13,7 +13,7 @@ describe('ClaudeSettingsFile', () => {
   beforeEach(async () => {
     home = await mkdtemp(join(tmpdir(), 'armada-settings-'));
     settingsPath = join(home, '.claude', 'settings.json');
-    settingsFile = new ClaudeSettingsFile({ settingsPath, scriptsDir: join(home, 'scripts'), logger: new FileLogger(join(home, 'armada.log')) });
+    settingsFile = new ClaudeSettingsFile({ settingsPath, scriptsDir: join(home, 'scripts'), logger: new FileLogger({ filePath: join(home, 'armada.log') }) });
   });
 
   afterEach(() => rm(home, { recursive: true, force: true }));

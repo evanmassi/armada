@@ -4,9 +4,11 @@ import { app } from 'electron';
 
 export const getHomeDir = (): string => homedir();
 
-export const getClaudeProjectsDir = (): string => join(getHomeDir(), '.claude', 'projects');
+const getClaudeDir = (): string => join(getHomeDir(), '.claude');
 
-export const getClaudeSettingsFilePath = (): string => join(getHomeDir(), '.claude', 'settings.json');
+export const getClaudeProjectsDir = (): string => join(getClaudeDir(), 'projects');
+
+export const getClaudeSettingsFilePath = (): string => join(getClaudeDir(), 'settings.json');
 
 const DEV_DATA_FOLDER = 'armada-dev';
 

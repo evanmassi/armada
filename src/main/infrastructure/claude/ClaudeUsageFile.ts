@@ -4,7 +4,7 @@ import { basename, dirname } from 'node:path';
 import { statusLineUsageSchema, type StatusLineUsage } from '@shared/usage/usageSchemas';
 import type { FileLogger } from '@main/infrastructure/logging/FileLogger';
 
-export type ClaudeUsageListener = (usage: StatusLineUsage) => void;
+type ClaudeUsageListener = (usage: StatusLineUsage) => void;
 
 interface ClaudeUsageFileDeps {
   filePath: string;

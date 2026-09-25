@@ -1,8 +1,6 @@
 import { ipcMain, type WebContents } from 'electron';
 import { IPC_CHANNELS } from '@shared/ipcChannels';
 import {
-  type ClaudeHookEvent,
-  type SessionStatus,
   openSessionRequestSchema,
   terminalRefSchema,
   terminalResizeRequestSchema,
@@ -11,6 +9,7 @@ import {
   type TerminalOutputEvent,
 } from '@shared/sessions/sessionSchemas';
 import type { ServiceContainer } from '@main/infrastructure/di/ServiceContainer';
+import { sendToRenderer } from './sendToRenderer';
 
 export function registerSessionHandlers({ sessionService, terminalHost, claudeHookInbox, claudeSessionStatusFiles }: ServiceContainer, renderer: WebContents): void {
   ipcMain.handle(IPC_CHANNELS.sessionsOpen, (_event, payload: unknown) =>
@@ -29,21 +28,13 @@ export function registerSessionHandlers({ sessionService, terminalHost, claudeHo
   });
 
   terminalHost.onOutput((terminalId, data) => {
-    if (renderer.isDestroyed()) return;
     const event: TerminalOutputEvent = { terminalId, data };
-    renderer.send(IPC_CHANNELS.sessionsOutput, event);
+    sendToRenderer(renderer, IPC_CHANNELS.sessionsOutput, event);
   });
   terminalHost.onExit((terminalId, exitCode) => {
-    if (renderer.isDestroyed()) return;
     const event: TerminalExitEvent = { terminalId, exitCode };
-    renderer.send(IPC_CHANNELS.sessionsExit, event);
+    sendToRenderer(renderer, IPC_CHANNELS.sessionsExit, event);
   });
-  claudeHookInbox.onEvent((event: ClaudeHookEvent) => {
-    if (renderer.isDestroyed()) return;
-    renderer.send(IPC_CHANNELS.sessionsClaudeHook, event);
-  });
-  claudeSessionStatusFiles.onStatus((status: SessionStatus) => {
-    if (renderer.isDestroyed()) return;
-    renderer.send(IPC_CHANNELS.sessionsStatus, status);
-  });
+  claudeHookInbox.onEvent((event) => sendToRenderer(renderer, IPC_CHANNELS.sessionsClaudeHook, event));
+  claudeSessionStatusFiles.onStatus((status) => sendToRenderer(renderer, IPC_CHANNELS.sessionsStatus, status));
 }

@@ -13,7 +13,7 @@ describe('ClaudeUsageFile', () => {
   beforeEach(async () => {
     usageDir = await mkdtemp(join(tmpdir(), 'armada-usage-'));
     filePath = join(usageDir, 'claude-usage', 'usage.json');
-    usageFile = new ClaudeUsageFile({ filePath, logger: new FileLogger(join(usageDir, 'armada.log')) });
+    usageFile = new ClaudeUsageFile({ filePath, logger: new FileLogger({ filePath: join(usageDir, 'armada.log') }) });
   });
 
   afterEach(async () => {

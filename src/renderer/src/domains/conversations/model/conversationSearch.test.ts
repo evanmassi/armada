@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Project } from '@shared/conversations/conversationTypes';
-import { filterProjects, findPinnedConversations, folderName, isRecentlyActive, splitArchivedConversations } from './conversationSearch';
+import { folderName } from '@shared/projects/folderName';
+import { filterProjects, findPinnedConversations, isRecentlyActive, splitArchivedConversations } from './conversationSearch';
 
 const projects: Project[] = [
   {

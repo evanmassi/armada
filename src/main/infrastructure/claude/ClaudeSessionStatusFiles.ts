@@ -6,7 +6,7 @@ import type { FileLogger } from '@main/infrastructure/logging/FileLogger';
 
 const STATUS_FILE_EXTENSION = '.json';
 
-export type SessionStatusListener = (status: SessionStatus) => void;
+type SessionStatusListener = (status: SessionStatus) => void;
 
 interface ClaudeSessionStatusFilesDeps {
   statusDir: string;

@@ -15,7 +15,7 @@ describe('ClaudeHookInbox', () => {
 
   beforeEach(async () => {
     inboxDir = await mkdtemp(join(tmpdir(), 'armada-inbox-'));
-    inbox = new ClaudeHookInbox({ inboxDir, logger: new FileLogger(join(inboxDir, 'armada.log')) });
+    inbox = new ClaudeHookInbox({ inboxDir, logger: new FileLogger({ filePath: join(inboxDir, 'armada.log') }) });
   });
 
   afterEach(async () => {

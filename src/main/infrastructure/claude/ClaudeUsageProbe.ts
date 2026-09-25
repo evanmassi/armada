@@ -4,7 +4,7 @@ import { CLAUDE_COMMAND } from '@main/domain/claude/claudeCommand';
 import type { FileLogger } from '@main/infrastructure/logging/FileLogger';
 import { parseUsageProbeOutput, USAGE_PROBE_REQUEST_ID } from './usageProbeOutputParser';
 
-export type ClaudeUsageProbeListener = (usage: ClaudeUsage) => void;
+type ClaudeUsageProbeListener = (usage: ClaudeUsage) => void;
 
 interface ClaudeUsageProbeDeps {
   cwd: string;
@@ -14,6 +14,7 @@ interface ClaudeUsageProbeDeps {
 const PROBE_INTERVAL_MS = 3 * 60_000;
 const POKE_MIN_GAP_MS = 60_000;
 const PROBE_TIMEOUT_MS = 30_000;
+const LOGGED_STDOUT_CHARS = 2000;
 // PITFALL: an empty --setting-sources keeps the user's hooks out of the probe; otherwise every poll would drop a SessionStart into Armada's own inbox.
 const PROBE_ARGS = ['--print', '--input-format', 'stream-json', '--output-format', 'stream-json', '--verbose', '--no-session-persistence', '--setting-sources', ''];
 const PROBE_REQUEST = JSON.stringify({ type: 'control_request', request_id: USAGE_PROBE_REQUEST_ID, request: { subtype: 'get_usage', skip_behaviors: true } });
@@ -61,7 +62,7 @@ export class ClaudeUsageProbe {
     child.on('error', (error) => {
       clearTimeout(timeout);
       this.isRunning = false;
-      this.deps.logger.error('usage.probe.failed', { error: error.message });
+      this.deps.logger.error('usage.probe.failed', { error });
     });
     child.on('close', (exitCode) => {
       clearTimeout(timeout);
@@ -74,7 +75,7 @@ export class ClaudeUsageProbe {
   private accept(stdout: string, exitCode: number | null): void {
     const usage = parseUsageProbeOutput(stdout, Date.now());
     if (!usage) {
-      this.deps.logger.error('usage.probe.rejected', { exitCode, stdout: stdout.slice(0, 2000) });
+      this.deps.logger.error('usage.probe.rejected', { exitCode, stdout: stdout.slice(0, LOGGED_STDOUT_CHARS) });
       return;
     }
     this.latest = usage;

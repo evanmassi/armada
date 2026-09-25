@@ -3,7 +3,6 @@ import type { Conversation, Project } from '@shared/conversations/conversationTy
 const STALE_AFTER_DAYS = 14;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export const folderName = (cwd: string): string => cwd.split(/[\\/]/).filter(Boolean).at(-1) ?? cwd;
 
 const matches = (haystack: string, needle: string): boolean => haystack.toLowerCase().includes(needle);
 

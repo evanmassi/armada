@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export type LinkTarget = { kind: 'web'; url: string } | { kind: 'path'; path: string; position: string | undefined };
+type LinkTarget = { kind: 'web'; url: string } | { kind: 'path'; path: string; position: string | undefined };
 
 interface LinkContext {
   cwd: string;

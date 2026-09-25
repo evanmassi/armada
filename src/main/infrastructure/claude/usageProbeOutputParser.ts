@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { ClaudeUsage, ModelUsageWindow, UsageWindow } from '@shared/usage/usageSchemas';
+import { parseJsonOrUndefined } from '@main/infrastructure/safeJson';
 
 export const USAGE_PROBE_REQUEST_ID = 'armada-usage';
 
@@ -39,17 +40,9 @@ const toUsageWindow = (probed: ProbedWindow | null | undefined): UsageWindow | u
   return resetsAt === undefined ? { usedPercentage: probed.utilization } : { usedPercentage: probed.utilization, resetsAt };
 };
 
-const parseJson = (line: string): unknown => {
-  try {
-    return JSON.parse(line);
-  } catch {
-    return undefined;
-  }
-};
-
 export function parseUsageProbeOutput(stdout: string, reportedAt: number): ClaudeUsage | undefined {
   for (const line of stdout.split('\n')) {
-    const parsed = probeResponseSchema.safeParse(parseJson(line));
+    const parsed = probeResponseSchema.safeParse(parseJsonOrUndefined(line));
     if (!parsed.success) continue;
     const limits = parsed.data.response.response.rate_limits;
     if (!limits) return undefined;

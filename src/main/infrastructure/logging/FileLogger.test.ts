@@ -18,7 +18,7 @@ describe('FileLogger', () => {
 
   it('creates the folder and appends one JSON line per entry with errors serialized', async () => {
     const logPath = join(dir, 'nested', 'armada.log');
-    const logger = new FileLogger(logPath);
+    const logger = new FileLogger({ filePath: logPath });
     logger.info('terminal.spawned', { terminalId: 't1', args: ['--resume', 's1'] });
     logger.error('workspace.invalid', { error: new Error('boom') });
     const [first, second] = await readLines(logPath);
@@ -30,7 +30,7 @@ describe('FileLogger', () => {
   it('moves an oversized log aside on startup and starts a fresh one', async () => {
     const logPath = join(dir, 'armada.log');
     await writeFile(logPath, 'x'.repeat(1_000_001), 'utf8');
-    new FileLogger(logPath).info('app.started');
+    new FileLogger({ filePath: logPath }).info('app.started');
     expect((await readFile(`${logPath}.1`, 'utf8')).length).toBe(1_000_001);
     expect(await readLines(logPath)).toHaveLength(1);
   });

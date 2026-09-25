@@ -5,7 +5,7 @@ const ROTATE_AT_BYTES = 1_000_000;
 const ROTATED_SUFFIX = '.1';
 
 type LogLevel = 'info' | 'error';
-export type LogFields = Record<string, unknown>;
+type LogFields = Record<string, unknown>;
 
 const fileSize = (path: string): number => {
   try {
@@ -18,8 +18,13 @@ const fileSize = (path: string): number => {
 const serializeErrors = (_key: string, value: unknown): unknown =>
   value instanceof Error ? { name: value.name, message: value.message, stack: value.stack } : value;
 
+interface FileLoggerDeps {
+  filePath: string;
+}
+
 export class FileLogger {
-  constructor(private filePath: string) {
+  constructor(private deps: FileLoggerDeps) {
+    const { filePath } = deps;
     mkdirSync(dirname(filePath), { recursive: true });
     if (fileSize(filePath) > ROTATE_AT_BYTES) renameSync(filePath, `${filePath}${ROTATED_SUFFIX}`);
   }
@@ -35,7 +40,7 @@ export class FileLogger {
   private write(level: LogLevel, event: string, fields: LogFields): void {
     const line = JSON.stringify({ at: new Date().toISOString(), level, event, ...fields }, serializeErrors);
     try {
-      appendFileSync(this.filePath, `${line}\n`, 'utf8');
+      appendFileSync(this.deps.filePath, `${line}\n`, 'utf8');
     } catch {
       return;
     }

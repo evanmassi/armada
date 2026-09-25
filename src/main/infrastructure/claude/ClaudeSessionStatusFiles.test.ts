@@ -17,7 +17,7 @@ describe('ClaudeSessionStatusFiles', () => {
   beforeEach(async () => {
     rootDir = await mkdtemp(join(tmpdir(), 'armada-status-'));
     statusDir = join(rootDir, 'claude-session-status');
-    statusFiles = new ClaudeSessionStatusFiles({ statusDir, logger: new FileLogger(join(rootDir, 'armada.log')) });
+    statusFiles = new ClaudeSessionStatusFiles({ statusDir, logger: new FileLogger({ filePath: join(rootDir, 'armada.log') }) });
   });
 
   afterEach(async () => {

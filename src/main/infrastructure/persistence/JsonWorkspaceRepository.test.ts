@@ -20,7 +20,7 @@ describe('JsonWorkspaceRepository', () => {
 
   beforeEach(async () => {
     dir = await mkdtemp(join(tmpdir(), 'armada-workspace-'));
-    repository = new JsonWorkspaceRepository({ filePath: join(dir, 'workspace.json'), logger: new FileLogger(join(dir, 'armada.log')) });
+    repository = new JsonWorkspaceRepository({ filePath: join(dir, 'workspace.json'), logger: new FileLogger({ filePath: join(dir, 'armada.log') }) });
   });
 
   afterEach(() => rm(dir, { recursive: true, force: true }));

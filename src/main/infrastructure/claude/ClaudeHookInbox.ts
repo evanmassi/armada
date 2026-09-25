@@ -3,18 +3,11 @@ import { mkdir, readdir, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { claudeHookEventSchema, type ClaudeHookEvent } from '@shared/sessions/sessionSchemas';
 import type { FileLogger } from '@main/infrastructure/logging/FileLogger';
+import { parseJsonOrUndefined } from '@main/infrastructure/safeJson';
 
 const EVENT_FILE_EXTENSION = '.json';
 
-const parseJson = (raw: string): unknown => {
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return undefined;
-  }
-};
-
-export type ClaudeHookListener = (event: ClaudeHookEvent) => void;
+type ClaudeHookListener = (event: ClaudeHookEvent) => void;
 
 interface ClaudeHookInboxDeps {
   inboxDir: string;
@@ -70,7 +63,7 @@ export class ClaudeHookInbox {
       return;
     }
     await rm(file, { force: true });
-    const parsed = claudeHookEventSchema.safeParse(parseJson(raw));
+    const parsed = claudeHookEventSchema.safeParse(parseJsonOrUndefined(raw));
     if (!parsed.success) {
       this.deps.logger.error('hook.rejected', { file, raw, issues: parsed.error.issues });
       return;

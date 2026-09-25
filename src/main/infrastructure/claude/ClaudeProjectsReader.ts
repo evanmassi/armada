@@ -40,20 +40,24 @@ async function pathExists(path: string): Promise<boolean> {
   }
 }
 
+interface ClaudeProjectsReaderDeps {
+  projectsDir: string;
+}
+
 export class ClaudeProjectsReader implements ConversationRepository {
   private cache = new Map<string, CachedConversation>();
 
-  constructor(private projectsDir: string) {}
+  constructor(private deps: ClaudeProjectsReaderDeps) {}
 
   async listConversations(): Promise<Conversation[]> {
-    const projectDirs = await listSubdirectories(this.projectsDir);
+    const projectDirs = await listSubdirectories(this.deps.projectsDir);
     const files = (await Promise.all(projectDirs.map(listConversationFiles))).flat();
     const conversations = await Promise.all(files.map((file) => this.readConversation(file)));
     return conversations.filter((conversation): conversation is Conversation => conversation !== undefined);
   }
 
   async hasConversation(sessionId: string): Promise<boolean> {
-    const projectDirs = await listSubdirectories(this.projectsDir);
+    const projectDirs = await listSubdirectories(this.deps.projectsDir);
     const candidates = projectDirs.map((dir) => join(dir, `${sessionId}${CONVERSATION_FILE_EXTENSION}`));
     const existence = await Promise.all(candidates.map(pathExists));
     return existence.includes(true);

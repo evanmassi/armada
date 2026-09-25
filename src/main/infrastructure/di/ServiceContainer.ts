@@ -53,8 +53,8 @@ export interface ServiceContainer {
 }
 
 export function createServiceContainer(): ServiceContainer {
-  const logger = new FileLogger(getLogFilePath());
-  const conversationRepository = new ClaudeProjectsReader(getClaudeProjectsDir());
+  const logger = new FileLogger({ filePath: getLogFilePath() });
+  const conversationRepository = new ClaudeProjectsReader({ projectsDir: getClaudeProjectsDir() });
   const hookInboxDir = getClaudeHookInboxDir();
   const usageFilePath = getClaudeUsageFilePath();
   const sessionStatusDir = getClaudeSessionStatusDir();

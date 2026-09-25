@@ -66,21 +66,27 @@ because the file belongs to the user and any key dropped on parse would be lost 
 ```
 src/main/
 ├── domain/           # No Electron, no Node built-ins.
+│   ├── claude/       # CLAUDE_COMMAND: the executable name every Claude launch uses
 │   ├── repositories/ # ConversationRepository, WorkspaceRepository (interfaces only)
 │   └── terminals/    # TerminalHost (interface only)
 ├── application/
-│   └── services/     # ConversationCatalogService, SessionService
+│   └── services/     # ConversationCatalogService, SessionService, ClaudeUsageService
 ├── infrastructure/
-│   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser, ClaudeHookInbox, ClaudeUsageFile, ClaudeSessionStatusFiles, ClaudeUsageProbe, ClaudeSettingsFile
+│   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser, ClaudeHookInbox, ClaudeUsageFile, ClaudeSessionStatusFiles, ClaudeUsageProbe + usageProbeOutputParser, ClaudeSettingsFile + claudeSettingsIntegration, ClaudeRelayScripts
 │   ├── git/          # GitChangeCounter: uncommitted lines added and removed under a project folder
+│   ├── folders/      # FolderOpener: Explorer and VS Code
+│   ├── links/        # LinkOpener + linkTargets: the only judge of what a clicked terminal link opens
 │   ├── clipboard/    # ClipboardImageSaver: a copied screenshot written to userData/clipboard-images
 │   ├── updates/      # AppUpdater: electron-updater against GitHub Releases, packaged app only
 │   ├── persistence/  # JsonWorkspaceRepository (userData/workspace.json)
 │   ├── pty/          # PtySessionHost wraps node-pty
 │   ├── logging/      # FileLogger: JSON lines in userData/armada.log, rotated at startup
 │   ├── di/           # ServiceContainer
+│   ├── launchChecks.ts # resolveOnPath and assertLaunchable, shared by pty spawns and the editor launch
+│   ├── fileErrors.ts # isMissingPath
+│   ├── safeJson.ts   # parseJsonOrUndefined for files and output that may be partial or foreign
 │   └── paths.ts      # The only place userData and ~/.claude paths are built
-└── ipc/              # One register*Handlers file per concern
+└── ipc/              # One register*Handlers file per concern, plus sendToRenderer for pushed events
 ```
 
 **Path Aliases**: `@main/*`, `@shared/*`
@@ -210,7 +216,7 @@ Never define a boundary type inline in main or renderer.
   TypeScript type with `z.infer`. A schema nothing calls `.parse()` on is dead.
 - **Plain type** for main-to-renderer results and events. Validating in-process output is theater.
 
-**Modules**: `workspace/workspaceSchemas`, `sessions/sessionSchemas`, `links/linkSchemas`, `projects/projectSchemas`, `usage/usageSchemas`, `updates/updateTypes`, `integration/integrationTypes`, `conversations/conversationTypes`, `ipcChannels`,
+**Modules**: `workspace/workspaceSchemas`, `sessions/sessionSchemas`, `links/linkSchemas`, `projects/projectSchemas`, `projects/folderName` (the one project display name both sides sort and show by), `usage/usageSchemas`, `updates/updateTypes`, `integration/integrationTypes`, `conversations/conversationTypes`, `ipcChannels`,
 `armadaApi` (the preload contract both sides implement against)
 
 ---
