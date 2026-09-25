@@ -9,6 +9,7 @@ import { ClaudeSessionStatusFiles } from '@main/infrastructure/claude/ClaudeSess
 import { ClaudeSettingsFile } from '@main/infrastructure/claude/ClaudeSettingsFile';
 import { ClaudeUsageFile } from '@main/infrastructure/claude/ClaudeUsageFile';
 import { ClaudeUsageProbe } from '@main/infrastructure/claude/ClaudeUsageProbe';
+import { ClipboardImageSaver } from '@main/infrastructure/clipboard/ClipboardImageSaver';
 import { FolderOpener } from '@main/infrastructure/folders/FolderOpener';
 import { GitChangeCounter } from '@main/infrastructure/git/GitChangeCounter';
 import { LinkOpener } from '@main/infrastructure/links/LinkOpener';
@@ -19,6 +20,7 @@ import {
   getClaudeSessionStatusDir,
   getClaudeSettingsFilePath,
   getClaudeUsageFilePath,
+  getClipboardImagesDir,
   getHomeDir,
   getLogFilePath,
   getRelayScriptsDir,
@@ -38,6 +40,7 @@ export interface ServiceContainer {
   claudeUsageProbe: ClaudeUsageProbe;
   claudeUsageService: ClaudeUsageService;
   claudeSettingsFile: ClaudeSettingsFile;
+  clipboardImageSaver: ClipboardImageSaver;
   folderOpener: FolderOpener;
   gitChangeCounter: GitChangeCounter;
   linkOpener: LinkOpener;
@@ -65,6 +68,7 @@ export function createServiceContainer(): ServiceContainer {
     claudeUsageProbe,
     claudeUsageService: new ClaudeUsageService({ statusLine: claudeUsageFile, probe: claudeUsageProbe }),
     claudeSettingsFile: new ClaudeSettingsFile({ settingsPath: getClaudeSettingsFilePath(), scriptsDir: getRelayScriptsDir(), logger }),
+    clipboardImageSaver: new ClipboardImageSaver({ imagesDir: getClipboardImagesDir(), logger }),
     folderOpener,
     gitChangeCounter: new GitChangeCounter(),
     linkOpener: new LinkOpener({ folderOpener, logger }),

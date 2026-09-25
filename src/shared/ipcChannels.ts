@@ -5,6 +5,7 @@ export const IPC_CHANNELS = {
   projectsOpenInEditor: 'projects:openInEditor',
   projectsCountLineChanges: 'projects:countLineChanges',
   linksOpen: 'links:open',
+  filesSaveClipboardImage: 'files:saveClipboardImage',
   workspaceLoad: 'workspace:load',
   workspaceSave: 'workspace:save',
   sessionsOpen: 'sessions:open',

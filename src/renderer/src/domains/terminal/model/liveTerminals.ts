@@ -12,10 +12,16 @@ import { getErrorMessage } from '@renderer/shared/utils/getErrorMessage';
 import { createActivityTracker } from './activityTracker';
 import { handleClipboardKey, handleContextMenu } from './terminalClipboard';
 import { enableTerminalLinks } from './terminalLinks';
+import { quotePathForInput } from './terminalPathInput';
 
 const TERMINAL_THEME = { background: '#080a0f', foreground: '#d7dbe2', cursor: '#8fd3e8', selectionBackground: '#8fd3e844' };
 const TERMINAL_FONT = '"Cascadia Code", Consolas, monospace';
 const REFIT_DEBOUNCE_MS = 80;
+
+const DROPPED_FILES_TYPE = 'Files';
+
+// PITFALL: Claude Code attaches every image path in a paste only when each sits on its own line; a shell would run each line.
+const DROPPED_PATH_SEPARATOR: Record<SessionLaunch['kind'], string> = { claude: '\n', shell: ' ' };
 
 const exitBanner = (exitCode: number): string => `\r\n[exited with code ${exitCode}]\r\n`;
 
@@ -40,9 +46,8 @@ interface LiveTerminalOptions {
 }
 
 interface Attachment {
-  container: HTMLElement;
   resizeObserver: ResizeObserver;
-  onContextMenu(event: MouseEvent): void;
+  listeners: AbortController;
 }
 
 class LiveTerminalEntry implements LiveTerminal {
@@ -72,11 +77,14 @@ class LiveTerminalEntry implements LiveTerminal {
     if (isFirstAttach) this.openTerminal(container);
     else container.appendChild(this.terminal.element!);
     this.fit.fit();
-    const onContextMenu = (event: MouseEvent): void => handleContextMenu(this.terminal, event);
-    container.addEventListener('contextmenu', onContextMenu);
+    const listeners = new AbortController();
+    const { signal } = listeners;
+    container.addEventListener('contextmenu', (event) => handleContextMenu(this.terminal, event), { signal });
+    container.addEventListener('dragover', (event) => this.acceptDroppedFiles(event), { signal });
+    container.addEventListener('drop', (event) => this.pasteDroppedFiles(event), { signal });
     const resizeObserver = new ResizeObserver(() => this.scheduleRefit());
     resizeObserver.observe(container);
-    this.attachment = { container, resizeObserver, onContextMenu };
+    this.attachment = { resizeObserver, listeners };
     if (isFirstAttach) this.openSession();
   }
 
@@ -84,7 +92,7 @@ class LiveTerminalEntry implements LiveTerminal {
     if (!this.attachment) return;
     window.clearTimeout(this.refitTimer);
     this.attachment.resizeObserver.disconnect();
-    this.attachment.container.removeEventListener('contextmenu', this.attachment.onContextMenu);
+    this.attachment.listeners.abort();
     this.terminal.element?.remove();
     this.attachment = undefined;
   }
@@ -115,6 +123,20 @@ class LiveTerminalEntry implements LiveTerminal {
         .open({ target, cwd: this.launch.cwd })
         .catch((error: unknown) => useNotificationStore.getState().notify(getErrorMessage(error)));
     });
+  }
+
+  private acceptDroppedFiles(event: DragEvent): void {
+    if (!event.dataTransfer?.types.includes(DROPPED_FILES_TYPE)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+  }
+
+  private pasteDroppedFiles(event: DragEvent): void {
+    event.preventDefault();
+    const paths = [...(event.dataTransfer?.files ?? [])].map((file) => armadaClient.files.getDroppedPath(file)).filter((path) => path !== '');
+    if (paths.length === 0) return;
+    this.terminal.paste(paths.map(quotePathForInput).join(DROPPED_PATH_SEPARATOR[this.launch.kind]));
+    this.terminal.focus();
   }
 
   private scheduleRefit(): void {

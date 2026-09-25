@@ -18,4 +18,6 @@ export const getClaudeUsageFilePath = (): string => join(app.getPath('userData')
 
 export const getClaudeSessionStatusDir = (): string => join(app.getPath('userData'), 'claude-session-status');
 
+export const getClipboardImagesDir = (): string => join(app.getPath('userData'), 'clipboard-images');
+
 export const getLogFilePath = (): string => join(app.getPath('userData'), 'armada.log');

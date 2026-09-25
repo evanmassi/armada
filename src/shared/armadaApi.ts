@@ -30,6 +30,10 @@ export interface ArmadaApi {
   links: {
     open(request: OpenLinkRequest): Promise<void>;
   };
+  files: {
+    getDroppedPath(file: File): string;
+    saveClipboardImage(): Promise<string | undefined>;
+  };
   workspace: {
     load(): Promise<Workspace>;
     save(workspace: Workspace): Promise<void>;

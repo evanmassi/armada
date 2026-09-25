@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
+import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron';
 import type { ArmadaApi, Unsubscribe } from '@shared/armadaApi';
 import { IPC_CHANNELS } from '@shared/ipcChannels';
 
@@ -20,6 +20,10 @@ const armadaApi: ArmadaApi = {
   },
   links: {
     open: (request) => ipcRenderer.invoke(IPC_CHANNELS.linksOpen, request),
+  },
+  files: {
+    getDroppedPath: (file) => webUtils.getPathForFile(file),
+    saveClipboardImage: () => ipcRenderer.invoke(IPC_CHANNELS.filesSaveClipboardImage),
   },
   workspace: {
     load: () => ipcRenderer.invoke(IPC_CHANNELS.workspaceLoad),

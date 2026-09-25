@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { app, BrowserWindow, Menu } from 'electron';
 import { createServiceContainer } from '@main/infrastructure/di/ServiceContainer';
 import { registerConversationHandlers } from '@main/ipc/registerConversationHandlers';
+import { registerFileHandlers } from '@main/ipc/registerFileHandlers';
 import { registerIntegrationHandlers } from '@main/ipc/registerIntegrationHandlers';
 import { registerLinkHandlers } from '@main/ipc/registerLinkHandlers';
 import { registerProjectHandlers } from '@main/ipc/registerProjectHandlers';
@@ -28,6 +29,8 @@ function createMainWindow(): BrowserWindow {
     },
   });
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  // PITFALL: a file dropped outside a terminal navigates the window to it, which restarts every session.
+  mainWindow.webContents.on('will-navigate', (event) => event.preventDefault());
   const rendererDevServerUrl = process.env['ELECTRON_RENDERER_URL'];
   if (rendererDevServerUrl) {
     void mainWindow.loadURL(rendererDevServerUrl);
@@ -60,6 +63,7 @@ app.whenReady().then(() => {
   registerIntegrationHandlers(container);
   registerProjectHandlers(container, mainWindow);
   registerLinkHandlers(container);
+  registerFileHandlers(container);
   registerWorkspaceHandlers(container);
   registerSessionHandlers(container, mainWindow.webContents);
   registerUsageHandlers(container, mainWindow.webContents);

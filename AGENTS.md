@@ -69,6 +69,7 @@ src/main/
 ├── infrastructure/
 │   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser, ClaudeHookInbox, ClaudeUsageFile, ClaudeSessionStatusFiles, ClaudeUsageProbe, ClaudeSettingsFile
 │   ├── git/          # GitChangeCounter: uncommitted lines added and removed under a project folder
+│   ├── clipboard/    # ClipboardImageSaver: a copied screenshot written to userData/clipboard-images
 │   ├── persistence/  # JsonWorkspaceRepository (userData/workspace.json)
 │   ├── pty/          # PtySessionHost wraps node-pty
 │   ├── logging/      # FileLogger: JSON lines in userData/armada.log, rotated at startup
@@ -168,7 +169,10 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   past xterm. Links (`model/terminalLinks.ts`) open on Ctrl+click from three sources: embedded hyperlinks Claude Code
   emits because the pty sets `FORCE_HYPERLINK`, bare URLs, and file paths (`model/pathLinkMatcher.ts`). The renderer
   sends the raw target and the tile's cwd; main's `LinkOpener` is the only judge of what opens and where. A Ctrl+click
-  on a link never reaches the pty, because fullscreen Claude Code would open the same link a second time.
+  on a link never reaches the pty, because fullscreen Claude Code would open the same link a second time. Files
+  dropped on a tile paste in as paths, one per line in a Claude tile so Claude Code attaches each image and tells the
+  model where it came from. Ctrl+V with only an image on the clipboard saves it through main and pastes that path. The
+  window refuses navigation, so a file dropped beside a tile cannot reload the page and restart every session.
 
 ---
 

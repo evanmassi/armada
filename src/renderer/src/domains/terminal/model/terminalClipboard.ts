@@ -1,5 +1,9 @@
 import type { Terminal } from '@xterm/xterm';
+import { useNotificationStore } from '@renderer/app/stores/notificationStore';
+import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
+import { getErrorMessage } from '@renderer/shared/utils/getErrorMessage';
 import { cleanCopiedText } from './copiedText';
+import { quotePathForInput } from './terminalPathInput';
 
 export const copySelection = (terminal: Terminal): boolean => {
   if (!terminal.hasSelection()) return false;
@@ -10,7 +14,16 @@ export const copySelection = (terminal: Terminal): boolean => {
 
 export const pasteFromClipboard = (terminal: Terminal): void => {
   void navigator.clipboard.readText().then((text) => {
-    if (text) terminal.paste(text);
+    if (text) {
+      terminal.paste(text);
+      return;
+    }
+    armadaClient.files
+      .saveClipboardImage()
+      .then((imagePath) => {
+        if (imagePath) terminal.paste(quotePathForInput(imagePath));
+      })
+      .catch((error: unknown) => useNotificationStore.getState().notify(getErrorMessage(error)));
   });
 };
 
