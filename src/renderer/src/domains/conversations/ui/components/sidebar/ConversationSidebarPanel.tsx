@@ -1,5 +1,6 @@
 import { type ReactNode, useMemo, useRef, useState } from 'react';
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
+import { MAX_SIDEBAR_WIDTH_PX, MIN_SIDEBAR_WIDTH_PX } from '@shared/workspace/workspaceSchemas';
 import { selectActivityBySession, useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
 import armadaIcon from '@renderer/assets/armada-icon.png';
 import { useWorkspaceQuery } from '@renderer/domains/workspace';
@@ -19,8 +20,6 @@ import { ConversationRow } from './ConversationRow';
 import { SidebarGroupHeader } from './SidebarGroupHeader';
 
 const DEFAULT_GROUP_NAME = 'Group';
-const MIN_WIDTH_PX = 200;
-const MAX_WIDTH_PX = 640;
 
 interface ConversationSidebarPanelProps {
   footer: ReactNode;
@@ -223,7 +222,7 @@ export function ConversationSidebarPanel({ footer, onOpenConversation, onOpenPro
           widthAtDragStart.current = width;
         }}
         onDragMove={(deltaPx) => {
-          liveWidth.current = Math.min(MAX_WIDTH_PX, Math.max(MIN_WIDTH_PX, widthAtDragStart.current + deltaPx));
+          liveWidth.current = Math.min(MAX_SIDEBAR_WIDTH_PX, Math.max(MIN_SIDEBAR_WIDTH_PX,widthAtDragStart.current + deltaPx));
           setDraftWidth(liveWidth.current);
         }}
         onDragEnd={() => {

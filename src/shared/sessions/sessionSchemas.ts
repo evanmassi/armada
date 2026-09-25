@@ -31,9 +31,9 @@ export const terminalWriteRequestSchema = terminalRefSchema.extend({
 
 export const terminalResizeRequestSchema = terminalRefSchema.merge(terminalSizeSchema);
 
-export const CLAUDE_HOOK_EVENT_KINDS = ['sessionStarted', 'promptSubmitted', 'turnEnded', 'permissionRequested'] as const;
+const CLAUDE_HOOK_EVENT_KINDS = ['sessionStarted', 'promptSubmitted', 'turnEnded', 'permissionRequested'] as const;
 
-export const SESSION_START_SOURCES = ['startup', 'resume', 'clear', 'compact', 'fork'] as const;
+const SESSION_START_SOURCES =['startup', 'resume', 'clear', 'compact', 'fork'] as const;
 
 export const claudeHookEventSchema = terminalRefSchema.extend({
   sessionId: z.string().uuid(),

@@ -210,7 +210,7 @@ Never define a boundary type inline in main or renderer.
   TypeScript type with `z.infer`. A schema nothing calls `.parse()` on is dead.
 - **Plain type** for main-to-renderer results and events. Validating in-process output is theater.
 
-**Modules**: `workspace/workspaceSchemas`, `sessions/sessionSchemas`, `links/linkSchemas`, `usage/usageSchemas`, `updates/updateTypes`, `integration/integrationTypes`, `conversations/conversationTypes`, `ipcChannels`,
+**Modules**: `workspace/workspaceSchemas`, `sessions/sessionSchemas`, `links/linkSchemas`, `projects/projectSchemas`, `usage/usageSchemas`, `updates/updateTypes`, `integration/integrationTypes`, `conversations/conversationTypes`, `ipcChannels`,
 `armadaApi` (the preload contract both sides implement against)
 
 ---

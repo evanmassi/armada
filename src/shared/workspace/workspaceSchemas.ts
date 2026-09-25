@@ -25,16 +25,21 @@ const LEGACY_PROJECT_COLOR_VALUES: Record<string, string> = {
 export const LAYOUT_MODES = ['auto', 'free'] as const;
 
 export const DEFAULT_TERMINAL_FONT_SIZE = 13;
+export const MIN_TERMINAL_FONT_SIZE = 8;
+export const MAX_TERMINAL_FONT_SIZE = 32;
+
+export const MIN_SIDEBAR_WIDTH_PX = 200;
+export const MAX_SIDEBAR_WIDTH_PX = 640;
 
 // PITFALL: workspace files from before free colors store Tailwind hue names; they map to their old hex here.
 const legacyColorNameToHex = (value: unknown): unknown =>
   typeof value === 'string' ? (LEGACY_PROJECT_COLOR_VALUES[value] ?? value) : value;
 
-export const projectColorSchema = z.preprocess(legacyColorNameToHex, z.string().regex(/^#[0-9a-f]{6}$/i));
+const projectColorSchema = z.preprocess(legacyColorNameToHex, z.string().regex(/^#[0-9a-f]{6}$/i));
 
-export const layoutModeSchema = z.enum(LAYOUT_MODES);
+const layoutModeSchema = z.enum(LAYOUT_MODES);
 
-export const tileLayoutSchema = z.object({
+const tileLayoutSchema = z.object({
   x: z.number().int().nonnegative(),
   y: z.number().int().nonnegative(),
   w: z.number().int().positive(),
@@ -68,17 +73,17 @@ const notesTileSchema = tileBaseSchema.extend({
 const defaultTileKindToClaude = (value: unknown): unknown =>
   value !== null && typeof value === 'object' && !('kind' in value) ? { ...value, kind: 'claude' } : value;
 
-export const tileSchema = z.preprocess(
+const tileSchema = z.preprocess(
   defaultTileKindToClaude,
   z.discriminatedUnion('kind', [claudeTileSchema, shellTileSchema, notesTileSchema]),
 );
 
-export const laneStateSchema = z.object({
+const laneStateSchema = z.object({
   weight: z.number().positive().default(1),
   isCollapsed: z.boolean().default(false),
 });
 
-export const boardSchema = z.object({
+const boardSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1),
   projectCwd: z.string().min(1).optional(),
@@ -89,19 +94,19 @@ export const boardSchema = z.object({
   tiles: z.array(tileSchema),
 });
 
-export const preferencesSchema = z.object({
-  terminalFontSize: z.number().int().min(8).max(32).default(DEFAULT_TERMINAL_FONT_SIZE),
+const preferencesSchema = z.object({
+  terminalFontSize: z.number().int().min(MIN_TERMINAL_FONT_SIZE).max(MAX_TERMINAL_FONT_SIZE).default(DEFAULT_TERMINAL_FONT_SIZE),
 });
 
-export const sidebarGroupSchema = z.object({
+const sidebarGroupSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1),
   projectCwds: z.array(z.string().min(1)),
   isCollapsed: z.boolean().default(false),
 });
 
-export const sidebarSchema = z.object({
-  width: z.number().int().min(200).max(640).default(288),
+const sidebarSchema = z.object({
+  width: z.number().int().min(MIN_SIDEBAR_WIDTH_PX).max(MAX_SIDEBAR_WIDTH_PX).default(288),
   groups: z.array(sidebarGroupSchema).default([]),
   projectOrder: z.array(z.string().min(1)).default([]),
   archivedProjectCwds: z.array(z.string().min(1)).default([]),
@@ -118,17 +123,13 @@ export const workspaceSchema = z.object({
   sidebar: sidebarSchema.default({}),
 });
 
-export type ProjectColor = z.infer<typeof projectColorSchema>;
 export type LayoutMode = z.infer<typeof layoutModeSchema>;
 export type TileLayout = z.infer<typeof tileLayoutSchema>;
 export type ClaudeTile = z.infer<typeof claudeTileSchema>;
-export type ShellTile = z.infer<typeof shellTileSchema>;
 export type NotesTile = z.infer<typeof notesTileSchema>;
 export type Tile = z.infer<typeof tileSchema>;
-export type TileKind = Tile['kind'];
 export type LaneState = z.infer<typeof laneStateSchema>;
 export type Board = z.infer<typeof boardSchema>;
-export type Preferences = z.infer<typeof preferencesSchema>;
 export type SidebarGroup = z.infer<typeof sidebarGroupSchema>;
 export type Sidebar = z.infer<typeof sidebarSchema>;
 export type Workspace = z.infer<typeof workspaceSchema>;
