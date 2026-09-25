@@ -6,6 +6,7 @@ import type { ClaudeIntegrationGap } from '@shared/integration/integrationTypes'
 const HOOK_RELAY_SCRIPT = 'claudeHookRelay.cjs';
 const STATUS_LINE_RELAY_SCRIPT = 'claudeStatusLineRelay.cjs';
 const ARMADA_HOOK_SCRIPTS = [HOOK_RELAY_SCRIPT, 'claudeSessionStartHook.cjs'];
+export const RELAY_SCRIPTS = [HOOK_RELAY_SCRIPT, STATUS_LINE_RELAY_SCRIPT];
 const MATCHER_BY_EVENT: Record<string, string | undefined> = {
   SessionStart: undefined,
   UserPromptSubmit: undefined,

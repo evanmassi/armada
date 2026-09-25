@@ -48,6 +48,10 @@ reach the status line: `ClaudeUsageProbe` asks a headless `claude --print` for t
 launch, every three minutes, and after a status line report. `ClaudeUsageService` merges both sources into one picture,
 plan windows from whichever reported last and model windows from the probe, and pushes it to the renderer.
 
+Claude Code runs the relays from `%APPDATA%/armada-relays`, not from the app. Every launch copies the bundled scripts
+there (`ClaudeRelayScripts`) when their content differs, so the installed app and the dev copy point settings at the
+same files and never repoint them at each other; each tile's environment says which copy's folders the relay writes to.
+
 The app is the only installer. `claudeSettingsIntegration.ts` holds the pure edit (`integrateArmada`) and derives the
 status from it: a part of the settings is a gap when integrating would change it, so check and repair cannot disagree.
 Armada's entries are recognized by script name, not full command, which is what lets a moved repo folder get repointed
@@ -70,6 +74,7 @@ src/main/
 │   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser, ClaudeHookInbox, ClaudeUsageFile, ClaudeSessionStatusFiles, ClaudeUsageProbe, ClaudeSettingsFile
 │   ├── git/          # GitChangeCounter: uncommitted lines added and removed under a project folder
 │   ├── clipboard/    # ClipboardImageSaver: a copied screenshot written to userData/clipboard-images
+│   ├── updates/      # AppUpdater: electron-updater against GitHub Releases, packaged app only
 │   ├── persistence/  # JsonWorkspaceRepository (userData/workspace.json)
 │   ├── pty/          # PtySessionHost wraps node-pty
 │   ├── logging/      # FileLogger: JSON lines in userData/armada.log, rotated at startup
@@ -408,9 +413,8 @@ get one named home.
 - Shell is PowerShell. Quote paths or use forward slashes.
 - **Never use `2>nul`** in Bash. It creates a literal file named `nul`.
 - Prefer dedicated tools: Read, Glob, Grep. Use Bash for npm, node, git, builds, tests.
-- node-pty is a native module and must be rebuilt for Electron's Node version after every install
-  (`electron-rebuild` on `postinstall`). A "module was compiled against a different Node version" error means this
-  step was skipped.
+- node-pty loads its N-API prebuilds in Electron without a rebuild. `npmRebuild` is off in `electron-builder.config.cjs`
+  because building it from source fails in winpty's build script.
 
 ---
 
@@ -421,12 +425,22 @@ Commits: `audit: <directory scope> — <specific changes, comma-separated>`, no 
 
 ---
 
+## Packaging and Releases
+
+`electron-builder.config.cjs` packages a per-user NSIS installer. Only `node-pty`, `zod`, and `electron-updater` are runtime
+`dependencies`; everything the renderer uses is bundled by Vite and stays in `devDependencies`, out of the installer.
+Pushing a `v*` tag runs `.github/workflows/release.yml`, which typechecks, tests, builds, and publishes the installer
+and `latest.yml` to a GitHub Release. The packaged app checks that release on launch, downloads in the background, and
+installs on quit. An unpackaged run (`npm run dev`, or `electron .`) is **Armada Dev**: its own `userData`
+(`armada-dev`), window title, and AppUserModelID, set by `separateDevDataFolder` before anything reads a path, so it
+runs beside the installed copy.
+
 ## Commands
 
 ```bash
 npm run dev           # Electron with hot reload
-npm run build         # Production build (what the Start Menu shortcut launches)
-npm run shortcut      # Write the Start Menu shortcut (pin it to the taskbar from there)
+npm run build         # Build main, preload, and renderer into out/
+npm run dist          # Build the installer into dist/ without publishing
 npm run typecheck     # Type check main, preload, renderer
 npm run lint          # Lint
 npm test              # Vitest

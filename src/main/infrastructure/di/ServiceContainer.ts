@@ -4,6 +4,7 @@ import { SessionService } from '@main/application/services/SessionService';
 import type { WorkspaceRepository } from '@main/domain/repositories/WorkspaceRepository';
 import type { TerminalHost } from '@main/domain/terminals/TerminalHost';
 import { ClaudeProjectsReader } from '@main/infrastructure/claude/ClaudeProjectsReader';
+import { ClaudeRelayScripts } from '@main/infrastructure/claude/ClaudeRelayScripts';
 import { ClaudeHookInbox } from '@main/infrastructure/claude/ClaudeHookInbox';
 import { ClaudeSessionStatusFiles } from '@main/infrastructure/claude/ClaudeSessionStatusFiles';
 import { ClaudeSettingsFile } from '@main/infrastructure/claude/ClaudeSettingsFile';
@@ -21,13 +22,15 @@ import {
   getClaudeSettingsFilePath,
   getClaudeUsageFilePath,
   getClipboardImagesDir,
+  getBundledRelayScriptsDir,
   getHomeDir,
+  getInstalledRelayScriptsDir,
   getLogFilePath,
-  getRelayScriptsDir,
   getWorkspaceFilePath,
 } from '@main/infrastructure/paths';
 import { JsonWorkspaceRepository } from '@main/infrastructure/persistence/JsonWorkspaceRepository';
 import { PtySessionHost } from '@main/infrastructure/pty/PtySessionHost';
+import { AppUpdater } from '@main/infrastructure/updates/AppUpdater';
 
 export interface ServiceContainer {
   conversationCatalogService: ConversationCatalogService;
@@ -39,7 +42,9 @@ export interface ServiceContainer {
   claudeUsageFile: ClaudeUsageFile;
   claudeUsageProbe: ClaudeUsageProbe;
   claudeUsageService: ClaudeUsageService;
+  claudeRelayScripts: ClaudeRelayScripts;
   claudeSettingsFile: ClaudeSettingsFile;
+  appUpdater: AppUpdater;
   clipboardImageSaver: ClipboardImageSaver;
   folderOpener: FolderOpener;
   gitChangeCounter: GitChangeCounter;
@@ -57,6 +62,7 @@ export function createServiceContainer(): ServiceContainer {
   const folderOpener = new FolderOpener({ logger });
   const claudeUsageFile = new ClaudeUsageFile({ filePath: usageFilePath, logger });
   const claudeUsageProbe = new ClaudeUsageProbe({ cwd: getHomeDir(), logger });
+  const relayScriptsDir = getInstalledRelayScriptsDir();
   return {
     conversationCatalogService: new ConversationCatalogService({ conversationRepository }),
     sessionService: new SessionService({ conversationRepository, terminalHost }),
@@ -67,7 +73,9 @@ export function createServiceContainer(): ServiceContainer {
     claudeUsageFile,
     claudeUsageProbe,
     claudeUsageService: new ClaudeUsageService({ statusLine: claudeUsageFile, probe: claudeUsageProbe }),
-    claudeSettingsFile: new ClaudeSettingsFile({ settingsPath: getClaudeSettingsFilePath(), scriptsDir: getRelayScriptsDir(), logger }),
+    claudeRelayScripts: new ClaudeRelayScripts({ sourceDir: getBundledRelayScriptsDir(), installDir: relayScriptsDir, logger }),
+    claudeSettingsFile: new ClaudeSettingsFile({ settingsPath: getClaudeSettingsFilePath(), scriptsDir: relayScriptsDir, logger }),
+    appUpdater: new AppUpdater({ logger }),
     clipboardImageSaver: new ClipboardImageSaver({ imagesDir: getClipboardImagesDir(), logger }),
     folderOpener,
     gitChangeCounter: new GitChangeCounter(),

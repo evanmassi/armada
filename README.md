@@ -30,18 +30,14 @@ Windows only for now, and it runs from source.
 
 ## Get it running
 
-You need Node.js 22 or newer and Claude Code from its native installer, which provides `claude.exe` (the npm package's
-`claude.cmd` won't launch). PowerShell 7 is only needed for shell tiles, VS Code only for the Open in VS Code menu.
+You need Node.js 22 or newer on PATH (Claude Code runs Armada's hooks with it) and Claude Code from its native
+installer, which provides `claude.exe` (the npm package's `claude.cmd` won't launch). PowerShell 7 is only needed for
+shell tiles, VS Code only for the Open in VS Code menu.
 
-```
-git clone https://github.com/evanmassi/armada.git
-cd armada
-npm install
-npm run build
-npm run shortcut
-```
-
-That adds Armada to the Start Menu; pin it to the taskbar from there. Rerun `npm run build` after pulling changes.
+Download `Armada-Setup-<version>.exe` from the [latest release](https://github.com/evanmassi/armada/releases/latest)
+and run it. It installs for your user only, adds Armada to the Start Menu, and updates itself: a new release downloads
+in the background and installs the next time you quit. Windows warns about an unknown publisher on first run because
+the installer isn't signed; choose **More info**, then **Run anyway**.
 
 On first launch a banner says Armada isn't connected to Claude Code. Click **Fix**. It adds a few hooks and a relay
 around your status line in `~/.claude/settings.json`, so tiles can show what Claude is doing and the sidebar can show
@@ -58,8 +54,13 @@ in the same folder usually say why.
 
 ## Development
 
-`npm run dev` runs it with hot reload. How the code is organized, and the rules it follows, are in
-[AGENTS.md](AGENTS.md).
+`npm run dev` runs **Armada Dev** with hot reload. It keeps its boards in `%APPDATA%rmada-dev`, so it runs beside the
+installed Armada without touching your real workspace. Both copies list the same conversations; don't open one
+conversation in both at once. How the code is organized, and the rules it follows, are in [AGENTS.md](AGENTS.md).
+
+To release, run `npm version <x.y.z>` and `git push --follow-tags`. The tag builds the installer on GitHub and publishes
+it as a release, which installed copies pick up on their next launch. `npm run dist` builds the same installer into
+`dist/` locally without publishing.
 
 ## License
 

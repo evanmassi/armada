@@ -8,7 +8,15 @@ export const getClaudeProjectsDir = (): string => join(getHomeDir(), '.claude', 
 
 export const getClaudeSettingsFilePath = (): string => join(getHomeDir(), '.claude', 'settings.json');
 
-export const getRelayScriptsDir = (): string => join(app.getAppPath(), 'scripts');
+const DEV_DATA_FOLDER = 'armada-dev';
+
+export const separateDevDataFolder = (): void => {
+  if (!app.isPackaged) app.setPath('userData', join(app.getPath('appData'), DEV_DATA_FOLDER));
+};
+
+export const getBundledRelayScriptsDir = (): string => join(app.getAppPath(), 'scripts');
+
+export const getInstalledRelayScriptsDir = (): string => join(app.getPath('appData'), 'armada-relays');
 
 export const getWorkspaceFilePath = (): string => join(app.getPath('userData'), 'workspace.json');
 
