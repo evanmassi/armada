@@ -20,16 +20,9 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npx electron-vite build
-      - run: npx electron-builder --win --config electron-builder.config.cjs --publish always
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Confirm the installer and update manifest reached the release
+      - run: npx electron-builder --win --config electron-builder.config.cjs --publish never
+      - name: Publish the installer, blockmap, and update manifest
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          version=$(node -p "require('./package.json').version")
-          assets=$(gh release view "v$version" --json assets --jq '.assets[] | select(.state == "uploaded") | .name')
-          for asset in "Armada-Setup-$version.exe" latest.yml; do
-            grep -qx "$asset" <<< "$assets" || { echo "::error::Release v$version is missing $asset"; exit 1; }
-          done
+        run: gh release create "$GITHUB_REF_NAME" --title "${GITHUB_REF_NAME#v}" --generate-notes dist/Armada-Setup-*.exe dist/Armada-Setup-*.exe.blockmap dist/latest.yml

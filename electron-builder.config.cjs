@@ -16,5 +16,5 @@ module.exports = {
     shortcutName: appIdentity.displayName,
     createDesktopShortcut: false,
   },
-  publish: { provider: 'github', owner: 'evanmassi', repo: 'armada', releaseType: 'release' },
+  publish: { provider: 'github', owner: 'evanmassi', repo: 'armada' },
 };
