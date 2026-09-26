@@ -73,13 +73,13 @@ export function ActionMenu({ label, entries }: ActionMenuProps) {
       <button
         type="button"
         className="hud-glyph px-1 text-muted"
-        data-glyph="…"
+        data-glyph="⋮"
         onClick={() => setIsOpen((value) => !value)}
         aria-label={label}
         aria-haspopup="menu"
         aria-expanded={isOpen}
       >
-        …
+        ⋮
       </button>
       {isOpen && (
         <div role="menu" className={`absolute top-5 right-0 ${MENU_SURFACE_CLASS}`}>

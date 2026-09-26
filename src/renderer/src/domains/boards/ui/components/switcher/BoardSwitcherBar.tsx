@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import type { Board } from '@shared/workspace/workspaceSchemas';
-import { useProjectAccents } from '@renderer/domains/conversations';
+import { useProjectColors } from '@renderer/domains/conversations';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
 import { soleProjectCwd } from '../../../model/lanes';
 import { BoardProjectChangesIndicator } from '../changes/BoardProjectChangesIndicator';
@@ -17,7 +17,7 @@ interface BoardSwitcherBarProps {
 
 export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, onRename, onRemove, children }: BoardSwitcherBarProps) {
   const [editingBoardId, setEditingBoardId] = useState<string>();
-  const accentFor = useProjectAccents();
+  const { colorOf } = useProjectColors();
 
   const confirmRemove = (board: Board): void => {
     if (board.tiles.length === 0 || window.confirm(`Remove board "${board.name}" and its ${board.tiles.length} tiles?`)) {
@@ -26,44 +26,54 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
   };
 
   return (
-    <nav className="flex items-center gap-1 border-b border-edge bg-panel/80 px-2 py-1 backdrop-blur" aria-label="Boards">
-      {boards.map((board) => {
+    <nav className="flex items-center gap-2 border-b border-edge bg-panel/80 px-3 py-1.5 backdrop-blur" aria-label="Boards">
+      {boards.map((board, index) => {
         const isActive = board.id === activeBoardId;
         const projectCwd = soleProjectCwd(board);
+        const projectColor = board.projectCwd ? colorOf(board.projectCwd) : undefined;
         return (
           <div
             key={board.id}
-            className={`readout flex items-center gap-1 border-b-2 border-l-2 px-2 py-1 ${isActive ? 'text-accent' : 'border-b-transparent text-muted hover:text-fg'}`}
-            style={{ borderLeftColor: accentFor(board.projectCwd), borderBottomColor: isActive ? 'var(--color-accent)' : undefined }}
+            className="readout hud-button hud-tab group flex items-center text-muted"
+            style={projectColor ? ({ '--hud-line': projectColor } as CSSProperties) : undefined}
           >
             {editingBoardId === board.id ? (
-              <InlineRenameInput
-                initialValue={board.name}
-                label="Board name"
-                onCommit={(name) => {
-                  onRename(board.id, name);
-                  setEditingBoardId(undefined);
-                }}
-                onCancel={() => setEditingBoardId(undefined)}
-              />
+              <span className="py-[5px] pl-[11px] pr-1">
+                <InlineRenameInput
+                  initialValue={board.name}
+                  label="Board name"
+                  onCommit={(name) => {
+                    onRename(board.id, name);
+                    setEditingBoardId(undefined);
+                  }}
+                  onCancel={() => setEditingBoardId(undefined)}
+                />
+              </span>
             ) : (
               <button
                 type="button"
+                className="flex items-center gap-2 py-[5px] pl-[11px] pr-1"
                 onClick={() => onSelect(board.id)}
                 onDoubleClick={() => setEditingBoardId(board.id)}
                 onKeyDown={(event) => event.key === 'F2' && setEditingBoardId(board.id)}
                 aria-current={isActive ? 'page' : undefined}
                 title="Double-click or F2 to rename"
               >
-                {board.name}
+                <span className="text-edge-strong">{String(index + 1).padStart(2, '0')}</span>
+                <span>{board.name}</span>
+                {projectCwd !== undefined && <BoardProjectChangesIndicator cwd={projectCwd} />}
               </button>
             )}
-            {projectCwd !== undefined && <BoardProjectChangesIndicator cwd={projectCwd} />}
-            {isActive && (
-              <button type="button" className="hud-glyph px-1 text-muted" data-glyph="×" data-tone="danger" onClick={() => confirmRemove(board)} aria-label="Remove board">
-                ×
-              </button>
-            )}
+            <button
+              type="button"
+              className={`hud-glyph mr-1 text-muted ${isActive ? '' : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'}`}
+              data-glyph="×"
+              data-tone="danger"
+              onClick={() => confirmRemove(board)}
+              aria-label={`Remove board ${board.name}`}
+            >
+              ×
+            </button>
           </div>
         );
       })}

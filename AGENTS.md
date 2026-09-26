@@ -223,8 +223,10 @@ no utility class uses it.
 so the click feedback and every existing button keep working unchanged. Three tiers, all tinted by `--hud-line`
 (accent by default, `data-tone="alert"` or `"danger"`, the project color inside tile and lane title bars):
 - `hud-button` for framed actions (+ folder, + board, auto/free, Fix): offset plate, corner brackets that lock on at
-  hover, squeeze on hold, a lit left bar when `aria-checked`. `hud-button-compact` for lane headers.
-- `hud-glyph` for small glyph buttons (×, +, …, chevrons): one 14px mono size with a 20px target, glow and an offset
+  hover, squeeze on hold, a lit left bar when `aria-checked`, dimmed when disabled. `hud-button-compact` for lane
+  headers. `hud-tab` makes the frame a container for board tabs: the name and × are separate buttons inside it, the
+  frame takes the board's project color, and it lights when the board is current.
+- `hud-glyph` for small glyph buttons (×, +, ⋮, chevrons): one 14px mono size with a 20px target, glow and an offset
   copy from `data-glyph` on hover. Destructive ones carry `data-tone="danger"`.
 - `hud-row` for rows (menu items, conversation rows): the Odysseus lit-row recipe, a left bar, a left-weighted wash,
   inner edge glow, outer halo and faint dark scanlines; half strength on hover, full on `data-selected`. A conversation

@@ -25,7 +25,7 @@ export function BoardLayoutModeControls({ layoutMode, onChange, onReflow }: Boar
       </div>
       <button
         type="button"
-        className={`hud-button text-muted ${layoutMode === 'free' ? '' : 'invisible'}`}
+        className="hud-button text-muted disabled:opacity-35"
         onClick={onReflow}
         disabled={layoutMode !== 'free'}
       >
