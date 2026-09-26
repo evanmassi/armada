@@ -116,8 +116,8 @@ export const setLayoutMode = (workspace: Workspace, boardId: string, layoutMode:
 export const addTile = (workspace: Workspace, boardId: string, seed: TileSeed, afterTileId?: string): Workspace =>
   updateBoard(workspace, boardId, (board) => appendTile(board, seed, afterTileId));
 
-export const removeTile = (workspace: Workspace, boardId: string, tileId: string): Workspace =>
-  updateBoard(workspace, boardId, (board) => ({ ...board, tiles: board.tiles.filter((tile) => tile.id !== tileId) }));
+export const removeTiles = (workspace: Workspace, boardId: string, tileIds: string[]): Workspace =>
+  updateBoard(workspace, boardId, (board) => ({ ...board, tiles: board.tiles.filter((tile) => !tileIds.includes(tile.id)) }));
 
 export const rebindClaudeTile = (workspace: Workspace, boardId: string, tileId: string, sessionId: string): Workspace => {
   const tile = findTile(workspace, boardId, tileId);

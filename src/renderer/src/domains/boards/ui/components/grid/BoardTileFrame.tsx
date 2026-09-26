@@ -15,12 +15,12 @@ export const TILE_DRAG_HANDLE_CLASS = 'tile-drag-handle';
 
 export type ArrowDirection = 'left' | 'right' | 'up' | 'down';
 
-const PLATE_LABELS: Record<Tile['kind'], string> = { claude: 'idle', shell: 'shell', notes: 'notes' };
+const STATUS_LABELS: Record<Tile['kind'], string> = { claude: 'idle', shell: 'shell', notes: 'notes' };
 
-const plateLabel = (tile: Tile, activity: ActivityState | undefined): string =>
-  activity && (tile.kind === 'claude' || activity === 'exited') ? activity : PLATE_LABELS[tile.kind];
+const statusLabel = (tile: Tile, activity: ActivityState | undefined): string =>
+  activity && (tile.kind === 'claude' || activity === 'exited') ? activity : STATUS_LABELS[tile.kind];
 
-const PLATE_TONES: Record<ActivityState, string> = { working: 'text-accent', waiting: 'text-alert', approval: 'text-alert', idle: '', exited: 'text-muted' };
+const STATUS_TONES: Record<ActivityState, string> = { working: 'text-accent', waiting: 'text-alert', approval: 'text-alert', idle: 'text-muted', exited: 'text-muted' };
 
 const ARROW_KEYS: Record<string, ArrowDirection> = {
   ArrowLeft: 'left',
@@ -68,7 +68,18 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, keyboardHin
     setLaunchCount((count) => count + 1);
   };
 
-  const handleHeaderKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
+  const status = (
+    <span
+      className={`tile-status readout ml-auto shrink-0 text-[11px] ${activity ? STATUS_TONES[activity] : 'text-muted'}`}
+      data-tone={activity === 'waiting' || activity === 'approval' ? 'alert' : undefined}
+      style={activity || tile.kind === 'claude' ? undefined : { color: accentColor }}
+      title={cwd}
+    >
+      {statusLabel(tile, activity)}
+    </span>
+  );
+
+  const handleHeaderKeyDown =(event: KeyboardEvent<HTMLDivElement>): void => {
     const direction = ARROW_KEYS[event.key];
     if (!direction) return;
     event.preventDefault();
@@ -81,7 +92,7 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, keyboardHin
       style={{ '--tile-accent': accentColor } as CSSProperties}
     >
       <div
-        className={`${TILE_DRAG_HANDLE_CLASS} tile-titlebar relative z-20 flex cursor-move items-center gap-2 border-b border-edge px-2 py-1 text-[11px] focus:outline-none focus:ring-1 focus:ring-accent/60`}
+        className={`${TILE_DRAG_HANDLE_CLASS} tile-titlebar relative z-20 flex cursor-move flex-col gap-0.5 border-b border-edge px-2 py-1 text-[11px] focus:outline-none focus:ring-1 focus:ring-accent/60`}
         tabIndex={0}
         role="group"
         aria-label={`${title} tile. ${keyboardHint}`}
@@ -90,45 +101,46 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, keyboardHin
         onKeyDown={handleHeaderKeyDown}
         onMouseDown={() => setFocusedTile(tile.id)}
       >
-        {activity ? <ActivityDot state={activity} /> : <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: accentColor }} />}
-        <span className="min-w-0 flex-1 truncate font-ui text-[13px] font-semibold tracking-wide text-fg">{title}</span>
-        {tile.kind === 'claude' && <BoardTileSessionIndicator tileId={tile.id} projectCwd={tile.cwd} />}
-        <span
-          className={`tile-project-plate readout shrink-0 text-[11px] transition-colors duration-500 ${activity ? PLATE_TONES[activity] : ''}`}
-          style={activity ? undefined : { color: accentColor }}
-          title={cwd}
-        >
-          {plateLabel(tile, activity)}
-        </span>
-        {activity === 'exited' && (
-          <button type="button" className="hud-glyph px-1 text-muted" data-glyph="↻" onClick={relaunch} title="Relaunch" aria-label="Relaunch session">
-            ↻
+        <div className="flex items-center gap-2">
+          {activity ? <ActivityDot state={activity} /> : <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: accentColor }} />}
+          <span className="min-w-0 flex-1 truncate font-ui text-[13px] font-semibold tracking-wide text-fg">{title}</span>
+          {tile.kind !== 'claude' && status}
+          {activity === 'exited' && (
+            <button type="button" className="hud-glyph px-1 text-muted" data-glyph="↻" onClick={relaunch} title="Relaunch" aria-label="Relaunch session">
+              ↻
+            </button>
+          )}
+          {cwd !== undefined && (
+            <ActionMenu
+              label={`${title} folder actions`}
+              entries={[
+                { label: 'Open in', emphasis: 'Explorer', onSelect: () => revealInExplorer(cwd) },
+                { label: 'Open in', emphasis: 'VS Code', onSelect: () => openInEditor(cwd) },
+              ]}
+            />
+          )}
+          {tile.kind === 'claude' && onOpenShell && (
+            <button
+              type="button"
+              className="hud-glyph px-1 font-bold text-muted"
+              data-glyph=">_"
+              onClick={() => onOpenShell(tile.cwd, tile.id)}
+              title="Open a shell in this folder"
+              aria-label="Open a shell in this folder"
+            >
+              {'>_'}
+            </button>
+          )}
+          <button type="button" className="hud-glyph px-1 text-muted" data-glyph="×" data-tone="neutral" onClick={() => editor.removeTiles(boardId, [tile.id])} aria-label="Close tile">
+            ×
           </button>
+        </div>
+        {tile.kind === 'claude' && (
+          <div className="flex items-center gap-2">
+            <BoardTileSessionIndicator tileId={tile.id} projectCwd={tile.cwd} />
+            {status}
+          </div>
         )}
-        {tile.kind === 'claude' && onOpenShell && (
-          <button
-            type="button"
-            className="hud-glyph px-1 font-bold text-muted"
-            data-glyph=">_"
-            onClick={() => onOpenShell(tile.cwd, tile.id)}
-            title="Open a shell in this folder"
-            aria-label="Open a shell in this folder"
-          >
-            {'>_'}
-          </button>
-        )}
-        {cwd !== undefined && (
-          <ActionMenu
-            label={`${title} folder actions`}
-            entries={[
-              { label: 'Open in', emphasis: 'Explorer', onSelect: () => revealInExplorer(cwd) },
-              { label: 'Open in', emphasis: 'VS Code', onSelect: () => openInEditor(cwd) },
-            ]}
-          />
-        )}
-        <button type="button" className="hud-glyph px-1 text-muted" data-glyph="×" data-tone="danger" onClick={() => editor.removeTile(boardId, tile.id)} aria-label="Close tile">
-          ×
-        </button>
       </div>
       <div className="min-h-0 flex-1">
         <TileBody key={launchCount} boardId={boardId} tile={tile} shouldMountTerminal={shouldMountTerminal} />

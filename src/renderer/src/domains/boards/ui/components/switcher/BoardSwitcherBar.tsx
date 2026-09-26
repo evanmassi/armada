@@ -68,7 +68,7 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
               type="button"
               className={`hud-glyph mr-1 text-muted ${isActive ? '' : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'}`}
               data-glyph="×"
-              data-tone="danger"
+              data-tone="neutral"
               onClick={() => confirmRemove(board)}
               aria-label={`Remove board ${board.name}`}
             >

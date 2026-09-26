@@ -125,7 +125,7 @@ export function SidebarGroupHeader({
         </button>
       )}
       {onRemove && (
-        <button type="button" className="hud-glyph px-1" data-glyph="×" data-tone="danger" onClick={confirmRemove} aria-label="Remove group">
+        <button type="button" className="hud-glyph px-1" data-glyph="×" data-tone="neutral" onClick={confirmRemove} aria-label="Remove group">
           ×
         </button>
       )}

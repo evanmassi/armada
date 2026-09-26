@@ -10,7 +10,7 @@ import {
   rebindClaudeTile,
   reflowFreeLayout,
   removeBoard,
-  removeTile,
+  removeTiles,
   renameBoard,
   scaleLaneWeight,
   scaleTileWeight,
@@ -41,7 +41,7 @@ export function useBoardsEditor() {
     setLayoutMode: (boardId: string, layoutMode: LayoutMode) => edit((workspace) => setLayoutMode(workspace, boardId, layoutMode)),
     addTile: (boardId: string, seed: TileSeed, afterTileId?: string) =>
       edit((workspace) => addTile(workspace, boardId, seed, afterTileId)),
-    removeTile: (boardId: string, tileId: string) => edit((workspace) => removeTile(workspace, boardId, tileId)),
+    removeTiles: (boardId: string, tileIds: string[]) => edit((workspace) => removeTiles(workspace, boardId, tileIds)),
     rebindClaudeTile: (boardId: string, tileId: string, sessionId: string) =>
       edit((workspace) => rebindClaudeTile(workspace, boardId, tileId, sessionId)),
     setNotesText: (boardId: string, tileId: string, text: string) => edit((workspace) => setNotesText(workspace, boardId, tileId, text)),

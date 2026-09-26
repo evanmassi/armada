@@ -418,9 +418,8 @@ button[data-pressed] {
   --hud-line: var(--color-alert);
 }
 
-.hud-button[data-tone='danger'],
-.hud-glyph[data-tone='danger'] {
-  --hud-line: var(--color-removed);
+.hud-glyph[data-tone='neutral'] {
+  --hud-line: var(--color-fg);
 }
 
 .hud-row {
@@ -649,6 +648,16 @@ button[data-pressed] {
   background: color-mix(in srgb, var(--tile-accent) 16%, transparent);
   border-left: 1px solid var(--tile-accent);
   border-right: 1px solid color-mix(in srgb, var(--tile-accent) 40%, transparent);
+}
+
+.tile-status {
+  transition:
+    color 500ms ease,
+    text-shadow 500ms ease;
+}
+
+.tile-status[data-tone='alert'] {
+  text-shadow: 0 0 8px color-mix(in srgb, currentColor 60%, transparent);
 }
 
 .react-grid-item.react-grid-placeholder {

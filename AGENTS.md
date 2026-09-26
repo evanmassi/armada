@@ -168,10 +168,10 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   last tile from the same project. Two layout modes per board: `auto` and `free`. In `auto`, a
   single-project board tiles by count (`model/tiling.ts`, rows of 1/2/3 columns, drag-to-swap, splitters adjust
   weights); a board spanning more than one project renders lanes (`model/lanes.ts`), one column per project keyed
-  by cwd with tiles stacked inside, lane order, width, and collapse saved on the board. A notes tile with a cwd lives in
+  by cwd with tiles stacked inside, lane order, width, and collapse saved on the board; the lane header's × closes every tile in it, asking first when there is more than one. A notes tile with a cwd lives in
   that project's lane; one without is board-wide and renders in a collapsible strip on the right, outside any layout. `free` is a scrolling grid
-  with explicit x/y/w/h (`react-grid-layout`); reflow rewrites its positions from the tiling. A Claude tile's title bar shows model and effort, context left before
-  auto-compact as a draining bar, and the session's folder only when it has left the project folder. Uncommitted +/- per
+  with explicit x/y/w/h (`react-grid-layout`); reflow rewrites its positions from the tiling. A Claude tile's title bar puts the title alone on its first row and, on a second, model and effort, context left before
+  auto-compact as a draining bar, and the session's folder only when it has left the project folder, with the activity word at the right. Uncommitted +/- per
   project (`useProjectLineChangesQuery`, refetched when a turn ends) sits on the lane header, or on the board tab when the
   board holds one project. Opening a
   conversation while another project's board is active routes it to that project's own board unless shift is held.
@@ -221,13 +221,13 @@ no utility class uses it.
 
 **Control styles** (Strand OS, from `overload/refs/ui_design_ideas`) are CSS classes in the same file, not components,
 so the click feedback and every existing button keep working unchanged. Three tiers, all tinted by `--hud-line`
-(accent by default, `data-tone="alert"` or `"danger"`, the project color inside tile and lane title bars):
+(accent by default, `data-tone="alert"`, `"neutral"` on glyphs, the project color inside tile and lane title bars):
 - `hud-button` for framed actions (+ folder, + board, auto/free, Fix): offset plate, corner brackets that lock on at
   hover, squeeze on hold, a lit left bar when `aria-checked`, dimmed when disabled. `hud-button-compact` for lane
   headers. `hud-tab` makes the frame a container for board tabs: the name and × are separate buttons inside it, the
   frame takes the board's project color, and it lights when the board is current.
 - `hud-glyph` for small glyph buttons (×, +, ⋮, chevrons): one 14px mono size with a 20px target, glow and an offset
-  copy from `data-glyph` on hover. Destructive ones carry `data-tone="danger"`.
+  copy from `data-glyph` on hover. Every × carries `data-tone="neutral"` and lights white, like a normal close button.
 - `hud-row` for rows (menu items, conversation rows): the Odysseus lit-row recipe, a left bar, a left-weighted wash,
   inner edge glow, outer halo and faint dark scanlines; half strength on hover, full on `data-selected`. A conversation
   row is selected when it is open in a tile on the active board.

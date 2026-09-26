@@ -15,12 +15,13 @@ interface BoardLaneHeaderProps {
   onToggleCollapsed(): void;
   onStartSession(): void;
   onAddNotes(): void;
+  onClose(): void;
   onDragOver(event: DragEvent<HTMLElement>): void;
   onDrop(event: DragEvent<HTMLElement>): void;
   onDragLeave(): void;
 }
 
-export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggleCollapsed, onStartSession, onAddNotes, onDragOver, onDrop, onDragLeave }: BoardLaneHeaderProps) {
+export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggleCollapsed, onStartSession, onAddNotes, onClose, onDragOver, onDrop, onDragLeave }: BoardLaneHeaderProps) {
   const activities = useSessionActivityStore(useShallow((state) => lane.tiles.map((tile) => state.byTileId[tile.id]?.state)));
 
   const activityDots = activities.map((activity, index) => (activity ? <ActivityDot key={index} state={activity} /> : null));
@@ -69,6 +70,9 @@ export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggl
             </button>
             <button type="button" className="hud-button hud-button-compact" onClick={onAddNotes} title="Add notes to this lane" aria-label={`Add notes to ${name}`}>
               + notes
+            </button>
+            <button type="button" className="hud-glyph text-muted" data-glyph="×" data-tone="neutral" onClick={onClose} aria-label={`Close ${name} lane`}>
+              ×
             </button>
           </span>
         </span>

@@ -17,7 +17,7 @@ export function BoardTileSessionIndicator({ tileId, projectCwd }: BoardTileSessi
 
   return (
     <>
-      <span className="divided-readouts flex min-w-0 items-center gap-2">
+      <span className="divided-readouts flex min-w-0 items-center gap-2 pl-4">
         {folder && (
           <span className="min-w-0 max-w-[18ch] truncate font-mono text-[11px] text-muted" title={status.cwd}>
             {folder}
