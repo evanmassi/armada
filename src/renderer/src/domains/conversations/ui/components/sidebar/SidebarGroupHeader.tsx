@@ -1,4 +1,5 @@
 import { useState, type DragEvent } from 'react';
+import { QUIET_CLICK_PROPS } from '@renderer/app/clickFeedback';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
 import { applyDragGhost, placementFromPointer, PLACEMENT_LINE_CLASS, type DropPlacement } from '@renderer/shared/utils/dragGhost';
 import { GROUP_DRAG_MIME, PROJECT_DRAG_MIME } from '../../../model/sidebarDragTypes';
@@ -108,6 +109,8 @@ export function SidebarGroupHeader({
           onDoubleClick={() => canRename && setIsRenaming(true)}
           onKeyDown={(event) => event.key === 'F2' && canRename && setIsRenaming(true)}
           onClick={onToggleCollapsed}
+          aria-expanded={!isCollapsed}
+          {...QUIET_CLICK_PROPS}
           title={canRename ? 'Double-click or F2 to rename. Drag to reorder.' : undefined}
         >
           <span>

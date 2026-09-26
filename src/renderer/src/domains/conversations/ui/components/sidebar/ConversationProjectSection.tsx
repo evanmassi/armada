@@ -1,5 +1,6 @@
 import { useState, type CSSProperties, type DragEvent, type KeyboardEvent } from 'react';
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
+import { QUIET_CLICK_PROPS } from '@renderer/app/clickFeedback';
 import type { ActivityState } from '@renderer/app/stores/sessionActivityStore';
 import { ActionMenu, type ActionMenuEntry, type ActionMenuItem } from '@renderer/shared/ui/components/ActionMenu';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
@@ -168,6 +169,7 @@ export function ConversationProjectSection({
             onClick={() => onToggleExpanded(project.cwd, !isOpen)}
             onKeyDown={handleNameKeyDown}
             aria-expanded={isOpen}
+            {...QUIET_CLICK_PROPS}
             title={`${project.cwd}\nF2 renames. Ctrl+Up/Down moves.`}
           >
             <span className="project-name truncate font-ui text-[15px] font-semibold tracking-wide">{displayName}</span>
@@ -194,6 +196,8 @@ export function ConversationProjectSection({
               type="button"
               className="px-4 py-0.5 text-left text-[11px] text-muted hover:text-fg"
               onClick={() => setIsShowingArchived((value) => !value)}
+              aria-expanded={isShowingArchived}
+              {...QUIET_CLICK_PROPS}
             >
               {isShowingArchived ? 'hide' : 'show'} {archived.length} archived
             </button>

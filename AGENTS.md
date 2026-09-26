@@ -185,6 +185,10 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   dropped on a tile paste in as paths, one per line in a Claude tile so Claude Code attaches each image and tells the
   model where it came from. Ctrl+V with only an image on the clipboard saves it through main and pastes that path. The
   window refuses navigation, so a file dropped beside a tile cannot reload the page and restart every session.
+- Click feedback is app-wide, not per component: `app/clickFeedback.ts` listens for clicks in the capture phase, squishes
+  the button, and draws rings in the button's text color in a fixed layer over it, so a clipped container never cuts
+  them off. `QUIET_CLICK_PROPS` opts a button out (full-width expand rows); `CLICK_ORIGIN_PROPS` marks the child the
+  rings start from (a conversation row's status dot). Both switch off under reduced motion.
 
 ---
 

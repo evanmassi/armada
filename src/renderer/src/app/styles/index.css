@@ -204,16 +204,130 @@ body,
   text-shadow: 0 0 10px color-mix(in srgb, var(--meter-color) 80%, transparent);
 }
 
+:root {
+  --ease-settle: cubic-bezier(0.2, 0.75, 0.25, 1);
+  --ease-emit: cubic-bezier(0.18, 0.72, 0.3, 1);
+  --click-clock: 520ms;
+  --click-echo-clock: 580ms;
+  --click-glow-clock: 620ms;
+  --click-echo-lag: 55ms;
+  --click-flicker-offset: 35ms;
+  --click-press: 322ms;
+}
+
+button[data-pressed] {
+  animation: click-press var(--click-press) var(--ease-settle) both;
+}
+
+.click-burst {
+  position: fixed;
+  z-index: 60;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.click-burst > span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+}
+
+.click-burst > span::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(var(--burst-size) + 36px);
+  aspect-ratio: 1;
+  border: 1px solid var(--burst-color);
+  border-radius: 50%;
+  translate: -50% -50%;
+  scale: 0.1;
+}
+
+.click-burst-halo::before {
+  border-width: 2px;
+  box-shadow: 0 0 22px var(--burst-color);
+  filter: blur(7px);
+}
+
+.click-burst-halo {
+  animation: click-ring-fade var(--click-glow-clock) linear both;
+}
+
+.click-burst-halo::before {
+  animation:
+    click-ring-grow var(--click-glow-clock) var(--ease-emit) both,
+    click-ring-flicker var(--click-glow-clock) steps(1, end) var(--click-flicker-offset) both;
+}
+
+.click-burst-hair {
+  animation: click-ring-fade var(--click-clock) steps(7, end) both;
+}
+
+.click-burst-hair::before {
+  animation:
+    click-ring-grow var(--click-clock) var(--ease-emit) both,
+    click-ring-flicker var(--click-clock) steps(1, end) both;
+}
+
+.click-burst-hair-echo {
+  animation: click-ring-fade var(--click-echo-clock) steps(5, end) var(--click-echo-lag) both;
+}
+
+.click-burst-hair-echo::before {
+  animation:
+    click-ring-grow var(--click-echo-clock) var(--ease-emit) var(--click-echo-lag) both,
+    click-ring-flicker var(--click-echo-clock) steps(1, end) calc(var(--click-echo-lag) + var(--click-flicker-offset)) both;
+}
+
+@keyframes click-press {
+  0% { transform: scale(1); }
+  12% { transform: scale(0.966); }
+  44% { transform: scale(1.012); }
+  100% { transform: scale(1); }
+}
+
+@keyframes click-ring-fade {
+  0% { opacity: 0.5; }
+  100% { opacity: 0; }
+}
+
+@keyframes click-ring-grow {
+  0% { scale: 0.1; }
+  100% { scale: 1; }
+}
+
+@keyframes click-ring-flicker {
+  0% { opacity: 1; }
+  16% { opacity: 0.35; }
+  19% { opacity: 1; }
+  38% { opacity: 0.55; }
+  42% { opacity: 1; }
+  64% { opacity: 0.15; }
+  67% { opacity: 1; }
+  80% { opacity: 0.45; }
+  84% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tile-frame.tile-focused::after,
   .activity-pin-working,
   .activity-pin-approval,
-  .meter-segment.is-tip {
+  .meter-segment.is-tip,
+  button[data-pressed] {
     animation: none;
   }
 
   .meter-segment.is-tip {
     opacity: 1;
+  }
+
+  .click-burst {
+    display: none;
   }
 }
 

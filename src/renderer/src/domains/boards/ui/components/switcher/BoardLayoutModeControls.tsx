@@ -23,11 +23,14 @@ export function BoardLayoutModeControls({ layoutMode, onChange, onReflow }: Boar
           </button>
         ))}
       </div>
-      {layoutMode === 'free' && (
-        <button type="button" className="px-2 py-0.5 text-muted hover:text-accent" onClick={onReflow}>
-          reflow
-        </button>
-      )}
+      <button
+        type="button"
+        className={`px-2 py-0.5 text-muted hover:text-accent ${layoutMode === 'free' ? '' : 'invisible'}`}
+        onClick={onReflow}
+        disabled={layoutMode !== 'free'}
+      >
+        reflow
+      </button>
     </div>
   );
 }
