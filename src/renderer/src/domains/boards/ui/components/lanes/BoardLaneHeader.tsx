@@ -45,7 +45,8 @@ export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggl
     >
       <button
         type="button"
-        className="hover:text-white"
+        className="hud-glyph"
+        data-glyph={lane.isCollapsed ? '▸' : '◂'}
         onClick={onToggleCollapsed}
         aria-expanded={!lane.isCollapsed}
         aria-label={lane.isCollapsed ? `Expand ${name}` : `Collapse ${name}`}
@@ -63,10 +64,10 @@ export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggl
             <span className="ml-1 text-edge-strong">{lane.tiles.length}</span>
           </span>
           <span className="flex items-center gap-1">
-            <button type="button" className="px-1 hover:text-white" onClick={onStartSession} title="New session in this project" aria-label={`New session in ${name}`}>
+            <button type="button" className="hud-button hud-button-compact" onClick={onStartSession} title="New session in this project" aria-label={`New session in ${name}`}>
               + session
             </button>
-            <button type="button" className="px-1 hover:text-white" onClick={onAddNotes} title="Add notes to this lane" aria-label={`Add notes to ${name}`}>
+            <button type="button" className="hud-button hud-button-compact" onClick={onAddNotes} title="Add notes to this lane" aria-label={`Add notes to ${name}`}>
               + notes
             </button>
           </span>

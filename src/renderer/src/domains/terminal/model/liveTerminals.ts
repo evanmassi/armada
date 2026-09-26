@@ -14,6 +14,7 @@ import { enableTerminalLinks } from './terminalLinks';
 import { quotePathForInput } from './terminalPathInput';
 
 const SELECTION_ALPHA_HEX = '44';
+const SCROLLBAR_HOVER_ALPHA_HEX = '8c';
 const REFIT_DEBOUNCE_MS = 80;
 
 const DROPPED_FILES_TYPE = 'Files';
@@ -26,7 +27,15 @@ const readDesignToken = (name: string): string => getComputedStyle(document.docu
 const terminalAppearance = () => {
   const accent = readDesignToken('--color-accent');
   return {
-    theme: { background: readDesignToken('--color-tile'), foreground: readDesignToken('--color-fg'), cursor: accent, selectionBackground: `${accent}${SELECTION_ALPHA_HEX}` },
+    theme: {
+      background: readDesignToken('--color-tile'),
+      foreground: readDesignToken('--color-fg'),
+      cursor: accent,
+      selectionBackground: `${accent}${SELECTION_ALPHA_HEX}`,
+      scrollbarSliderBackground: readDesignToken('--color-edge-strong'),
+      scrollbarSliderHoverBackground: `${accent}${SCROLLBAR_HOVER_ALPHA_HEX}`,
+      scrollbarSliderActiveBackground: accent,
+    },
     fontFamily: readDesignToken('--font-mono'),
   };
 };

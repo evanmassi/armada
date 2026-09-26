@@ -60,14 +60,14 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
             )}
             {projectCwd !== undefined && <BoardProjectChangesIndicator cwd={projectCwd} />}
             {isActive && (
-              <button type="button" className="px-1 text-muted hover:text-fg" onClick={() => confirmRemove(board)} aria-label="Remove board">
+              <button type="button" className="hud-glyph px-1 text-muted" data-glyph="×" data-tone="danger" onClick={() => confirmRemove(board)} aria-label="Remove board">
                 ×
               </button>
             )}
           </div>
         );
       })}
-      <button type="button" className="readout px-2 py-1 text-muted hover:text-accent" onClick={onCreate} aria-label="New board">
+      <button type="button" className="readout hud-button ml-1 text-muted" onClick={onCreate} aria-label="New board">
         + board
       </button>
       {children}

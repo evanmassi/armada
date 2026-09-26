@@ -187,8 +187,10 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   window refuses navigation, so a file dropped beside a tile cannot reload the page and restart every session.
 - Click feedback is app-wide, not per component: `app/clickFeedback.ts` listens for clicks in the capture phase, squishes
   the button, and draws rings in the button's text color in a fixed layer over it, so a clipped container never cuts
-  them off. `QUIET_CLICK_PROPS` opts a button out (full-width expand rows); `CLICK_ORIGIN_PROPS` marks the child the
-  rings start from (a conversation row's status dot). Both switch off under reduced motion.
+  them off. `QUIET_CLICK_PROPS` opts a button out ("show N archived"); `CLICK_ORIGIN_PROPS` marks the child the rings
+  start from (a conversation row's status dot, a project or group chevron); `ROW_ORIGIN_CLICK_PROPS` makes a full-width
+  row ring and squish its sibling origin instead of itself. Both switch off under reduced motion. The listener is
+  installed once at startup, so a dev hot reload of `clickFeedback.ts` needs a restart to take effect.
 
 ---
 
@@ -214,6 +216,17 @@ and saving a clipboard image.
 **Design tokens**: colors and fonts live once, in `app/styles/index.css` under `@theme static`. Code that needs a
 literal value (the xterm theme, the drag ghost) reads the CSS variable; `static` keeps every token emitted even when
 no utility class uses it.
+
+**Control styles** (Strand OS, from `overload/refs/ui_design_ideas`) are CSS classes in the same file, not components,
+so the click feedback and every existing button keep working unchanged. Three tiers, all tinted by `--hud-line`
+(accent by default, `data-tone="alert"` or `"danger"`, the project color inside tile and lane title bars):
+- `hud-button` for framed actions (+ folder, + board, auto/free, Fix): offset plate, corner brackets that lock on at
+  hover, squeeze on hold, a lit left bar when `aria-checked`. `hud-button-compact` for lane headers.
+- `hud-glyph` for small glyph buttons (×, +, …, chevrons): one 14px mono size with a 20px target, glow and an offset
+  copy from `data-glyph` on hover. Destructive ones carry `data-tone="danger"`.
+- `hud-row` for rows (menu items, conversation rows): the Odysseus lit-row recipe, a left bar, a left-weighted wash,
+  inner edge glow, outer halo and faint dark scanlines; half strength on hover, full on `data-selected`. A conversation
+  row is selected when it is open in a tile on the active board.
 
 ---
 

@@ -51,7 +51,7 @@ export function ProjectColorSelector({ color, onChange }: ProjectColorSelectorPr
       <button
         type="button"
         className="h-3 w-3 rounded-full border border-muted"
-        style={color ? { background: color, borderColor: 'transparent' } : undefined}
+        style={color ? { background: color, borderColor: 'transparent', boxShadow: `0 0 7px ${color}` } : undefined}
         onClick={() => setIsOpen((value) => !value)}
         aria-label={color ? `Color ${color}. Change color` : 'Assign a color'}
         aria-expanded={isOpen}

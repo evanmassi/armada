@@ -1,5 +1,5 @@
 import { useState, type DragEvent } from 'react';
-import { QUIET_CLICK_PROPS } from '@renderer/app/clickFeedback';
+import { CLICK_ORIGIN_PROPS, ROW_ORIGIN_CLICK_PROPS } from '@renderer/app/clickFeedback';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
 import { applyDragGhost, placementFromPointer, PLACEMENT_LINE_CLASS, type DropPlacement } from '@renderer/shared/utils/dragGhost';
 import { GROUP_DRAG_MIME, PROJECT_DRAG_MIME } from '../../../model/sidebarDragTypes';
@@ -89,7 +89,7 @@ export function SidebarGroupHeader({
       onDragLeave={() => setHover(undefined)}
       onDrop={handleDrop}
     >
-      <button type="button" className="px-1 hover:text-fg" onClick={onToggleCollapsed} aria-expanded={!isCollapsed} aria-label={isCollapsed ? 'Expand group' : 'Collapse group'}>
+      <button type="button" className="hud-glyph px-1" data-glyph={isCollapsed ? '▸' : '▾'} {...CLICK_ORIGIN_PROPS} onClick={onToggleCollapsed} aria-expanded={!isCollapsed} aria-label={isCollapsed ? 'Expand group' : 'Collapse group'}>
         {isCollapsed ? '▸' : '▾'}
       </button>
       {isRenaming && onRename ? (
@@ -110,7 +110,7 @@ export function SidebarGroupHeader({
           onKeyDown={(event) => event.key === 'F2' && canRename && setIsRenaming(true)}
           onClick={onToggleCollapsed}
           aria-expanded={!isCollapsed}
-          {...QUIET_CLICK_PROPS}
+          {...ROW_ORIGIN_CLICK_PROPS}
           title={canRename ? 'Double-click or F2 to rename. Drag to reorder.' : undefined}
         >
           <span>
@@ -125,7 +125,7 @@ export function SidebarGroupHeader({
         </button>
       )}
       {onRemove && (
-        <button type="button" className="px-1 hover:text-fg" onClick={confirmRemove} aria-label="Remove group">
+        <button type="button" className="hud-glyph px-1" data-glyph="×" data-tone="danger" onClick={confirmRemove} aria-label="Remove group">
           ×
         </button>
       )}

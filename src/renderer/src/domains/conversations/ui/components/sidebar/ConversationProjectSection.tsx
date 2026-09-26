@@ -1,6 +1,6 @@
 import { useState, type CSSProperties, type DragEvent, type KeyboardEvent } from 'react';
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
-import { QUIET_CLICK_PROPS } from '@renderer/app/clickFeedback';
+import { CLICK_ORIGIN_PROPS, QUIET_CLICK_PROPS, ROW_ORIGIN_CLICK_PROPS } from '@renderer/app/clickFeedback';
 import type { ActivityState } from '@renderer/app/stores/sessionActivityStore';
 import { ActionMenu, type ActionMenuEntry, type ActionMenuItem } from '@renderer/shared/ui/components/ActionMenu';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
@@ -21,6 +21,7 @@ interface ConversationProjectSectionProps {
   isForcedOpen: boolean;
   hasBoard: boolean;
   activityBySession: Map<string, ActivityState>;
+  activeBoardSessionIds: ReadonlySet<string>;
   archivedSessionIds: string[];
   moveTargets: ActionMenuItem[];
   isPinned(sessionId: string): boolean;
@@ -44,6 +45,7 @@ export function ConversationProjectSection({
   isForcedOpen,
   hasBoard,
   activityBySession,
+  activeBoardSessionIds,
   archivedSessionIds,
   moveTargets,
   isPinned,
@@ -122,6 +124,7 @@ export function ConversationProjectSection({
       activity={activityBySession.get(conversation.sessionId)}
       isPinned={isPinned(conversation.sessionId)}
       isArchived={isConversationArchived}
+      isOnActiveBoard={activeBoardSessionIds.has(conversation.sessionId)}
       onOpen={onOpenConversation}
       onTogglePin={onTogglePin}
       onSetArchived={onSetConversationArchived}
@@ -145,7 +148,9 @@ export function ConversationProjectSection({
         <ProjectColorSelector color={colorOf(project.cwd)} onChange={(color) => setColor(project.cwd, color)} />
         <button
           type="button"
-          className="px-1 text-muted hover:text-fg"
+          className="hud-glyph px-1 text-muted"
+          data-glyph={isOpen ? '▾' : '▸'}
+          {...CLICK_ORIGIN_PROPS}
           onClick={() => onToggleExpanded(project.cwd, !isOpen)}
           aria-expanded={isOpen}
           aria-label={isOpen ? 'Collapse project' : 'Expand project'}
@@ -169,17 +174,18 @@ export function ConversationProjectSection({
             onClick={() => onToggleExpanded(project.cwd, !isOpen)}
             onKeyDown={handleNameKeyDown}
             aria-expanded={isOpen}
-            {...QUIET_CLICK_PROPS}
+            {...ROW_ORIGIN_CLICK_PROPS}
             title={`${project.cwd}\nF2 renames. Ctrl+Up/Down moves.`}
           >
-            <span className="project-name truncate font-ui text-[15px] font-semibold tracking-wide">{displayName}</span>
+            <span className="truncate font-ui text-[15px] font-semibold tracking-wide">{displayName}</span>
             <span className="shrink-0 text-muted" aria-hidden="true">·</span>
             <span className="readout shrink-0 text-[12px] text-fg">{active.length}</span>
           </button>
         )}
         <button
           type="button"
-          className="rounded px-1.5 text-muted hover:bg-edge hover:text-fg"
+          className="hud-glyph px-1.5 text-muted"
+          data-glyph="+"
           onClick={(event) => onStartSession(project.cwd, event.shiftKey)}
           title="New session in this project"
           aria-label="New session in this project"

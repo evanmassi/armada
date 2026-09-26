@@ -1,6 +1,7 @@
 import { type ReactNode, useMemo, useRef, useState } from 'react';
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
 import { DEFAULT_SIDEBAR_WIDTH_PX, MAX_SIDEBAR_WIDTH_PX, MIN_SIDEBAR_WIDTH_PX } from '@shared/workspace/workspaceSchemas';
+import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { selectActivityBySession, useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
 import armadaIcon from '@renderer/assets/armada-icon.png';
 import { useWorkspaceQuery } from '@renderer/domains/workspace';
@@ -36,6 +37,7 @@ export function ConversationSidebarPanel({ footer, onOpenConversation, onOpenPro
   const nameOf = useProjectNames();
   const editor = useSidebarEditor();
   const byTileId = useSessionActivityStore((state) => state.byTileId);
+  const activeBoardId = useBoardSelectionStore((state) => state.activeBoardId);
   const [query, setQuery] = useState('');
   const [draftWidth, setDraftWidth] = useState<number>();
   const [isArchivedOpen, setIsArchivedOpen] = useState(false);
@@ -45,6 +47,13 @@ export function ConversationSidebarPanel({ footer, onOpenConversation, onOpenPro
   const liveWidth = useRef<number>(undefined);
 
   const activityBySession = useMemo(() => selectActivityBySession(byTileId), [byTileId]);
+  const activeBoardSessionIds = useMemo(
+    () =>
+      new Set(
+        workspace?.boards.find((board) => board.id === activeBoardId)?.tiles.flatMap((tile) => (tile.kind === 'claude' ? [tile.sessionId] : [])),
+      ),
+    [workspace, activeBoardId],
+  );
   const visibleProjects = useMemo(() => filterProjects(projects, query, nameOf), [projects, query, nameOf]);
   const pinnedConversations = useMemo(() => findPinnedConversations(projects, pinnedSessionIds), [projects, pinnedSessionIds]);
   const sections = useMemo(() => (sidebar ? arrangeSidebar(visibleProjects, sidebar) : []), [visibleProjects, sidebar]);
@@ -150,6 +159,7 @@ export function ConversationSidebarPanel({ footer, onOpenConversation, onOpenPro
               isForcedOpen={isSearching}
               hasBoard={workspace?.boards.some((board) => board.projectCwd === project.cwd) ?? false}
               activityBySession={activityBySession}
+              activeBoardSessionIds={activeBoardSessionIds}
               archivedSessionIds={sidebar?.archivedSessionIds ?? []}
               moveTargets={moveTargetsFor(section, project.cwd)}
               isPinned={isPinned}
@@ -175,10 +185,10 @@ export function ConversationSidebarPanel({ footer, onOpenConversation, onOpenPro
         <header className="flex items-center gap-1 border-b border-edge bg-panel/80 px-3 py-2 backdrop-blur">
           <img src={armadaIcon} alt="" className="h-4 w-4" />
           <strong className="readout glow-accent flex-1 text-accent">Armada</strong>
-          <button type="button" className="readout border border-edge-strong px-2 py-0.5 text-muted hover:border-accent hover:text-accent" onClick={() => void startSessionInPickedFolder()} title="Start a session in a folder">
+          <button type="button" className="readout hud-button text-muted" onClick={() => void startSessionInPickedFolder()} title="Start a session in a folder">
             + folder
           </button>
-          <button type="button" className="readout border border-edge-strong px-2 py-0.5 text-muted hover:border-accent hover:text-accent" onClick={createGroup} title="New group">
+          <button type="button" className="readout hud-button ml-1.5 text-muted" onClick={createGroup} title="New group">
             + group
           </button>
           <ActionMenu label="Sort projects" entries={sortMenuItems} />
@@ -204,6 +214,7 @@ export function ConversationSidebarPanel({ footer, onOpenConversation, onOpenPro
                   activity={activityBySession.get(conversation.sessionId)}
                   isPinned
                   isArchived={sidebar?.archivedSessionIds.includes(conversation.sessionId) ?? false}
+                  isOnActiveBoard={activeBoardSessionIds.has(conversation.sessionId)}
                   onOpen={onOpenConversation}
                   onTogglePin={togglePin}
                   onSetArchived={editor.setConversationArchived}

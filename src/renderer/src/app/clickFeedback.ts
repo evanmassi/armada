@@ -3,20 +3,26 @@ const MIN_RING_BASE_PX = 28;
 const BURST_LIFETIME_MS = 900;
 const PRESSED_ATTRIBUTE = 'data-pressed';
 const QUIET_CLICK_ATTRIBUTE = 'data-quiet-click';
-
 const CLICK_ORIGIN_ATTRIBUTE = 'data-click-origin';
+const ROW_ORIGIN_CLICK_ATTRIBUTE = 'data-click-row-origin';
 
 export const QUIET_CLICK_PROPS = { [QUIET_CLICK_ATTRIBUTE]: true } as const;
 export const CLICK_ORIGIN_PROPS = { [CLICK_ORIGIN_ATTRIBUTE]: true } as const;
+export const ROW_ORIGIN_CLICK_PROPS = { [ROW_ORIGIN_CLICK_ATTRIBUTE]: true } as const;
 
-function drawRings(button: HTMLButtonElement): void {
-  const bounds = (button.querySelector(`[${CLICK_ORIGIN_ATTRIBUTE}]`) ?? button).getBoundingClientRect();
+const ringOriginOf = (button: HTMLButtonElement): Element => {
+  const scope = button.hasAttribute(ROW_ORIGIN_CLICK_ATTRIBUTE) ? button.parentElement : button;
+  return scope?.querySelector(`[${CLICK_ORIGIN_ATTRIBUTE}]`) ?? button;
+};
+
+function drawRings(origin: Element, color: string): void {
+  const bounds = origin.getBoundingClientRect();
   const burst = document.createElement('span');
   burst.className = 'click-burst';
   burst.style.left = `${bounds.left + bounds.width / 2}px`;
   burst.style.top = `${bounds.top + bounds.height / 2}px`;
   burst.style.setProperty('--burst-size', `${Math.max(MIN_RING_BASE_PX, bounds.width, bounds.height)}px`);
-  burst.style.setProperty('--burst-color', getComputedStyle(button).color);
+  burst.style.setProperty('--burst-color', color);
   for (const layer of RING_LAYERS) {
     const ring = document.createElement('span');
     ring.className = `click-burst-${layer}`;
@@ -39,8 +45,9 @@ export function installClickFeedback(): void {
     (event) => {
       const button = event.target instanceof Element ? event.target.closest('button') : null;
       if (!button || button.disabled || button.hasAttribute(QUIET_CLICK_ATTRIBUTE)) return;
-      drawRings(button);
-      squish(button);
+      const origin = ringOriginOf(button);
+      drawRings(origin, getComputedStyle(button).color);
+      squish(origin instanceof HTMLButtonElement ? origin : button);
     },
     { capture: true },
   );

@@ -8,15 +8,15 @@ interface BoardLayoutModeControlsProps {
 
 export function BoardLayoutModeControls({ layoutMode, onChange, onReflow }: BoardLayoutModeControlsProps) {
   return (
-    <div className="readout ml-auto flex items-center gap-1">
-      <div className="flex border border-edge-strong" role="radiogroup" aria-label="Layout mode">
+    <div className="readout ml-auto flex items-center gap-2">
+      <div className="flex gap-1.5" role="radiogroup" aria-label="Layout mode">
         {LAYOUT_MODES.map((mode) => (
           <button
             key={mode}
             type="button"
             role="radio"
             aria-checked={layoutMode === mode}
-            className={`px-2 py-0.5 ${layoutMode === mode ? 'bg-accent/15 text-accent' : 'text-muted hover:text-fg'}`}
+            className="hud-button text-muted"
             onClick={() => onChange(mode)}
           >
             {mode}
@@ -25,7 +25,7 @@ export function BoardLayoutModeControls({ layoutMode, onChange, onReflow }: Boar
       </div>
       <button
         type="button"
-        className={`px-2 py-0.5 text-muted hover:text-accent ${layoutMode === 'free' ? '' : 'invisible'}`}
+        className={`hud-button text-muted ${layoutMode === 'free' ? '' : 'invisible'}`}
         onClick={onReflow}
         disabled={layoutMode !== 'free'}
       >

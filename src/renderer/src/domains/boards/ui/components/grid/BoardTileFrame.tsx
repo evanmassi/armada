@@ -101,14 +101,15 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, keyboardHin
           {plateLabel(tile, activity)}
         </span>
         {activity === 'exited' && (
-          <button type="button" className="px-1 text-muted hover:text-fg" onClick={relaunch} title="Relaunch" aria-label="Relaunch session">
+          <button type="button" className="hud-glyph px-1 text-muted" data-glyph="↻" onClick={relaunch} title="Relaunch" aria-label="Relaunch session">
             ↻
           </button>
         )}
         {tile.kind === 'claude' && onOpenShell && (
           <button
             type="button"
-            className="px-1 font-bold text-muted hover:text-fg"
+            className="hud-glyph px-1 font-bold text-muted"
+            data-glyph=">_"
             onClick={() => onOpenShell(tile.cwd, tile.id)}
             title="Open a shell in this folder"
             aria-label="Open a shell in this folder"
@@ -125,7 +126,7 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, keyboardHin
             ]}
           />
         )}
-        <button type="button" className="px-1 text-muted hover:text-fg" onClick={() => editor.removeTile(boardId, tile.id)} aria-label="Close tile">
+        <button type="button" className="hud-glyph px-1 text-muted" data-glyph="×" data-tone="danger" onClick={() => editor.removeTile(boardId, tile.id)} aria-label="Close tile">
           ×
         </button>
       </div>

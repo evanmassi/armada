@@ -137,7 +137,7 @@ export function App() {
         >
           {activeBoard && (
             <>
-              <button type="button" className="readout ml-auto px-2 py-0.5 text-muted hover:text-accent" onClick={addNotes}>
+              <button type="button" className="readout hud-button ml-1.5 text-muted" onClick={addNotes}>
                 + notes
               </button>
               <BoardLayoutModeControls

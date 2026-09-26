@@ -18,7 +18,7 @@ interface ActionMenuProps {
   entries: ActionMenuEntry[];
 }
 
-const MENU_ITEM_CLASS = 'flex w-full items-center gap-1 px-3 py-1 text-left whitespace-nowrap text-fg hover:bg-accent/15 hover:text-accent focus:bg-accent/15 focus:outline-none';
+const MENU_ITEM_CLASS = 'hud-row flex w-full items-center gap-1 px-3 py-1 text-left whitespace-nowrap focus:outline-none';
 const MENU_SURFACE_CLASS = 'z-20 flex min-w-28 flex-col border border-edge-strong bg-panel/95 py-1 shadow-lg backdrop-blur';
 
 const isSubmenu = (entry: ActionMenuEntry): entry is ActionMenuSubmenu => typeof entry !== 'string' && 'items' in entry;
@@ -47,8 +47,8 @@ export function ActionMenu({ label, entries }: ActionMenuProps) {
         item.onSelect();
       }}
     >
-      {item.label}
-      {item.emphasis && <strong className="font-semibold">{item.emphasis}</strong>}
+      <span className="hud-row-label">{item.label}</span>
+      {item.emphasis && <strong className="hud-row-label font-semibold">{item.emphasis}</strong>}
     </button>
   );
 
@@ -58,7 +58,7 @@ export function ActionMenu({ label, entries }: ActionMenuProps) {
     return (
       <div key={entry.label} className="group relative">
         <button type="button" role="menuitem" aria-haspopup="menu" className={MENU_ITEM_CLASS}>
-          <span className="flex-1">{entry.label}</span>
+          <span className="hud-row-label flex-1">{entry.label}</span>
           <span className="text-muted">◂</span>
         </button>
         <div role="menu" className={`absolute top-0 right-full mr-px hidden group-hover:flex group-focus-within:flex ${MENU_SURFACE_CLASS}`}>
@@ -72,7 +72,8 @@ export function ActionMenu({ label, entries }: ActionMenuProps) {
     <div ref={rootRef} className="relative flex items-center">
       <button
         type="button"
-        className="rounded px-1 text-muted hover:bg-edge hover:text-fg"
+        className="hud-glyph px-1 text-muted"
+        data-glyph="…"
         onClick={() => setIsOpen((value) => !value)}
         aria-label={label}
         aria-haspopup="menu"
