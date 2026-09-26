@@ -7,16 +7,20 @@ const TONE_CLASSES: Record<StatusBannerTone, { edge: string; text: string }> = {
   alert: { edge: 'border-alert/60', text: 'text-alert' },
 };
 
+interface StatusBannerAction {
+  label: string;
+  isActing: boolean;
+  onSelect(): void;
+}
+
 interface StatusBannerProps {
   tone: StatusBannerTone;
   message: string;
   note: string;
-  actionLabel: string;
-  isActing: boolean;
-  onAction(): void;
+  action?: StatusBannerAction;
 }
 
-export function StatusBanner({ tone, message, note, actionLabel, isActing, onAction }: StatusBannerProps) {
+export function StatusBanner({ tone, message, note, action }: StatusBannerProps) {
   const [isDismissed, setIsDismissed] = useState(false);
 
   if (isDismissed) return null;
@@ -26,9 +30,11 @@ export function StatusBanner({ tone, message, note, actionLabel, isActing, onAct
     <div role="status" className={`flex items-center gap-3 border-b bg-panel px-3 py-1.5 text-fg ${edge}`}>
       <span className="min-w-0">{message}</span>
       <span className="text-muted">{note}</span>
-      <button type="button" className={`readout hud-button disabled:opacity-50 ${text}`} data-tone={tone} onClick={onAction} disabled={isActing}>
-        {actionLabel}
-      </button>
+      {action && (
+        <button type="button" className={`readout hud-button disabled:opacity-50 ${text}`} data-tone={tone} onClick={action.onSelect} disabled={action.isActing}>
+          {action.label}
+        </button>
+      )}
       <button type="button" className="hud-glyph ml-auto text-muted" data-glyph="×" onClick={() => setIsDismissed(true)} aria-label="Dismiss until next launch">
         ×
       </button>

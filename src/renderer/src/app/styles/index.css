@@ -419,6 +419,7 @@ button[data-pressed] {
 
 .hud-row {
   --hud-line: var(--color-accent);
+  --hud-strength: 1;
   --hud-scanlines: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 3px);
   position: relative;
   transition:
@@ -433,40 +434,44 @@ button[data-pressed] {
     var(--hud-scanlines),
     linear-gradient(
       90deg,
-      color-mix(in srgb, var(--hud-line) 7%, transparent) 0%,
-      color-mix(in srgb, var(--hud-line) 4%, transparent) 18%,
-      color-mix(in srgb, var(--hud-line) 2%, transparent) 48%,
-      color-mix(in srgb, var(--hud-line) 0.5%, transparent) 78%,
+      color-mix(in srgb, var(--hud-line) calc(7% * var(--hud-strength)), transparent) 0%,
+      color-mix(in srgb, var(--hud-line) calc(4% * var(--hud-strength)), transparent) 18%,
+      color-mix(in srgb, var(--hud-line) calc(2% * var(--hud-strength)), transparent) 48%,
+      color-mix(in srgb, var(--hud-line) calc(0.5% * var(--hud-strength)), transparent) 78%,
       transparent 100%
     );
   box-shadow:
     inset 3px 0 0 0 color-mix(in srgb, var(--hud-line) 45%, transparent),
-    inset 14px 0 36px -10px color-mix(in srgb, var(--hud-line) 12%, transparent),
-    inset 0 10px 16px -8px color-mix(in srgb, var(--hud-line) 4%, transparent),
-    inset 0 -10px 16px -8px color-mix(in srgb, var(--hud-line) 4%, transparent),
-    0 0 22px -4px color-mix(in srgb, var(--hud-line) 5%, transparent),
-    0 0 50px 4px color-mix(in srgb, var(--hud-line) 2.5%, transparent);
+    inset 14px 0 36px -10px color-mix(in srgb, var(--hud-line) calc(12% * var(--hud-strength)), transparent),
+    inset 0 10px 16px -8px color-mix(in srgb, var(--hud-line) calc(4% * var(--hud-strength)), transparent),
+    inset 0 -10px 16px -8px color-mix(in srgb, var(--hud-line) calc(4% * var(--hud-strength)), transparent),
+    0 0 22px -4px color-mix(in srgb, var(--hud-line) calc(5% * var(--hud-strength)), transparent),
+    0 0 50px 4px color-mix(in srgb, var(--hud-line) calc(2.5% * var(--hud-strength)), transparent);
 }
 
 .hud-row[data-selected] {
   background:
     var(--hud-scanlines),
-    linear-gradient(color-mix(in srgb, var(--hud-line) 1.5%, transparent), color-mix(in srgb, var(--hud-line) 1.5%, transparent)),
+    linear-gradient(color-mix(in srgb, var(--hud-line) calc(1.5% * var(--hud-strength)), transparent), color-mix(in srgb, var(--hud-line) calc(1.5% * var(--hud-strength)), transparent)),
     linear-gradient(
       90deg,
-      color-mix(in srgb, var(--hud-line) 14%, transparent) 0%,
-      color-mix(in srgb, var(--hud-line) 8%, transparent) 18%,
-      color-mix(in srgb, var(--hud-line) 4%, transparent) 48%,
-      color-mix(in srgb, var(--hud-line) 1%, transparent) 78%,
+      color-mix(in srgb, var(--hud-line) calc(14% * var(--hud-strength)), transparent) 0%,
+      color-mix(in srgb, var(--hud-line) calc(8% * var(--hud-strength)), transparent) 18%,
+      color-mix(in srgb, var(--hud-line) calc(4% * var(--hud-strength)), transparent) 48%,
+      color-mix(in srgb, var(--hud-line) calc(1% * var(--hud-strength)), transparent) 78%,
       transparent 100%
     );
   box-shadow:
     inset 3px 0 0 0 var(--hud-line),
-    inset 14px 0 36px -10px color-mix(in srgb, var(--hud-line) 28%, transparent),
-    inset 0 10px 16px -8px color-mix(in srgb, var(--hud-line) 9%, transparent),
-    inset 0 -10px 16px -8px color-mix(in srgb, var(--hud-line) 9%, transparent),
-    0 0 32px -4px color-mix(in srgb, var(--hud-line) 12%, transparent),
-    0 0 80px 4px color-mix(in srgb, var(--hud-line) 5%, transparent);
+    inset 14px 0 36px -10px color-mix(in srgb, var(--hud-line) calc(28% * var(--hud-strength)), transparent),
+    inset 0 10px 16px -8px color-mix(in srgb, var(--hud-line) calc(9% * var(--hud-strength)), transparent),
+    inset 0 -10px 16px -8px color-mix(in srgb, var(--hud-line) calc(9% * var(--hud-strength)), transparent),
+    0 0 32px -4px color-mix(in srgb, var(--hud-line) calc(12% * var(--hud-strength)), transparent),
+    0 0 80px 4px color-mix(in srgb, var(--hud-line) calc(5% * var(--hud-strength)), transparent);
+}
+
+.hud-row-soft {
+  --hud-strength: 0.8;
 }
 
 .hud-row[data-selected]:hover {

@@ -1,13 +1,15 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import type { ClaudeIntegrationStatus } from '@shared/integration/integrationTypes';
+import type { ClaudeIntegrationGap, ClaudeIntegrationStatus } from '@shared/integration/integrationTypes';
 import { isMissingPath } from '@main/infrastructure/fileErrors';
+import { resolveOnPath } from '@main/infrastructure/launchChecks';
 import type { FileLogger } from '@main/infrastructure/logging/FileLogger';
 import { claudeSettingsSchema, findIntegrationGaps, integrateArmada, type ClaudeSettings } from './claudeSettingsIntegration';
 
 interface ClaudeSettingsFileDeps {
   settingsPath: string;
   scriptsDir: string;
+  relayRuntime: string;
   logger: FileLogger;
 }
 
@@ -15,21 +17,25 @@ export class ClaudeSettingsFile {
   constructor(private deps: ClaudeSettingsFileDeps) {}
 
   async checkIntegration(): Promise<ClaudeIntegrationStatus> {
-    return { gaps: findIntegrationGaps(await this.read(), this.deps.scriptsDir) };
+    return this.status(findIntegrationGaps(await this.read(), this.deps.scriptsDir));
   }
 
   async repairIntegration(): Promise<ClaudeIntegrationStatus> {
     const { settingsPath, scriptsDir, logger } = this.deps;
     const settings = await this.read();
     const gaps = findIntegrationGaps(settings, scriptsDir);
-    if (gaps.length === 0) return { gaps };
+    if (gaps.length === 0) return this.status(gaps);
     const integrated = integrateArmada(settings, scriptsDir);
     await mkdir(dirname(settingsPath), { recursive: true });
     const draftPath = `${settingsPath}.armada.tmp`;
     await writeFile(draftPath, `${JSON.stringify(integrated, null, 2)}\n`, 'utf8');
     await rename(draftPath, settingsPath);
     logger.info('integration.repaired', { settingsPath, gaps });
-    return { gaps: findIntegrationGaps(integrated, scriptsDir) };
+    return this.status(findIntegrationGaps(integrated, scriptsDir));
+  }
+
+  private status(gaps: ClaudeIntegrationGap[]): ClaudeIntegrationStatus {
+    return { gaps, isNodeAvailable: resolveOnPath(this.deps.relayRuntime) !== undefined };
   }
 
   private async read(): Promise<ClaudeSettings> {

@@ -6,7 +6,7 @@ arrange on boards, grouped by project instead of scattered across windows.
 Armada reads the conversations Claude Code already keeps on disk, so there's nothing to import. Open it and your
 history is the sidebar.
 
-Windows only for now, and it runs from source.
+Windows only for now. Install it from the latest release; see Get it running below.
 
 ## What it does
 
@@ -54,7 +54,7 @@ in the same folder usually say why.
 
 ## Development
 
-`npm run dev` runs **Armada Dev** with hot reload. It keeps its boards in `%APPDATA%rmada-dev`, so it runs beside the
+`npm run dev` runs **Armada Dev** with hot reload. It keeps its boards in `%APPDATA%\armada-dev`, so it runs beside the
 installed Armada without touching your real workspace. Both copies list the same conversations; don't open one
 conversation in both at once. How the code is organized, and the rules it follows, are in [AGENTS.md](AGENTS.md).
 

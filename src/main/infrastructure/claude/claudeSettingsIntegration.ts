@@ -31,7 +31,10 @@ export const claudeSettingsSchema = z
 export type ClaudeSettings = z.infer<typeof claudeSettingsSchema>;
 type HookGroup = z.infer<typeof hookGroupSchema>;
 
-const scriptCommand = (scriptsDir: string, script: string): string => `node "${join(scriptsDir, script).split('\\').join('/')}"`;
+const RELAY_RUNTIME = 'node';
+export const RELAY_RUNTIME_EXECUTABLE = process.platform === 'win32' ? `${RELAY_RUNTIME}.exe` : RELAY_RUNTIME;
+
+const scriptCommand = (scriptsDir: string, script: string): string => `${RELAY_RUNTIME} "${join(scriptsDir, script).split('\\').join('/')}"`;
 
 // PITFALL: matched by script name, not full command, so a relay left at an older location (a moved repo, the pre-installer scripts folder) is replaced instead of kept firing.
 const isArmadaGroup = (group: HookGroup): boolean => {

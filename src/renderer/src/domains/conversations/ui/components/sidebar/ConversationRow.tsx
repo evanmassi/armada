@@ -21,7 +21,7 @@ const HOVER_ACTION_CLASS = 'hud-glyph px-1 text-[11px] text-muted opacity-0 grou
 
 export function ConversationRow({ conversation, activity, isPinned, isArchived, isOnActiveBoard, onOpen, onTogglePin, onSetArchived }: ConversationRowProps) {
   return (
-    <div className={`hud-row group flex items-center gap-1 py-1 pr-1 pl-4 ${isArchived ? 'opacity-60' : ''}`} data-selected={isOnActiveBoard || undefined}>
+    <div className={`hud-row hud-row-soft group flex items-center gap-1 py-1 pr-1 pl-4 ${isArchived ? 'opacity-60' : ''}`} data-selected={isOnActiveBoard || undefined}>
       <button type="button" className="flex min-w-0 flex-1 items-center gap-2 text-left focus:outline-none" onClick={(event) => onOpen(conversation, event.shiftKey)}>
         <span className="w-2 shrink-0" {...CLICK_ORIGIN_PROPS}>
           {activity && <ActivityDot state={activity} />}

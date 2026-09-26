@@ -13,15 +13,20 @@ describe('ClaudeSettingsFile', () => {
   beforeEach(async () => {
     home = await mkdtemp(join(tmpdir(), 'armada-settings-'));
     settingsPath = join(home, '.claude', 'settings.json');
-    settingsFile = new ClaudeSettingsFile({ settingsPath, scriptsDir: join(home, 'scripts'), logger: new FileLogger({ filePath: join(home, 'armada.log') }) });
+    settingsFile = new ClaudeSettingsFile({ settingsPath, scriptsDir: join(home, 'scripts'), relayRuntime: process.execPath, logger: new FileLogger({ filePath: join(home, 'armada.log') }) });
   });
 
   afterEach(() => rm(home, { recursive: true, force: true }));
 
   it('reports every gap when Claude Code has no settings file, and repairs by creating it', async () => {
-    expect(await settingsFile.checkIntegration()).toEqual({ gaps: ['hooks', 'statusLine'] });
-    expect(await settingsFile.repairIntegration()).toEqual({ gaps: [] });
-    expect(await settingsFile.checkIntegration()).toEqual({ gaps: [] });
+    expect(await settingsFile.checkIntegration()).toEqual({ gaps: ['hooks', 'statusLine'], isNodeAvailable: true });
+    expect(await settingsFile.repairIntegration()).toEqual({ gaps: [], isNodeAvailable: true });
+    expect(await settingsFile.checkIntegration()).toEqual({ gaps: [], isNodeAvailable: true });
+  });
+
+  it('reports when the runtime the relays need is not installed', async () => {
+    const withoutNode = new ClaudeSettingsFile({ settingsPath, scriptsDir: join(home, 'scripts'), relayRuntime: join(home, 'missing-node.exe'), logger: new FileLogger({ filePath: join(home, 'armada.log') }) });
+    expect((await withoutNode.checkIntegration()).isNodeAvailable).toBe(false);
   });
 
   it('does not rewrite a file that is already integrated', async () => {

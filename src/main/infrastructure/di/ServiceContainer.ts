@@ -8,6 +8,7 @@ import { ClaudeRelayScripts } from '@main/infrastructure/claude/ClaudeRelayScrip
 import { ClaudeHookInbox } from '@main/infrastructure/claude/ClaudeHookInbox';
 import { ClaudeSessionStatusFiles } from '@main/infrastructure/claude/ClaudeSessionStatusFiles';
 import { ClaudeSettingsFile } from '@main/infrastructure/claude/ClaudeSettingsFile';
+import { RELAY_RUNTIME_EXECUTABLE } from '@main/infrastructure/claude/claudeSettingsIntegration';
 import { ClaudeUsageFile } from '@main/infrastructure/claude/ClaudeUsageFile';
 import { ClaudeUsageProbe } from '@main/infrastructure/claude/ClaudeUsageProbe';
 import { ClipboardImageSaver } from '@main/infrastructure/clipboard/ClipboardImageSaver';
@@ -74,7 +75,7 @@ export function createServiceContainer(): ServiceContainer {
     claudeUsageProbe,
     claudeUsageService: new ClaudeUsageService({ statusLine: claudeUsageFile, probe: claudeUsageProbe }),
     claudeRelayScripts: new ClaudeRelayScripts({ sourceDir: getBundledRelayScriptsDir(), installDir: relayScriptsDir, logger }),
-    claudeSettingsFile: new ClaudeSettingsFile({ settingsPath: getClaudeSettingsFilePath(), scriptsDir: relayScriptsDir, logger }),
+    claudeSettingsFile: new ClaudeSettingsFile({ settingsPath: getClaudeSettingsFilePath(), scriptsDir: relayScriptsDir, relayRuntime: RELAY_RUNTIME_EXECUTABLE, logger }),
     appUpdater: new AppUpdater({ logger }),
     clipboardImageSaver: new ClipboardImageSaver({ imagesDir: getClipboardImagesDir(), logger }),
     folderOpener,

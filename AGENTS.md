@@ -58,6 +58,8 @@ Armada's entries are recognized by script name, not full command, which is what 
 instead of stacked. `ClaudeSettingsFile` checks on launch and writes only from the banner's Fix button; a settings file
 it cannot parse is an error shown to the user, never overwritten. The settings schema is passthrough at every level
 because the file belongs to the user and any key dropped on parse would be lost on save.
+The same check reports whether `node`, which Claude Code runs the relays with, is on PATH; without it the banner asks
+for Node.js instead of offering Fix, since every hook and the status line would fail.
 
 ---
 
