@@ -467,8 +467,8 @@ Pushing a `v*` tag runs `.github/workflows/release.yml`, which typechecks, tests
 creates the GitHub Release with `gh release create`, uploading the installer, its blockmap, and `latest.yml`.
 electron-builder's own GitHub publishing twice reported success with only the blockmap uploaded, so it is not used; the
 `publish` block in the config stays because it is what writes `app-update.yml` into the app for `electron-updater`.
-`gh release create` fails if the release already exists, so a broken release is fixed by the next version. The packaged app checks that release on launch, downloads in the background, and
-installs on quit. `AppUpdater` pushes the downloaded version to the renderer, whose banner offers **Restart now**
+`gh release create` fails if the release already exists, so a broken release is fixed by the next version. The packaged app checks that release on launch and every hour after, downloads in the
+background, and installs on quit. `AppUpdater` pushes the downloaded version to the renderer, whose banner offers **Restart now**
 (`quitAndInstall`, relaunching after a silent install). An unpackaged run (`npm run dev`, or `electron .`) is **Armada Dev**: its own `userData`
 (`armada-dev`), window title, and AppUserModelID, set by `separateDevDataFolder` before anything reads a path, so it
 runs beside the installed copy.

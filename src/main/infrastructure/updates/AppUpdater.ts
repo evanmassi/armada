@@ -3,6 +3,8 @@ import { autoUpdater } from 'electron-updater';
 import type { AppUpdateStatus } from '@shared/updates/updateTypes';
 import type { FileLogger } from '@main/infrastructure/logging/FileLogger';
 
+const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
+
 interface AppUpdaterDeps {
   logger: FileLogger;
 }
@@ -22,8 +24,12 @@ export class AppUpdater {
       this.listeners.forEach((listener) => listener(status));
     });
     autoUpdater.on('error', (error) => logger.error('update.failed', { error }));
-    // PITFALL: a failed check also arrives as the error event above, so the rejection is only silenced here.
-    autoUpdater.checkForUpdates().catch(() => undefined);
+    const checkForUpdates = (): void => {
+      // PITFALL: a failed check also arrives as the error event above, so the rejection is only silenced here.
+      autoUpdater.checkForUpdates().catch(() => undefined);
+    };
+    checkForUpdates();
+    setInterval(checkForUpdates, UPDATE_CHECK_INTERVAL_MS);
   }
 
   read(): AppUpdateStatus {
