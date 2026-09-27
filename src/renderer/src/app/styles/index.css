@@ -407,6 +407,32 @@ button[data-pressed] {
   opacity: 1;
 }
 
+.hud-glyph > svg {
+  grid-area: 1 / 1;
+  width: auto;
+  height: 14px;
+}
+
+.hud-glyph-icon {
+  transition: filter 160ms ease;
+}
+
+.hud-glyph-echo {
+  z-index: -1;
+  color: color-mix(in srgb, var(--hud-line) 45%, transparent);
+  translate: 1.5px 1.5px;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.hud-glyph:hover:not(:disabled) > .hud-glyph-icon {
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--hud-line) 70%, transparent));
+}
+
+.hud-glyph:hover:not(:disabled) > .hud-glyph-echo {
+  opacity: 1;
+}
+
 .tile-titlebar .hud-glyph,
 .lane-titlebar .hud-glyph,
 .lane-titlebar .hud-button {

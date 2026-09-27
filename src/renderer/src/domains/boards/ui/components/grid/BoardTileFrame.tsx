@@ -4,11 +4,11 @@ import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore
 import { useSessionActivityStore, type ActivityState } from '@renderer/app/stores/sessionActivityStore';
 import { useFolderActions } from '@renderer/domains/conversations';
 import { disposeLiveTerminal, TerminalSessionTile } from '@renderer/domains/terminal';
-import { ActionMenu } from '@renderer/shared/ui/components/ActionMenu';
 import { ActivityDot } from '@renderer/shared/ui/components/ActivityDot';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
 import { useTilePresentation } from '../../../hooks/useTilePresentation';
 import { BoardNotesTile } from '../notes/BoardNotesTile';
+import { BoardTileIconButton } from './BoardTileIconButton';
 import { BoardTileSessionIndicator } from './BoardTileSessionIndicator';
 
 export const TILE_DRAG_HANDLE_CLASS = 'tile-drag-handle';
@@ -111,25 +111,13 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, keyboardHin
             </button>
           )}
           {cwd !== undefined && (
-            <ActionMenu
-              label={`${title} folder actions`}
-              entries={[
-                { label: 'Open in', emphasis: 'Explorer', onSelect: () => revealInExplorer(cwd) },
-                { label: 'Open in', emphasis: 'VS Code', onSelect: () => openInEditor(cwd) },
-              ]}
-            />
+            <>
+              <BoardTileIconButton icon="explorer" label="Open in Explorer" onClick={() => revealInExplorer(cwd)} />
+              <BoardTileIconButton icon="editor" label="Open in VS Code" onClick={() => openInEditor(cwd)} />
+            </>
           )}
           {tile.kind === 'claude' && onOpenShell && (
-            <button
-              type="button"
-              className="hud-glyph px-1 font-bold text-muted"
-              data-glyph=">_"
-              onClick={() => onOpenShell(tile.cwd, tile.id)}
-              title="Open a shell in this folder"
-              aria-label="Open a shell in this folder"
-            >
-              {'>_'}
-            </button>
+            <BoardTileIconButton icon="shell" label="Open a shell in this folder" onClick={() => onOpenShell(tile.cwd, tile.id)} />
           )}
           <button type="button" className="hud-glyph px-1 text-muted" data-glyph="×" data-tone="neutral" onClick={() => editor.removeTiles(boardId, [tile.id])} aria-label="Close tile">
             ×
