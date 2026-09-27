@@ -1,41 +1,67 @@
-import type { IBufferLine, ILink, ILinkProvider, Terminal } from '@xterm/xterm';
+import type { IBufferCellPosition, ILink, ILinkProvider, Terminal } from '@xterm/xterm';
 import { WebLinksAddon } from '@xterm/addon-web-links';
-import { findPathLinks } from './pathLinkMatcher';
+import { continuesOnNextRow, findPathLinks } from './pathLinkMatcher';
 
 type LinkCallbacks = Pick<ILink, 'activate' | 'hover' | 'leave'>;
 
-interface LineCells {
+interface RowCells {
   text: string;
-  columns: number[];
+  cells: IBufferCellPosition[];
 }
 
-// PITFALL: a wide character fills two cells, so a string index is not a column; columns[i] is the cell that holds text[i].
-function readLineCells(line: IBufferLine): LineCells {
+// PITFALL: a wide character fills two cells, so a string index is not a column; cells[i] is the cell that holds text[i].
+function readRowCells(terminal: Terminal, rowIndex: number): RowCells | undefined {
+  const line = terminal.buffer.active.getLine(rowIndex);
+  if (!line) return undefined;
   let text = '';
-  const columns: number[] = [];
+  const cells: IBufferCellPosition[] = [];
   for (let column = 0; column < line.length; column++) {
     const cell = line.getCell(column);
     if (!cell || cell.getWidth() === 0) continue;
     const chars = cell.getChars() || ' ';
     text += chars;
-    for (let index = 0; index < chars.length; index++) columns.push(column);
+    for (let index = 0; index < chars.length; index++) cells.push({ x: column + 1, y: rowIndex + 1 });
   }
-  return { text, columns };
+  return { text, cells };
+}
+
+const appendContinuation = (row: RowCells, continuation: RowCells): RowCells => {
+  const indent = continuation.text.length - continuation.text.trimStart().length;
+  return { text: row.text + continuation.text.slice(indent), cells: [...row.cells, ...continuation.cells.slice(indent)] };
+};
+
+function readJoinedRows(terminal: Terminal, rowIndex: number): RowCells | undefined {
+  const row = readRowCells(terminal, rowIndex);
+  if (!row) return undefined;
+  let joined = row;
+  let top = row;
+  for (let index = rowIndex - 1; index >= 0; index--) {
+    const previous = readRowCells(terminal, index);
+    if (!previous || !continuesOnNextRow(previous.text, top.text)) break;
+    joined = appendContinuation(previous, joined);
+    top = previous;
+  }
+  let bottom = row;
+  for (let index = rowIndex + 1; ; index++) {
+    const next = readRowCells(terminal, index);
+    if (!next || !continuesOnNextRow(bottom.text, next.text)) break;
+    joined = appendContinuation(joined, next);
+    bottom = next;
+  }
+  return joined;
 }
 
 const createPathLinkProvider = (terminal: Terminal, callbacks: LinkCallbacks): ILinkProvider => ({
   provideLinks(bufferLineNumber, callback) {
-    const line = terminal.buffer.active.getLine(bufferLineNumber - 1);
-    if (!line) return callback(undefined);
-    const { text, columns } = readLineCells(line);
-    const links: ILink[] = findPathLinks(text).map((match) => ({
-      text: match.text,
-      range: {
-        start: { x: columns[match.startIndex]! + 1, y: bufferLineNumber },
-        end: { x: columns[match.startIndex + match.text.length - 1]! + 1, y: bufferLineNumber },
-      },
-      ...callbacks,
-    }));
+    const joined = readJoinedRows(terminal, bufferLineNumber - 1);
+    if (!joined) return callback(undefined);
+    const links: ILink[] = findPathLinks(joined.text)
+      .map((match) => ({
+        text: match.text,
+        range: { start: joined.cells[match.startIndex]!, end: joined.cells[match.startIndex + match.text.length - 1]! },
+        ...callbacks,
+      }))
+      .filter(({ range }) => range.start.y <= bufferLineNumber && range.end.y >= bufferLineNumber);
     callback(links.length > 0 ? links : undefined);
   },
 });

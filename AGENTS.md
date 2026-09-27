@@ -181,8 +181,10 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   remounts the tile never restarts the process. `App` disposes terminals whose tile has left the workspace. It owns
   the activity tracker (`model/activityTracker.ts`) and lets global shortcuts (`app/keyboardShortcuts.ts`) bubble
   past xterm. Links (`model/terminalLinks.ts`) open on Ctrl+click from three sources: embedded hyperlinks Claude Code
-  emits because the pty sets `FORCE_HYPERLINK`, bare URLs, and file paths (`model/pathLinkMatcher.ts`). The renderer
-  sends the raw target and the tile's cwd; main's `LinkOpener` is the only judge of what opens and where. A Ctrl+click
+  emits because the pty sets `FORCE_HYPERLINK`, bare URLs, and file paths (`model/pathLinkMatcher.ts`), joined back
+  across a row break Claude Code drew itself. The renderer sends the raw target and the tile's cwd; main's `LinkOpener`
+  is the only judge of what opens and where: folders, programs, installers, shortcuts, and archives in Explorer, other
+  files in VS Code, never run. A Ctrl+click
   on a link never reaches the pty, because fullscreen Claude Code would open the same link a second time. Files
   dropped on a tile paste in as paths, one per line in a Claude tile so Claude Code attaches each image and tells the
   model where it came from. Ctrl+V with only an image on the clipboard saves it through main and pastes that path. The

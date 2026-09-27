@@ -1,5 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { findPathLinks } from './pathLinkMatcher';
+import { continuesOnNextRow, findPathLinks } from './pathLinkMatcher';
+
+describe('continuesOnNextRow', () => {
+  it('joins a path Claude Code broke at the right edge onto an indented next row', () => {
+    expect(
+      continuesOnNextRow(
+        String.raw`● C:\Users\evanmassi\Games\Emulators\shadPS4-v0.18.0\launche`,
+        String.raw`  r\shadPS4QtLauncher.exe          `,
+      ),
+    ).toBe(true);
+  });
+
+  it('leaves a row alone when it stops short of the edge, ends in a plain word, or the next row is blank', () => {
+    expect(continuesOnNextRow(String.raw`see C:\dev\armada `, '  AGENTS.md')).toBe(false);
+    expect(continuesOnNextRow('the settings live in the file', '  src/config.ts')).toBe(false);
+    expect(continuesOnNextRow(String.raw`C:\dev\armada\src`, '        ')).toBe(false);
+  });
+});
 
 const textsIn = (line: string): string[] => findPathLinks(line).map((match) => match.text);
 

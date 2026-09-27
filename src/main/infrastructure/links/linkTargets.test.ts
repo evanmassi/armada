@@ -1,7 +1,22 @@
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { parseLinkTarget } from './linkTargets';
+import { opensInFileManager, parseLinkTarget } from './linkTargets';
+
+describe('opensInFileManager', () => {
+  it('shows programs, installers, shortcuts, and archives in the file manager instead of the editor', () => {
+    expect(opensInFileManager(String.raw`C:\Games\launcher\shadPS4QtLauncher.EXE`)).toBe(true);
+    expect(['setup.msi', 'Game.lnk', 'mods.zip', 'mods.7z', 'mods.rar'].map(opensInFileManager)).toEqual([
+      true,
+      true,
+      true,
+      true,
+      true,
+    ]);
+    expect(opensInFileManager('src/main/index.ts')).toBe(false);
+    expect(opensInFileManager('scripts/build.ps1')).toBe(false);
+  });
+});
 
 const context = { cwd: resolve('project'), homeDir: resolve('home') };
 

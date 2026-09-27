@@ -4,7 +4,7 @@ import type { OpenLinkRequest } from '@shared/links/linkSchemas';
 import type { FolderOpener } from '@main/infrastructure/folders/FolderOpener';
 import type { FileLogger } from '@main/infrastructure/logging/FileLogger';
 import { getHomeDir } from '@main/infrastructure/paths';
-import { parseLinkTarget } from './linkTargets';
+import { opensInFileManager, parseLinkTarget } from './linkTargets';
 
 interface LinkOpenerDeps {
   folderOpener: FolderOpener;
@@ -23,8 +23,9 @@ export class LinkOpener {
     }
     const stats = await stat(link.path).catch(() => undefined);
     if (!stats) throw new Error(`Path not found: ${link.path}`);
-    // PITFALL: shell.openPath on a file runs it, so only folders go to the file manager and files only ever reach the editor.
+    // PITFALL: shell.openPath on a file runs it, so a file is only ever shown selected in the file manager or opened in the editor.
     if (stats.isDirectory()) await this.deps.folderOpener.revealInFileManager(link.path);
+    else if (opensInFileManager(link.path)) shell.showItemInFolder(link.path);
     else this.deps.folderOpener.openInEditor(link.path, link.position);
   }
 }

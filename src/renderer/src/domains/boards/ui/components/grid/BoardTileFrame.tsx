@@ -124,7 +124,7 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, keyboardHin
           </button>
         </div>
         {tile.kind === 'claude' && (
-          <div className="flex items-center gap-2">
+          <div className="tile-titlebar-readouts flex items-center gap-2">
             <BoardTileSessionIndicator tileId={tile.id} projectCwd={tile.cwd} />
             {status}
           </div>
