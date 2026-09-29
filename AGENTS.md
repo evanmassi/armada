@@ -193,7 +193,8 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   the button, and draws rings in the button's text color in a fixed layer over it, so a clipped container never cuts
   them off. `QUIET_CLICK_PROPS` opts a button out ("show N archived"); `CLICK_ORIGIN_PROPS` marks the child the rings
   start from (a conversation row's status dot, a project or group chevron); `ROW_ORIGIN_CLICK_PROPS` makes a full-width
-  row ring and squish its sibling origin instead of itself. Both switch off under reduced motion. The listener is
+  row ring and squish its sibling origin instead of itself, or ring from its parent when the parent is the origin (a
+  board tab). Both switch off under reduced motion. The listener is
   installed once at startup, so a dev hot reload of `clickFeedback.ts` needs a restart to take effect.
 
 ---
@@ -222,12 +223,14 @@ literal value (the xterm theme, the drag ghost) reads the CSS variable; `static`
 no utility class uses it.
 
 **Control styles** (Strand OS, from `overload/refs/ui_design_ideas`) are CSS classes in the same file, not components,
-so the click feedback and every existing button keep working unchanged. Three tiers, all tinted by `--hud-line`
+so the click feedback and every existing button keep working unchanged. Four tiers, all tinted by `--hud-line`
 (accent by default, `data-tone="alert"`, `"neutral"` on glyphs, the project color inside tile and lane title bars):
 - `hud-button` for framed actions (+ folder, + board, auto/free, Fix): offset plate, corner brackets that lock on at
   hover, squeeze on hold, a lit left bar when `aria-checked`, dimmed when disabled. `hud-button-compact` for lane
-  headers. `hud-tab` makes the frame a container for board tabs: the name and × are separate buttons inside it, the
-  frame takes the board's project color, and it lights when the board is current.
+  headers.
+- `hud-tab` for board tabs: no frame, so they never read as buttons. The `hud-row` recipe turned to rise from a lit
+  bottom rail that sits on the switcher's bottom edge, in the board's project color; full when the board is current.
+  On hover the rail flickers on like a tube catching and the wash rises from it, settling at half strength. The name and × are separate buttons inside it.
 - `hud-glyph` for small glyph buttons (×, +, ⋮, chevrons): one 14px mono size with a 20px target, glow and an offset
   copy from `data-glyph` on hover. Every × carries `data-tone="neutral"` and lights white, like a normal close button.
 - `hud-row` for rows (menu items, conversation rows): the Odysseus lit-row recipe, a left bar, a left-weighted wash,

@@ -261,6 +261,7 @@ body,
 }
 
 :root {
+  --hud-scanlines: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 3px);
   --ease-settle: cubic-bezier(0.2, 0.75, 0.25, 1);
   --ease-emit: cubic-bezier(0.18, 0.72, 0.3, 1);
   --ease-snap: cubic-bezier(0.2, 0.9, 0.25, 1);
@@ -353,8 +354,7 @@ button[data-pressed] {
   animation: none;
 }
 
-.hud-button[aria-checked='true'],
-.hud-tab:has([aria-current='page']) {
+.hud-button[aria-checked='true'] {
   border-color: var(--hud-line);
   color: var(--hud-line);
   box-shadow:
@@ -369,10 +369,6 @@ button[data-pressed] {
 
 .hud-button-compact::before {
   translate: 2px 2px;
-}
-
-.hud-tab {
-  padding: 0;
 }
 
 .hud-glyph {
@@ -455,10 +451,81 @@ button[data-pressed] {
   --hud-line: var(--color-fg);
 }
 
+.hud-tab {
+  --hud-line: var(--color-accent);
+  position: relative;
+  isolation: isolate;
+  transition: color 150ms ease;
+}
+
+.hud-tab::before,
+.hud-tab::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.hud-tab::before {
+  inset: 0;
+  z-index: -1;
+  background:
+    var(--hud-scanlines),
+    linear-gradient(
+      to top,
+      color-mix(in srgb, var(--hud-line) 16%, transparent) 0%,
+      color-mix(in srgb, var(--hud-line) 8%, transparent) 22%,
+      color-mix(in srgb, var(--hud-line) 3%, transparent) 55%,
+      transparent 100%
+    );
+  box-shadow: inset 0 -14px 20px -12px color-mix(in srgb, var(--hud-line) 30%, transparent);
+}
+
+.hud-tab::after {
+  inset: auto 0 0;
+  height: 2px;
+  background: var(--hud-line);
+  box-shadow:
+    0 0 6px color-mix(in srgb, var(--hud-line) 80%, transparent),
+    0 0 16px 1px color-mix(in srgb, var(--hud-line) 45%, transparent);
+}
+
+.hud-tab:hover,
+.hud-tab:focus-within {
+  color: var(--color-fg);
+}
+
+.hud-tab:hover::before,
+.hud-tab:focus-within::before {
+  opacity: 0.5;
+}
+
+.hud-tab:hover::after,
+.hud-tab:focus-within::after {
+  opacity: 0.55;
+}
+
+.hud-tab:hover:not(:has([aria-current='page']))::after {
+  animation: hud-rail-power-on 340ms linear both;
+}
+
+.hud-tab:hover:not(:has([aria-current='page']))::before {
+  animation: hud-wash-rise 260ms var(--ease-settle) 110ms both;
+}
+
+.hud-tab:has([aria-current='page']) {
+  color: var(--color-fg);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--hud-line) 35%, transparent);
+}
+
+.hud-tab:has([aria-current='page'])::before,
+.hud-tab:has([aria-current='page'])::after {
+  opacity: 1;
+}
+
 .hud-row {
   --hud-line: var(--color-accent);
   --hud-strength: 1;
-  --hud-scanlines: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 3px);
   position: relative;
   transition:
     background 150ms ease,
@@ -539,6 +606,20 @@ button[data-pressed] {
   54% { opacity: 0.18; }
   64% { opacity: 0.65; }
   100% { opacity: 0.6; inset: -5px; }
+}
+
+@keyframes hud-rail-power-on {
+  0% { opacity: 0.9; filter: brightness(1.4); }
+  10% { opacity: 0.1; }
+  20% { opacity: 0.75; }
+  27% { opacity: 0.2; }
+  36% { opacity: 1; filter: brightness(1.9); }
+  100% { opacity: 0.55; filter: brightness(1); }
+}
+
+@keyframes hud-wash-rise {
+  0% { opacity: 0; clip-path: inset(100% 0 0 0); }
+  100% { opacity: 0.5; clip-path: inset(0); }
 }
 
 .click-burst {
@@ -655,6 +736,11 @@ button[data-pressed] {
   .hud-button:hover:not(:disabled)::after {
     animation: none;
     opacity: 0.6;
+  }
+
+  .hud-tab:hover:not(:has([aria-current='page']))::before,
+  .hud-tab:hover:not(:has([aria-current='page']))::after {
+    animation: none;
   }
 
   .xterm .xterm-scrollable-element > .scrollbar.vertical > .slider {

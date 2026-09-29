@@ -1,5 +1,6 @@
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import type { Board } from '@shared/workspace/workspaceSchemas';
+import { CLICK_ORIGIN_PROPS, ROW_ORIGIN_CLICK_PROPS } from '@renderer/app/clickFeedback';
 import { useProjectColors } from '@renderer/domains/conversations';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
 import { soleProjectCwd } from '../../../model/lanes';
@@ -34,8 +35,9 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
         return (
           <div
             key={board.id}
-            className="readout hud-button hud-tab group flex items-center text-muted"
+            className="readout hud-tab group -mt-1.5 -mb-[7px] flex items-center self-stretch text-muted"
             style={projectColor ? ({ '--hud-line': projectColor } as CSSProperties) : undefined}
+            {...CLICK_ORIGIN_PROPS}
           >
             {editingBoardId === board.id ? (
               <span className="py-[5px] pl-[11px] pr-1">
@@ -53,6 +55,7 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
               <button
                 type="button"
                 className="flex items-center gap-2 py-[5px] pl-[11px] pr-1"
+                {...ROW_ORIGIN_CLICK_PROPS}
                 onClick={() => onSelect(board.id)}
                 onDoubleClick={() => setEditingBoardId(board.id)}
                 onKeyDown={(event) => event.key === 'F2' && setEditingBoardId(board.id)}

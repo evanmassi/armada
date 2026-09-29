@@ -12,7 +12,8 @@ export const ROW_ORIGIN_CLICK_PROPS = { [ROW_ORIGIN_CLICK_ATTRIBUTE]: true } as 
 
 const ringOriginOf = (button: HTMLButtonElement): Element => {
   const scope = button.hasAttribute(ROW_ORIGIN_CLICK_ATTRIBUTE) ? button.parentElement : button;
-  return scope?.querySelector(`[${CLICK_ORIGIN_ATTRIBUTE}]`) ?? button;
+  const originSelector = `[${CLICK_ORIGIN_ATTRIBUTE}]`;
+  return (scope?.matches(originSelector) ? scope : scope?.querySelector(originSelector)) ?? button;
 };
 
 function drawRings(origin: Element, color: string): void {
