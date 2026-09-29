@@ -77,7 +77,7 @@ src/main/
 │   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser, ClaudeHookInbox, ClaudeUsageFile, ClaudeSessionStatusFiles, ClaudeUsageProbe + usageProbeOutputParser, ClaudeSettingsFile + claudeSettingsIntegration, ClaudeRelayScripts
 │   ├── git/          # GitChangeCounter: uncommitted lines added and removed under a project folder
 │   ├── folders/      # FolderOpener: Explorer and VS Code
-│   ├── links/        # LinkOpener + linkTargets: the only judge of what a clicked terminal link opens
+│   ├── links/        # LinkOpener + linkTargets + binaryFileCheck: the only judge of what a clicked terminal link opens
 │   ├── clipboard/    # ClipboardImageSaver: a copied screenshot written to userData/clipboard-images
 │   ├── updates/      # AppUpdater: electron-updater against GitHub Releases, packaged app only
 │   ├── persistence/  # JsonWorkspaceRepository (userData/workspace.json)
@@ -183,8 +183,8 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   past xterm. Links (`model/terminalLinks.ts`) open on Ctrl+click from three sources: embedded hyperlinks Claude Code
   emits because the pty sets `FORCE_HYPERLINK`, bare URLs, and file paths (`model/pathLinkMatcher.ts`), joined back
   across a row break Claude Code drew itself. The renderer sends the raw target and the tile's cwd; main's `LinkOpener`
-  is the only judge of what opens and where: folders, programs, installers, shortcuts, and archives in Explorer, other
-  files in VS Code, never run. A Ctrl+click
+  is the only judge of what opens and where: folders and binary files (a zero byte in the first 8000, the check git
+  uses) in Explorer, text files of any extension in VS Code, never run. A Ctrl+click
   on a link never reaches the pty, because fullscreen Claude Code would open the same link a second time. Files
   dropped on a tile paste in as paths, one per line in a Claude tile so Claude Code attaches each image and tells the
   model where it came from. Ctrl+V with only an image on the clipboard saves it through main and pastes that path. The

@@ -1,4 +1,4 @@
-import { extname, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 type LinkTarget = { kind: 'web'; url: string } | { kind: 'path'; path: string; position: string | undefined };
@@ -12,9 +12,6 @@ interface LinkContext {
 const URL_SCHEME = /^[a-z][a-z0-9+.-]+:/i;
 const POSITION_SUFFIX = /:(\d+(?::\d+)?)$/;
 const HOME_PREFIX = /^~(?=[\\/]|$)/;
-const FILE_MANAGER_EXTENSIONS = new Set(['.exe', '.msi', '.lnk', '.zip', '.7z', '.rar']);
-
-export const opensInFileManager = (path: string): boolean => FILE_MANAGER_EXTENSIONS.has(extname(path).toLowerCase());
 
 function parseUrlTarget(target: string): LinkTarget {
   const url = URL.canParse(target) ? new URL(target) : undefined;
