@@ -12,6 +12,7 @@ import { RELAY_RUNTIME_EXECUTABLE } from '@main/infrastructure/claude/claudeSett
 import { ClaudeUsageFile } from '@main/infrastructure/claude/ClaudeUsageFile';
 import { ClaudeUsageProbe } from '@main/infrastructure/claude/ClaudeUsageProbe';
 import { ClipboardImageSaver } from '@main/infrastructure/clipboard/ClipboardImageSaver';
+import { TileDiagramFiles } from '@main/infrastructure/diagrams/TileDiagramFiles';
 import { FolderOpener } from '@main/infrastructure/folders/FolderOpener';
 import { GitChangeCounter } from '@main/infrastructure/git/GitChangeCounter';
 import { LinkOpener } from '@main/infrastructure/links/LinkOpener';
@@ -23,6 +24,7 @@ import {
   getClaudeSettingsFilePath,
   getClaudeUsageFilePath,
   getClipboardImagesDir,
+  getDiagramsDir,
   getBundledRelayScriptsDir,
   getHomeDir,
   getInstalledRelayScriptsDir,
@@ -47,6 +49,7 @@ export interface ServiceContainer {
   claudeSettingsFile: ClaudeSettingsFile;
   appUpdater: AppUpdater;
   clipboardImageSaver: ClipboardImageSaver;
+  tileDiagramFiles: TileDiagramFiles;
   folderOpener: FolderOpener;
   gitChangeCounter: GitChangeCounter;
   linkOpener: LinkOpener;
@@ -64,10 +67,12 @@ export function createServiceContainer(): ServiceContainer {
   const claudeUsageFile = new ClaudeUsageFile({ filePath: usageFilePath, logger });
   const claudeUsageProbe = new ClaudeUsageProbe({ cwd: getHomeDir(), logger });
   const relayScriptsDir = getInstalledRelayScriptsDir();
+  const workspaceRepository = new JsonWorkspaceRepository({ filePath: getWorkspaceFilePath(), logger });
+  const tileDiagramFiles = new TileDiagramFiles({ diagramsDir: getDiagramsDir(), workspaceRepository, logger });
   return {
     conversationCatalogService: new ConversationCatalogService({ conversationRepository }),
-    sessionService: new SessionService({ conversationRepository, terminalHost }),
-    workspaceRepository: new JsonWorkspaceRepository({ filePath: getWorkspaceFilePath(), logger }),
+    sessionService: new SessionService({ conversationRepository, terminalHost, prepareDiagramFolder: (tileId) => tileDiagramFiles.prepareFolder(tileId) }),
+    workspaceRepository,
     terminalHost,
     claudeHookInbox: new ClaudeHookInbox({ inboxDir: hookInboxDir, logger }),
     claudeSessionStatusFiles: new ClaudeSessionStatusFiles({ statusDir: sessionStatusDir, logger }),
@@ -78,6 +83,7 @@ export function createServiceContainer(): ServiceContainer {
     claudeSettingsFile: new ClaudeSettingsFile({ settingsPath: getClaudeSettingsFilePath(), scriptsDir: relayScriptsDir, relayRuntime: RELAY_RUNTIME_EXECUTABLE, logger }),
     appUpdater: new AppUpdater({ logger }),
     clipboardImageSaver: new ClipboardImageSaver({ imagesDir: getClipboardImagesDir(), logger }),
+    tileDiagramFiles,
     folderOpener,
     gitChangeCounter: new GitChangeCounter(),
     linkOpener: new LinkOpener({ folderOpener, logger }),

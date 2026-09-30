@@ -227,6 +227,79 @@ body,
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
+.diagram-seam {
+  --hud-line: var(--tile-accent);
+  position: relative;
+  user-select: none;
+  border-top: 1px solid color-mix(in srgb, var(--tile-accent) 55%, transparent);
+  border-bottom: 1px solid var(--color-edge);
+  background:
+    var(--hud-scanlines),
+    linear-gradient(to bottom, color-mix(in srgb, var(--tile-accent) 12%, transparent), transparent),
+    var(--color-panel);
+  box-shadow: 0 -4px 12px -6px color-mix(in srgb, var(--tile-accent) 60%, transparent);
+}
+
+.diagram-seam-label:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--tile-accent) 70%, transparent);
+  outline-offset: -1px;
+}
+
+.diagram-seam-label {
+  color: var(--tile-accent);
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 8px color-mix(in srgb, var(--tile-accent) 50%, transparent);
+}
+
+.diagram-canvas {
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--color-edge) 70%, transparent) 1px, transparent 1px) 0 0 / 18px 18px,
+    var(--color-tile);
+}
+
+.diagram-pager {
+  border: 1px solid color-mix(in srgb, var(--tile-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--color-panel) 88%, transparent);
+  box-shadow: 0 0 12px -4px color-mix(in srgb, var(--tile-accent) 40%, transparent);
+  backdrop-filter: blur(4px);
+}
+
+.diagram-viewer {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.diagram-viewer[open] {
+  position: static;
+  display: flex;
+  flex-direction: column;
+}
+
+.diagram-viewer:modal {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: color-mix(in srgb, var(--color-ink) 96%, transparent);
+}
+
+.diagram-viewer::backdrop {
+  background: color-mix(in srgb, var(--color-ink) 70%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.diagram-mermaid svg {
+  max-width: 100%;
+  max-height: 100%;
+}
+
 .divided-readouts > * + * {
   border-left: 1px solid var(--color-edge-strong);
   padding-left: 0.5rem;

@@ -29,7 +29,7 @@ function drawRings(origin: Element, color: string): void {
     ring.className = `click-burst-${layer}`;
     burst.appendChild(ring);
   }
-  document.body.appendChild(burst);
+  (document.querySelector('dialog:modal') ?? document.body).appendChild(burst);
   window.setTimeout(() => burst.remove(), BURST_LIFETIME_MS);
 }
 

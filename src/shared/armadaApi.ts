@@ -1,4 +1,11 @@
 import type { Project } from './conversations/conversationTypes';
+import type {
+  DiagramRef,
+  DiagramSummary,
+  SaveDiagramRequest,
+  TileDiagramsChangedEvent,
+  TileDiagramsRequest,
+} from './diagrams/diagramSchemas';
 import type { ClaudeIntegrationStatus } from './integration/integrationTypes';
 import type { OpenLinkRequest } from './links/linkSchemas';
 import type { FolderRequest, ProjectLineChanges } from './projects/projectSchemas';
@@ -52,6 +59,12 @@ export interface ArmadaApi {
   integration: {
     check(): Promise<ClaudeIntegrationStatus>;
     repair(): Promise<ClaudeIntegrationStatus>;
+  };
+  diagrams: {
+    list(request: TileDiagramsRequest): Promise<DiagramSummary[]>;
+    read(ref: DiagramRef): Promise<string>;
+    save(request: SaveDiagramRequest): Promise<string | undefined>;
+    onChanged(listener: (event: TileDiagramsChangedEvent) => void): Unsubscribe;
   };
   usage: {
     read(): Promise<ClaudeUsage | undefined>;

@@ -8,6 +8,7 @@ import { notifyError } from '@renderer/app/stores/notificationStore';
 import { useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
 import { useSessionStatusStore } from '@renderer/app/stores/sessionStatusStore';
 import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
+import { readDesignToken } from '@renderer/shared/utils/readDesignToken';
 import { createActivityTracker } from './activityTracker';
 import { handleClipboardKey, handleContextMenu } from './terminalClipboard';
 import { enableTerminalLinks } from './terminalLinks';
@@ -21,8 +22,6 @@ const DROPPED_FILES_TYPE = 'Files';
 
 // PITFALL: Claude Code attaches every image path in a paste only when each sits on its own line; a shell would run each line.
 const DROPPED_PATH_SEPARATOR: Record<SessionLaunch['kind'], string> = { claude: '\n', shell: ' ' };
-
-const readDesignToken = (name: string): string => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
 const terminalAppearance = () => {
   const accent = readDesignToken('--color-accent');
@@ -93,7 +92,7 @@ class LiveTerminalEntry implements LiveTerminal {
     const isFirstAttach = this.terminal.element === undefined;
     if (isFirstAttach) this.openTerminal(container);
     else container.appendChild(this.terminal.element!);
-    this.fit.fit();
+    this.refit();
     const listeners = new AbortController();
     const { signal } = listeners;
     container.addEventListener('contextmenu', (event) => handleContextMenu(this.terminal, event), { signal });
@@ -116,7 +115,7 @@ class LiveTerminalEntry implements LiveTerminal {
 
   setFontSize(fontSize: number): void {
     this.terminal.options.fontSize = fontSize;
-    if (this.attachment) this.fit.fit();
+    if (this.attachment) this.refit();
   }
 
   focus(): void {
@@ -158,7 +157,12 @@ class LiveTerminalEntry implements LiveTerminal {
 
   private scheduleRefit(): void {
     window.clearTimeout(this.refitTimer);
-    this.refitTimer = window.setTimeout(() => this.fit.fit(), REFIT_DEBOUNCE_MS);
+    this.refitTimer = window.setTimeout(() => this.refit(), REFIT_DEBOUNCE_MS);
+  }
+
+  // PITFALL: a tile on a hidden board reports its CSS width ("100%") instead of 0, which FitAddon reads as 100px and shrinks the pty to about 11 columns.
+  private refit(): void {
+    if (this.terminal.element?.parentElement?.clientWidth) this.fit.fit();
   }
 
   private openSession(): void {
@@ -170,7 +174,9 @@ class LiveTerminalEntry implements LiveTerminal {
     const activity = createActivityTracker((state) => setActivity(tileId, boundSessionId, state));
     const size = { cols: terminal.cols, rows: terminal.rows };
     const request: OpenSessionRequest =
-      this.launch.kind === 'claude' ? { kind: 'claude', sessionId: this.launch.sessionId, cwd: this.launch.cwd, ...size } : { kind: 'shell', cwd: this.launch.cwd, ...size };
+      this.launch.kind === 'claude'
+        ? { kind: 'claude', sessionId: this.launch.sessionId, cwd: this.launch.cwd, tileId, ...size }
+        : { kind: 'shell', cwd: this.launch.cwd, ...size };
 
     armadaClient.sessions
       .open(request)

@@ -1,11 +1,13 @@
 import type { OpenSessionRequest, TerminalRef } from '@shared/sessions/sessionSchemas';
 import type { ConversationRepository } from '@main/domain/repositories/ConversationRepository';
 import { CLAUDE_COMMAND } from '@main/domain/claude/claudeCommand';
+import { diagramInstructions } from '@main/domain/claude/diagramInstructions';
 import type { TerminalHost } from '@main/domain/terminals/TerminalHost';
 
 interface SessionServiceDeps {
   conversationRepository: ConversationRepository;
   terminalHost: TerminalHost;
+  prepareDiagramFolder(tileId: string): Promise<string>;
 }
 
 interface Launch {
@@ -19,13 +21,19 @@ export class SessionService {
   constructor(private deps: SessionServiceDeps) {}
 
   async open(request: OpenSessionRequest): Promise<TerminalRef> {
-    const { command, args } = request.kind === 'claude' ? await this.claudeLaunch(request.sessionId) : { command: SHELL_COMMAND, args: [] };
+    const { command, args } =
+      request.kind === 'claude' ? await this.claudeLaunch(request.sessionId, request.tileId) : { command: SHELL_COMMAND, args: [] };
     const terminalId = this.deps.terminalHost.spawn({ command, args, cwd: request.cwd, cols: request.cols, rows: request.rows });
     return { terminalId };
   }
 
-  private async claudeLaunch(sessionId: string): Promise<Launch> {
+  private async claudeLaunch(sessionId: string, tileId: string): Promise<Launch> {
     const isExistingConversation = await this.deps.conversationRepository.hasConversation(sessionId);
-    return { command: CLAUDE_COMMAND, args: isExistingConversation ? ['--resume', sessionId] : ['--session-id', sessionId] };
+    const diagramFolder = await this.deps.prepareDiagramFolder(tileId);
+    const sessionArgs = isExistingConversation ? ['--resume', sessionId] : ['--session-id', sessionId];
+    return {
+      command: CLAUDE_COMMAND,
+      args: [...sessionArgs, '--append-system-prompt', diagramInstructions(diagramFolder), '--add-dir', diagramFolder],
+    };
   }
 }

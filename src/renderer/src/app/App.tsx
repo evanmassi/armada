@@ -4,6 +4,7 @@ import { GLOBAL_SHORTCUTS, isGlobalShortcut } from '@renderer/app/keyboardShortc
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { BoardLayoutModeControls, BoardPanel, BoardSwitcherBar, findClaudeTile, useBoardsEditor } from '@renderer/domains/boards';
 import { ConversationSidebarPanel, useProjectColors, useProjectNames } from '@renderer/domains/conversations';
+import { useTileDiagramArrivals } from '@renderer/domains/diagrams';
 import { IntegrationBanner } from '@renderer/domains/integration';
 import { disposeLiveTerminalsExcept } from '@renderer/domains/terminal';
 import { AppUpdateBanner, AppVersionIndicator } from '@renderer/domains/updates';
@@ -24,6 +25,7 @@ export function App() {
   const nameOf = useProjectNames();
   const { activeBoardId, openedBoardIds, focusedTileId, selectBoard, focusTile, setFocusedTile } = useBoardSelectionStore();
   const boardAreaRef = useRef<HTMLDivElement>(null);
+  useTileDiagramArrivals((tileId, fileName) => editor.updateDiagramDock(tileId, { isOpen: true, selectedFileName: fileName }));
 
   const boards = workspace?.boards ?? [];
   const activeBoard = boards.find((board) => board.id === activeBoardId) ?? boards[0];

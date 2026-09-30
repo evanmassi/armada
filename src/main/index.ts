@@ -1,7 +1,10 @@
 import { join } from 'node:path';
 import { app, BrowserWindow, Menu } from 'electron';
 import { createServiceContainer } from '@main/infrastructure/di/ServiceContainer';
+import { DIAGRAM_PAGE_SCHEME } from '@shared/diagrams/diagramSchemas';
+import { registerDiagramPageScheme, serveDiagramPages } from '@main/infrastructure/diagrams/diagramPageProtocol';
 import { separateDevDataFolder } from '@main/infrastructure/paths';
+import { registerDiagramHandlers } from '@main/ipc/registerDiagramHandlers';
 import { registerConversationHandlers } from '@main/ipc/registerConversationHandlers';
 import { registerFileHandlers } from '@main/ipc/registerFileHandlers';
 import { registerIntegrationHandlers } from '@main/ipc/registerIntegrationHandlers';
@@ -37,6 +40,10 @@ function createMainWindow(): BrowserWindow {
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   // PITFALL: a file dropped outside a terminal navigates the window to it, which restarts every session.
   mainWindow.webContents.on('will-navigate', (event) => event.preventDefault());
+  // PITFALL: a sandboxed diagram page can still navigate its own frame, so a subframe may only ever show a diagram page.
+  mainWindow.webContents.on('will-frame-navigate', (event) => {
+    if (!event.isMainFrame && !event.url.startsWith(`${DIAGRAM_PAGE_SCHEME}:`)) event.preventDefault();
+  });
   const rendererDevServerUrl = process.env['ELECTRON_RENDERER_URL'];
   if (rendererDevServerUrl) {
     void mainWindow.loadURL(rendererDevServerUrl);
@@ -47,6 +54,7 @@ function createMainWindow(): BrowserWindow {
 }
 
 separateDevDataFolder();
+registerDiagramPageScheme();
 app.setAppUserModelId(APP_USER_MODEL_ID);
 Menu.setApplicationMenu(null);
 
@@ -56,6 +64,7 @@ if (!isPrimaryInstance) app.quit();
 app.whenReady().then(() => {
   if (!isPrimaryInstance) return;
   const container = createServiceContainer();
+  serveDiagramPages(container.tileDiagramFiles);
   container.logger.info('app.started', { version: app.getVersion(), electron: process.versions.electron });
   process.on('uncaughtException', (error) => container.logger.error('main.uncaughtException', { error }));
   process.on('unhandledRejection', (reason) => container.logger.error('main.unhandledRejection', { error: reason }));
@@ -75,21 +84,27 @@ app.whenReady().then(() => {
   registerWorkspaceHandlers(container);
   registerSessionHandlers(container, mainWindow.webContents);
   registerUsageHandlers(container, mainWindow.webContents);
+  registerDiagramHandlers(container, mainWindow);
   registerUpdateHandlers(container, mainWindow.webContents);
   void container.claudeHookInbox.start();
   void container.claudeSessionStatusFiles.start();
   void container.claudeUsageFile.start();
+  container.tileDiagramFiles.start().catch((error: unknown) => container.logger.error('diagrams.startFailed', { error }));
   container.claudeUsageProbe.start();
   if (app.isPackaged) container.appUpdater.start();
 
   const killAllTerminals = (): void => container.terminalHost.killAll();
-  mainWindow.webContents.on('did-start-navigation', killAllTerminals);
+  // PITFALL: this event also fires when a diagram page loads in its frame, which must not end every session.
+  mainWindow.webContents.on('did-start-navigation', ({ isMainFrame, isSameDocument }) => {
+    if (isMainFrame && !isSameDocument) killAllTerminals();
+  });
   mainWindow.on('close', () => {
     container.logger.info('app.closing');
     killAllTerminals();
     container.claudeHookInbox.stop();
     container.claudeSessionStatusFiles.stop();
     container.claudeUsageFile.stop();
+    container.tileDiagramFiles.stop();
     container.claudeUsageProbe.stop();
   });
 });

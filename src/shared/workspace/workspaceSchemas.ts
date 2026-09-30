@@ -53,10 +53,19 @@ const tileBaseSchema = z.object({
   weight: z.number().positive().default(1),
 });
 
+const diagramDockSchema = z.object({
+  isOpen: z.boolean(),
+  heightFraction: z.number().min(0.1).max(0.9),
+  selectedFileName: z.string().optional(),
+});
+
+export const DEFAULT_DIAGRAM_DOCK: DiagramDock = { isOpen: false, heightFraction: 0.5 };
+
 const claudeTileSchema = tileBaseSchema.extend({
   kind: z.literal('claude'),
   sessionId: z.string().uuid(),
   cwd: z.string().min(1),
+  diagramDock: diagramDockSchema.optional(),
 });
 
 const shellTileSchema = tileBaseSchema.extend({
@@ -127,6 +136,7 @@ export const workspaceSchema = z.object({
 export type LayoutMode = z.infer<typeof layoutModeSchema>;
 export type TileLayout = z.infer<typeof tileLayoutSchema>;
 export type ClaudeTile = z.infer<typeof claudeTileSchema>;
+export type DiagramDock = z.infer<typeof diagramDockSchema>;
 export type NotesTile = z.infer<typeof notesTileSchema>;
 export type Tile = z.infer<typeof tileSchema>;
 export type LaneState = z.infer<typeof laneStateSchema>;

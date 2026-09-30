@@ -1,4 +1,13 @@
-import type { Board, LaneState, LayoutMode, Tile, TileLayout, Workspace } from '@shared/workspace/workspaceSchemas';
+import {
+  DEFAULT_DIAGRAM_DOCK,
+  type Board,
+  type DiagramDock,
+  type LaneState,
+  type LayoutMode,
+  type Tile,
+  type TileLayout,
+  type Workspace,
+} from '@shared/workspace/workspaceSchemas';
 import { lanedTiles } from './lanes';
 import { tilingToCells } from './tiling';
 
@@ -123,6 +132,17 @@ export const rebindClaudeTile = (workspace: Workspace, boardId: string, tileId: 
   const tile = findTile(workspace, boardId, tileId);
   if (tile?.kind !== 'claude' || tile.sessionId === sessionId) return workspace;
   return updateTile(workspace, boardId, tileId, (current) => ({ ...current, sessionId }));
+};
+
+export const updateDiagramDock = (workspace: Workspace, tileId: string, change: Partial<DiagramDock>): Workspace => {
+  const board = workspace.boards.find((candidate) => candidate.tiles.some((tile) => tile.id === tileId));
+  const tile = board && findTile(workspace, board.id, tileId);
+  if (!board || tile?.kind !== 'claude') return workspace;
+  const current = tile.diagramDock ?? DEFAULT_DIAGRAM_DOCK;
+  const next = { ...current, ...change };
+  const isUnchanged = tile.diagramDock !== undefined && (Object.keys(next) as (keyof DiagramDock)[]).every((key) => next[key] === current[key]);
+  if (isUnchanged) return workspace;
+  return updateTile(workspace, board.id, tileId, (existing) => ({ ...existing, diagramDock: next }));
 };
 
 export const setNotesText = (workspace: Workspace, boardId: string, tileId: string, text: string): Workspace => {

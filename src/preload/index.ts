@@ -43,6 +43,12 @@ const armadaApi: ArmadaApi = {
     check: () => ipcRenderer.invoke(IPC_CHANNELS.integrationCheck),
     repair: () => ipcRenderer.invoke(IPC_CHANNELS.integrationRepair),
   },
+  diagrams: {
+    list: (request) => ipcRenderer.invoke(IPC_CHANNELS.diagramsList, request),
+    read: (ref) => ipcRenderer.invoke(IPC_CHANNELS.diagramsRead, ref),
+    save: (request) => ipcRenderer.invoke(IPC_CHANNELS.diagramsSave, request),
+    onChanged: (listener) => subscribe(IPC_CHANNELS.diagramsChanged, listener),
+  },
   usage: {
     read: () => ipcRenderer.invoke(IPC_CHANNELS.usageRead),
     onChanged: (listener) => subscribe(IPC_CHANNELS.usageChanged, listener),

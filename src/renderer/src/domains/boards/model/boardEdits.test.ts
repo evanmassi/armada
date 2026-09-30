@@ -18,6 +18,7 @@ import {
   setTileWeights,
   swapTiles,
   toggleLaneCollapsed,
+  updateDiagramDock,
 } from './boardEdits';
 
 const tile = (id: string, x: number, y: number, w: number, h: number, weight = 1, cwd = 'C:\\dev'): Tile => ({
@@ -177,5 +178,26 @@ describe('rebindClaudeTile', () => {
     const workspace = workspaceWith(tile('a', 0, 0, 6, 14), notes);
     expect(rebindClaudeTile(workspace, 'board', 'a', 'a')).toBe(workspace);
     expect(rebindClaudeTile(workspace, 'board', 'n', 'fresh')).toBe(workspace);
+  });
+});
+
+describe('updateDiagramDock', () => {
+  it('starts a Claude tile from the default dock and merges each change into it', () => {
+    const opened = updateDiagramDock(workspaceWith(tile('a', 0, 0, 6, 14)), 'a', { isOpen: true, selectedFileName: 'flow.mmd' });
+    const resized = updateDiagramDock(opened, 'a', { heightFraction: 0.3 });
+    const claudeTile = resized.boards[0]!.tiles[0]!;
+    expect(claudeTile.kind === 'claude' && claudeTile.diagramDock).toEqual({ isOpen: true, heightFraction: 0.3, selectedFileName: 'flow.mmd' });
+  });
+
+  it('returns the same workspace when nothing changes, so no save follows', () => {
+    const opened = updateDiagramDock(workspaceWith(tile('a', 0, 0, 6, 14)), 'a', { isOpen: true, selectedFileName: 'flow.mmd' });
+    expect(updateDiagramDock(opened, 'a', { isOpen: true, selectedFileName: 'flow.mmd' })).toBe(opened);
+    expect(updateDiagramDock(opened, 'closed-tile', { isOpen: true })).toBe(opened);
+  });
+
+  it('leaves tiles that are not Claude tiles alone', () => {
+    const notes: Tile = { kind: 'notes', id: 'n', text: '', layout: { x: 0, y: 0, w: 6, h: 14 }, weight: 1 };
+    const workspace = workspaceWith(notes);
+    expect(updateDiagramDock(workspace, 'n', { isOpen: true })).toBe(workspace);
   });
 });

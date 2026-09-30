@@ -21,7 +21,7 @@ export const terminalRefSchema = z.object({
 });
 
 export const openSessionRequestSchema = z.discriminatedUnion('kind', [
-  claudeLaunchSchema.merge(terminalSizeSchema),
+  claudeLaunchSchema.merge(terminalSizeSchema).extend({ tileId: z.string().uuid() }),
   shellLaunchSchema.merge(terminalSizeSchema),
 ]);
 

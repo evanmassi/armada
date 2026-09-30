@@ -61,6 +61,16 @@ because the file belongs to the user and any key dropped on parse would be lost 
 The same check reports whether `node`, which Claude Code runs the relays with, is on PATH; without it the banner asks
 for Node.js instead of offering Fix, since every hook and the status line would fail.
 
+Claude tiles draw diagrams. Every Claude launch creates the tile's own folder, `userData/diagrams/<tileId>` (keyed by
+tile, so a `/clear` keeps them), grants it with `--add-dir` so writing there never prompts, and names it in
+`diagramInstructions` through `--append-system-prompt`; a test holds the instruction's colors to the design tokens. Claude writes `.mmd`
+(Mermaid), `.svg`, or `.html` (interactive) there; `TileDiagramFiles` watches the folder and pushes the tile's list,
+and the renderer opens the newest in a dock under that tile. On launch it deletes folders of tiles no longer in the
+workspace and files untouched for 14 days, and deletes nothing when the workspace cannot be read. An `.html` diagram
+is served from the `armada-diagram:` scheme into an iframe sandboxed to scripts only, under its own policy: no network
+but script and style tags from three CDN hosts. A subframe may never navigate anywhere else. The served page gets a
+one-line relay that posts Escape to the app, since keys inside the frame never reach it.
+
 ---
 
 ## Main Process Architecture (Clean Architecture)
@@ -68,13 +78,14 @@ for Node.js instead of offering Fix, since every hook and the status line would 
 ```
 src/main/
 ├── domain/           # No Electron, no Node built-ins.
-│   ├── claude/       # CLAUDE_COMMAND: the executable name every Claude launch uses
+│   ├── claude/       # CLAUDE_COMMAND: the executable name every Claude launch uses; diagramInstructions
 │   ├── repositories/ # ConversationRepository, WorkspaceRepository (interfaces only)
 │   └── terminals/    # TerminalHost (interface only)
 ├── application/
 │   └── services/     # ConversationCatalogService, SessionService, ClaudeUsageService
 ├── infrastructure/
 │   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser, ClaudeHookInbox, ClaudeUsageFile, ClaudeSessionStatusFiles, ClaudeUsageProbe + usageProbeOutputParser, ClaudeSettingsFile + claudeSettingsIntegration, ClaudeRelayScripts
+│   ├── diagrams/     # TileDiagramFiles (list, read, watch, prune), diagramPageProtocol (serves .html diagrams)
 │   ├── git/          # GitChangeCounter: uncommitted lines added and removed under a project folder
 │   ├── folders/      # FolderOpener: Explorer and VS Code
 │   ├── links/        # LinkOpener + linkTargets + binaryFileCheck: the only judge of what a clicked terminal link opens
@@ -127,6 +138,7 @@ src/renderer/src/
 │   ├── conversations/ # Sidebar: projects and conversations, open/resume, project colors
 │   ├── boards/        # Board list, grid layout, tile placement
 │   ├── terminal/      # xterm tile bound to one pty session
+│   ├── diagrams/      # Dock under a Claude tile: Mermaid, SVG, and sandboxed interactive pages
 │   ├── integration/   # Banner that checks and repairs Armada's entries in Claude Code's settings
 │   ├── usage/         # 5 hour, weekly, and per-model limit readout in the sidebar footer
 │   └── updates/       # Update-ready banner with Restart now, and the running version under the usage readout
@@ -175,6 +187,14 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   project (`useProjectLineChangesQuery`, refetched when a turn ends) sits on the lane header, or on the board tab when the
   board holds one project. Opening a
   conversation while another project's board is active routes it to that project's own board unless shift is held.
+- `diagrams` renders a tile's diagrams and knows nothing about boards. `DiagramDockPanel` takes the dock state
+  (`diagramDock` on the Claude tile: open, height, selected file) and a change callback from `boards`, which owns the
+  save; `useTileDiagramArrivals` in `App` updates the list query from pushed changes and opens the dock on a new or
+  rewritten diagram. Mermaid loads lazily, themed from the design tokens, and a diagram renders only when its dock is open
+or it is saved. Pan and zoom apply to Mermaid and SVG; an
+  `.html` diagram handles its own input. Full view lifts the dock's own `<dialog>` into the top layer with `showModal`
+  rather than rendering a copy, so an interactive page keeps its state both ways. Save writes SVG (Mermaid on the tile background) or the HTML page wherever the
+  user picks.
 - `terminal` renders one pty session, Claude or plain shell. It does not know which board it sits on. The xterm
   instance and its pty live in `model/liveTerminals.ts`, keyed by tile id and independent of the React tree: a tile
   component attaches the existing terminal element on mount and detaches on unmount, so a layout change that
@@ -232,7 +252,8 @@ so the click feedback and every existing button keep working unchanged. Four tie
   bottom rail that sits on the switcher's bottom edge, in the board's project color; full when the board is current.
   On hover the rail flickers on like a tube catching and the wash rises from it, settling at half strength. The name and × are separate buttons inside it.
 - `hud-glyph` for small glyph buttons (×, +, ⋮, chevrons): one 14px mono size with a 20px target, glow and an offset
-  copy from `data-glyph` on hover. Every × carries `data-tone="neutral"` and lights white, like a normal close button.
+  copy from `data-glyph` on hover. Outline icons (tile title bar, diagram dock) come from `StrokeIconButton` in
+  `shared/ui`, one stroke drawing per icon rendered twice for the same glow and offset copy; add icons there. Every × carries `data-tone="neutral"` and lights white, like a normal close button.
 - `hud-row` for rows (menu items, conversation rows): the Odysseus lit-row recipe, a left bar, a left-weighted wash,
   inner edge glow, outer halo and faint dark scanlines; half strength on hover, full on `data-selected`. A conversation
   row is selected when it is open in a tile on the active board.
@@ -248,7 +269,7 @@ Never define a boundary type inline in main or renderer.
   TypeScript type with `z.infer`. A schema nothing calls `.parse()` on is dead.
 - **Plain type** for main-to-renderer results and events. Validating in-process output is theater.
 
-**Modules**: `workspace/workspaceSchemas`, `sessions/sessionSchemas`, `links/linkSchemas`, `projects/projectSchemas`, `projects/folderName` (the one project display name both sides sort and show by), `usage/usageSchemas`, `updates/updateTypes`, `integration/integrationTypes`, `conversations/conversationTypes`, `ipcChannels`,
+**Modules**: `workspace/workspaceSchemas`, `sessions/sessionSchemas`, `links/linkSchemas`, `projects/projectSchemas`, `projects/folderName` (the one project display name both sides sort and show by), `diagrams/diagramSchemas`, `usage/usageSchemas`, `updates/updateTypes`, `integration/integrationTypes`, `conversations/conversationTypes`, `ipcChannels`,
 `armadaApi` (the preload contract both sides implement against)
 
 ---
@@ -444,6 +465,7 @@ get one named home.
 - Validate every IPC payload in main with Zod
 - Spawn with argv arrays, never shell strings; cwd is normalized and must exist
 - The preload exposes named calls only, never a generic `invoke(channel, ...)`
+- Diagram pages run in `sandbox="allow-scripts"` frames on `armada-diagram:`, never same-origin with the app
 
 ---
 

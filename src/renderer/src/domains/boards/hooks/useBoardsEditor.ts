@@ -1,4 +1,4 @@
-import type { LayoutMode, TileLayout } from '@shared/workspace/workspaceSchemas';
+import type { DiagramDock, LayoutMode, TileLayout } from '@shared/workspace/workspaceSchemas';
 import { useWorkspaceEditor } from '@renderer/domains/workspace';
 import {
   addBoard,
@@ -22,6 +22,7 @@ import {
   setTileWeights,
   swapTiles,
   toggleLaneCollapsed,
+  updateDiagramDock,
   type BoardSeed,
   type PositionedLayout,
   type TileSeed,
@@ -44,6 +45,7 @@ export function useBoardsEditor() {
     removeTiles: (boardId: string, tileIds: string[]) => edit((workspace) => removeTiles(workspace, boardId, tileIds)),
     rebindClaudeTile: (boardId: string, tileId: string, sessionId: string) =>
       edit((workspace) => rebindClaudeTile(workspace, boardId, tileId, sessionId)),
+    updateDiagramDock: (tileId: string, change: Partial<DiagramDock>) => edit((workspace) => updateDiagramDock(workspace, tileId, change)),
     setNotesText: (boardId: string, tileId: string, text: string) => edit((workspace) => setNotesText(workspace, boardId, tileId, text)),
     swapTiles: (boardId: string, tileIdA: string, tileIdB: string) =>
       edit((workspace) => swapTiles(workspace, boardId, tileIdA, tileIdB)),

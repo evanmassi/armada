@@ -3,12 +3,13 @@ import type { Tile } from '@shared/workspace/workspaceSchemas';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useSessionActivityStore, type ActivityState } from '@renderer/app/stores/sessionActivityStore';
 import { useFolderActions } from '@renderer/domains/conversations';
+import { DiagramDockPanel } from '@renderer/domains/diagrams';
 import { disposeLiveTerminal, TerminalSessionTile } from '@renderer/domains/terminal';
 import { ActivityDot } from '@renderer/shared/ui/components/ActivityDot';
+import { StrokeIconButton } from '@renderer/shared/ui/components/StrokeIconButton';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
 import { useTilePresentation } from '../../../hooks/useTilePresentation';
 import { BoardNotesTile } from '../notes/BoardNotesTile';
-import { BoardTileIconButton } from './BoardTileIconButton';
 import { BoardTileSessionIndicator } from './BoardTileSessionIndicator';
 
 export const TILE_DRAG_HANDLE_CLASS = 'tile-drag-handle';
@@ -112,12 +113,12 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, keyboardHin
           )}
           {cwd !== undefined && (
             <>
-              <BoardTileIconButton icon="explorer" label="Open in Explorer" onClick={() => revealInExplorer(cwd)} />
-              <BoardTileIconButton icon="editor" label="Open in VS Code" onClick={() => openInEditor(cwd)} />
+              <StrokeIconButton icon="explorer" label="Open in Explorer" onClick={() => revealInExplorer(cwd)} />
+              <StrokeIconButton icon="editor" label="Open in VS Code" onClick={() => openInEditor(cwd)} />
             </>
           )}
           {tile.kind === 'claude' && onOpenShell && (
-            <BoardTileIconButton icon="shell" label="Open a shell in this folder" onClick={() => onOpenShell(tile.cwd, tile.id)} />
+            <StrokeIconButton icon="shell" label="Open a shell in this folder" onClick={() => onOpenShell(tile.cwd, tile.id)} />
           )}
           <button type="button" className="hud-glyph px-1 text-muted" data-glyph="×" data-tone="neutral" onClick={() => editor.removeTiles(boardId, [tile.id])} aria-label="Close tile">
             ×
@@ -130,8 +131,17 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, keyboardHin
           </div>
         )}
       </div>
-      <div className="min-h-0 flex-1">
-        <TileBody key={launchCount} boardId={boardId} tile={tile} shouldMountTerminal={shouldMountTerminal} />
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="min-h-0 flex-1">
+          <TileBody key={launchCount} boardId={boardId} tile={tile} shouldMountTerminal={shouldMountTerminal} />
+        </div>
+        {tile.kind === 'claude' && (
+          <DiagramDockPanel
+            tileId={tile.id}
+            dock={tile.diagramDock}
+            onDockChange={(change) => editor.updateDiagramDock(tile.id, change)}
+          />
+        )}
       </div>
     </div>
   );
