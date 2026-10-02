@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { Board, Tile } from '@shared/workspace/workspaceSchemas';
 import { boardWideNotes, computeLanes, hasMultipleLanes, soleProjectCwd } from './lanes';
 
-const claude = (id: string, cwd: string): Tile => ({ kind: 'claude', id, sessionId: id, cwd, layout: { x: 0, y: 0, w: 1, h: 1 }, weight: 1 });
-const notes = (id: string, cwd?: string): Tile => ({ kind: 'notes', id, text: '', cwd, layout: { x: 0, y: 0, w: 1, h: 1 }, weight: 1 });
+const claude = (id: string, cwd: string): Tile => ({ kind: 'claude', id, sessionId: id, cwd, layout: { x: 0, y: 0, w: 1, h: 1 }, weight: 1, isCollapsed: false });
+const notes = (id: string, cwd?: string): Tile => ({ kind: 'notes', id, text: '', cwd, layout: { x: 0, y: 0, w: 1, h: 1 }, weight: 1, isCollapsed: false });
 
 const board = (tiles: Tile[], overrides: Partial<Board> = {}): Board => ({
   id: 'b',

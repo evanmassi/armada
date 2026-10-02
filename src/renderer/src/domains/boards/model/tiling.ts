@@ -22,11 +22,16 @@ const chunkTilesIntoRows = (tiles: Tile[]): Tile[][] => {
 const normalizeRowWeights = (rowWeights: number[], rowCount: number): number[] =>
   rowWeights.length === rowCount ? rowWeights : Array.from({ length: rowCount }, () => 1);
 
-export const computeTiling = (board: Board): TilingRow[] => {
-  const rows = chunkTilesIntoRows(lanedTiles(board));
+const tilingOf = (board: Board, tiles: Tile[]): TilingRow[] => {
+  const rows = chunkTilesIntoRows(tiles);
   const weights = normalizeRowWeights(board.rowWeights, rows.length);
-  return rows.map((tiles, index) => ({ tiles, weight: weights[index]! }));
+  return rows.map((rowTiles, index) => ({ tiles: rowTiles, weight: weights[index]! }));
 };
+
+export const collapsedTiles = (board: Board): Tile[] => lanedTiles(board).filter((tile) => tile.isCollapsed);
+
+export const computeTiling = (board: Board): TilingRow[] =>
+  tilingOf(board, lanedTiles(board).filter((tile) => !tile.isCollapsed));
 
 const sum = (values: number[]): number => values.reduce((total, value) => total + value, 0);
 
@@ -38,8 +43,9 @@ interface CellSpan {
   h: number;
 }
 
+// PITFALL: the free grid shows a collapsed tile at full size, so its cells come from every tile, not only the expanded ones.
 export function tilingToCells(board: Board, columns: number, rows: number): CellSpan[] {
-  const tiling = computeTiling(board);
+  const tiling = tilingOf(board, lanedTiles(board));
   const totalRowWeight = sum(tiling.map((row) => row.weight));
   const cells: CellSpan[] = [];
   let rowStart = 0;

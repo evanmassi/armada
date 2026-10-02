@@ -51,6 +51,7 @@ const tileBaseSchema = z.object({
   id: z.string().uuid(),
   layout: tileLayoutSchema,
   weight: z.number().positive().default(1),
+  isCollapsed: z.boolean().default(false),
 });
 
 const diagramDockSchema = z.object({

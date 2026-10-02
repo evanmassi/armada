@@ -1,14 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import type { Board, Tile } from '@shared/workspace/workspaceSchemas';
-import { columnsFor, computeTiling, tilingToCells } from './tiling';
+import { collapsedTiles, columnsFor, computeTiling, tilingToCells } from './tiling';
 
-const tile = (id: string, weight = 1): Tile => ({
+const tile = (id: string, weight = 1, isCollapsed = false): Tile => ({
   kind: 'claude',
   id,
   sessionId: id,
   cwd: 'C:\\dev',
   layout: { x: 0, y: 0, w: 1, h: 1 },
   weight,
+  isCollapsed,
 });
 
 const board = (tiles: Tile[], rowWeights: number[] = []): Board => ({
@@ -39,6 +40,12 @@ describe('computeTiling', () => {
     expect(computeTiling(board(tiles, [2, 1])).map((row) => row.weight)).toEqual([2, 1]);
     expect(computeTiling(board(tiles, [2, 1, 1])).map((row) => row.weight)).toEqual([1, 1]);
   });
+
+  it('tiles only the expanded tiles and lists the collapsed ones apart', () => {
+    const mixed = board([tile('a'), tile('b', 1, true), tile('c'), tile('d', 1, true)]);
+    expect(computeTiling(mixed).map((row) => row.tiles.map((item) => item.id))).toEqual([['a', 'c']]);
+    expect(collapsedTiles(mixed).map((item) => item.id)).toEqual(['b', 'd']);
+  });
 });
 
 describe('tilingToCells', () => {
@@ -50,5 +57,10 @@ describe('tilingToCells', () => {
       { tileId: 'c', x: 0, y: 10, w: 6, h: 10 },
       { tileId: 'd', x: 6, y: 10, w: 6, h: 10 },
     ]);
+  });
+
+  it('gives a collapsed tile a cell, since the free grid shows it at full size', () => {
+    const cells = tilingToCells(board([tile('a'), tile('b', 1, true)]), 12, 20);
+    expect(cells.map((cell) => cell.tileId)).toEqual(['a', 'b']);
   });
 });

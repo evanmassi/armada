@@ -1,8 +1,9 @@
 import { useState, type CSSProperties, type DragEvent, type KeyboardEvent } from 'react';
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
-import { CLICK_ORIGIN_PROPS, QUIET_CLICK_PROPS, ROW_ORIGIN_CLICK_PROPS } from '@renderer/app/clickFeedback';
+import { QUIET_CLICK_PROPS, ROW_ORIGIN_CLICK_PROPS } from '@renderer/app/clickFeedback';
 import type { ActivityState } from '@renderer/app/stores/sessionActivityStore';
 import { ActionMenu, type ActionMenuEntry, type ActionMenuItem } from '@renderer/shared/ui/components/ActionMenu';
+import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
 import { applyDragGhost, placementFromPointer, PLACEMENT_LINE_CLASS, type DropPlacement } from '@renderer/shared/utils/dragGhost';
 import { useFolderActions } from '../../../hooks/useFolderActions';
@@ -145,18 +146,8 @@ export function ConversationProjectSection({
         onDragStart={handleDragStart}
         onDragEnd={endDrag}
       >
+        <CollapseToggleButton isCollapsed={!isOpen} target="project" isClickOrigin onToggle={() => onToggleExpanded(project.cwd, !isOpen)} />
         <ProjectColorSelector color={colorOf(project.cwd)} onChange={(color) => setColor(project.cwd, color)} />
-        <button
-          type="button"
-          className="hud-glyph px-1 text-muted"
-          data-glyph={isOpen ? '▾' : '▸'}
-          {...CLICK_ORIGIN_PROPS}
-          onClick={() => onToggleExpanded(project.cwd, !isOpen)}
-          aria-expanded={isOpen}
-          aria-label={isOpen ? 'Collapse project' : 'Expand project'}
-        >
-          {isOpen ? '▾' : '▸'}
-        </button>
         {isRenaming ? (
           <InlineRenameInput
             initialValue={displayName}

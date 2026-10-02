@@ -6,10 +6,13 @@ import { useElementRegistry } from '../../../hooks/useElementRegistry';
 import { useSeamDrag } from '../../../hooks/useSeamDrag';
 import { TILE_DRAG_MIME } from '../../../model/boardDragTypes';
 import { WEIGHT_STEP } from '../../../model/boardEdits';
-import { computeTiling } from '../../../model/tiling';
+import { collapsedTiles, computeTiling } from '../../../model/tiling';
 import { BoardTileFrame, type ArrowDirection } from '../grid/BoardTileFrame';
 
 const KEYBOARD_HINT = 'Arrow keys reorder, shift with left or right resizes.';
+const COLLAPSED_KEYBOARD_HINT = 'Arrow keys reorder the collapsed tiles.';
+
+const stepOf = (direction: ArrowDirection): -1 | 1 => (direction === 'left' || direction === 'up' ? -1 : 1);
 
 const withAdjacentWeights = (weights: number[], firstIndex: number, firstWeight: number, secondWeight: number): number[] =>
   weights.map((weight, index) => (index === firstIndex ? firstWeight : index === firstIndex + 1 ? secondWeight : weight));
@@ -63,7 +66,7 @@ export function BoardTilingPanel({ board, shouldMountTerminals, onOpenShell }: B
       if (direction === 'right') editor.scaleTileWeight(board.id, tile.id, WEIGHT_STEP);
       return;
     }
-    editor.moveTile(board.id, tile.id, direction === 'left' || direction === 'up' ? -1 : 1);
+    editor.moveTile(board.id, tile.id, stepOf(direction));
   };
 
   const handleDragStart = (tile: Tile, event: DragEvent<HTMLDivElement>): void => {
@@ -117,6 +120,7 @@ export function BoardTilingPanel({ board, shouldMountTerminals, onOpenShell }: B
                     boardId={board.id}
                     tile={tile}
                     shouldMountTerminal={shouldMountTerminals}
+                    isCollapsible
                     keyboardHint={KEYBOARD_HINT}
                     onOpenShell={onOpenShell}
                     onArrow={(direction, isShift) => handleArrow(tile, direction, isShift)}
@@ -126,6 +130,19 @@ export function BoardTilingPanel({ board, shouldMountTerminals, onOpenShell }: B
               </div>
             ))}
           </div>
+        </div>
+      ))}
+      {collapsedTiles(board).map((tile) => (
+        <div key={tile.id} className="shrink-0">
+          <BoardTileFrame
+            boardId={board.id}
+            tile={tile}
+            shouldMountTerminal={shouldMountTerminals}
+            isCollapsible
+            keyboardHint={COLLAPSED_KEYBOARD_HINT}
+            onOpenShell={onOpenShell}
+            onArrow={(direction) => editor.moveTile(board.id, tile.id, stepOf(direction))}
+          />
         </div>
       ))}
     </div>

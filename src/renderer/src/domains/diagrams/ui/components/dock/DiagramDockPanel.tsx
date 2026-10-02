@@ -1,6 +1,7 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import type { DiagramSummary } from '@shared/diagrams/diagramSchemas';
 import { DEFAULT_DIAGRAM_DOCK, type DiagramDock } from '@shared/workspace/workspaceSchemas';
+import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
 import { StrokeIconButton } from '@renderer/shared/ui/components/StrokeIconButton';
 import { useDiagramSave } from '../../../hooks/useDiagramSave';
 import { useTileDiagramsQuery } from '../../../hooks/useTileDiagramsQuery';
@@ -85,12 +86,7 @@ function DiagramDockPanelContent({ tileId, dock, onDockChange, diagrams }: Diagr
         onPointerMove={resize}
         onLostPointerCapture={finishResize}
       >
-        <StrokeIconButton
-          icon={dock.isOpen ? 'chevronDown' : 'chevronRight'}
-          label={dock.isOpen ? 'Collapse diagram' : 'Expand diagram'}
-          expanded={dock.isOpen}
-          onClick={() => onDockChange({ isOpen: !dock.isOpen })}
-        />
+        <CollapseToggleButton isCollapsed={!dock.isOpen} target="diagram" onToggle={() => onDockChange({ isOpen: !dock.isOpen })} />
         <span
           className="diagram-seam-label readout text-[10px]"
           role="separator"

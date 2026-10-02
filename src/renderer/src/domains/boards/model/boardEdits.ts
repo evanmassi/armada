@@ -24,7 +24,7 @@ export const WEIGHT_STEP = 1.15;
 
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 
-export type TileSeed = DistributiveOmit<Tile, 'id' | 'layout' | 'weight'>;
+export type TileSeed = DistributiveOmit<Tile, 'id' | 'layout' | 'weight' | 'isCollapsed'>;
 
 export interface BoardSeed {
   name: string;
@@ -88,7 +88,7 @@ const insertionIndex = (tiles: Tile[], seed: TileSeed, afterTileId: string | und
 
 const appendTile = (board: Board, seed: TileSeed, afterTileId?: string): Board => {
   const position = findFreePosition(board.tiles, DEFAULT_TILE_WIDTH, DEFAULT_TILE_HEIGHT);
-  const tile: Tile = { ...seed, id: crypto.randomUUID(), layout: { ...position, w: DEFAULT_TILE_WIDTH, h: DEFAULT_TILE_HEIGHT }, weight: 1 };
+  const tile: Tile = { ...seed, id: crypto.randomUUID(), layout: { ...position, w: DEFAULT_TILE_WIDTH, h: DEFAULT_TILE_HEIGHT }, weight: 1, isCollapsed: false };
   const tiles = [...board.tiles];
   tiles.splice(insertionIndex(board.tiles, seed, afterTileId), 0, tile);
   return { ...board, tiles };
@@ -161,13 +161,17 @@ export const swapTiles = (workspace: Workspace, boardId: string, tileIdA: string
     return { ...board, tiles };
   });
 
-// PITFALL: neighbors come from the laid-out tiles, so a board-wide note in the strip is never the swap partner.
+// PITFALL: neighbors come from the tiles laid out beside this one, so a board-wide note in the strip is never the swap partner, and neither is a collapsed tile for an expanded one.
 export const moveTile = (workspace: Workspace, boardId: string, tileId: string, step: -1 | 1): Workspace => {
   const board = findBoard(workspace, boardId);
-  const laidOut = board ? lanedTiles(board) : [];
-  const neighbor = laidOut[laidOut.findIndex((tile) => tile.id === tileId) + step];
+  const moved = board?.tiles.find((tile) => tile.id === tileId);
+  const peers = board && moved ? lanedTiles(board).filter((tile) => tile.isCollapsed === moved.isCollapsed) : [];
+  const neighbor = peers[peers.findIndex((tile) => tile.id === tileId) + step];
   return neighbor ? swapTiles(workspace, boardId, tileId, neighbor.id) : workspace;
 };
+
+export const toggleTileCollapsed = (workspace: Workspace, boardId: string, tileId: string): Workspace =>
+  updateTile(workspace, boardId, tileId, (tile) => ({ ...tile, isCollapsed: !tile.isCollapsed }));
 
 export const setTileWeights = (workspace: Workspace, boardId: string, weights: Record<string, number>): Workspace =>
   updateBoard(workspace, boardId, (board) => ({

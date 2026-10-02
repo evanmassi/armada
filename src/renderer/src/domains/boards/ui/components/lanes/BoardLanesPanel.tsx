@@ -148,13 +148,13 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
             <div className={`flex min-h-0 flex-1 flex-col gap-1 p-1 ${lane.isCollapsed ? 'hidden' : ''}`}>
               {lane.tiles.map((tile, tileIndex) => (
                 <div key={tile.id} className="contents">
-                  {tileIndex > 0 && (
+                  {tileIndex > 0 && !tile.isCollapsed && !lane.tiles[tileIndex - 1]!.isCollapsed && (
                     <DragSplitter orientation="horizontal" onDragStart={() => beginTileSeam(lane.tiles[tileIndex - 1]!, tile)} onDragMove={seam.move} onDragEnd={endSeam} />
                   )}
                   <div
                     ref={tileElements.refFor(tile.id)}
-                    className={`min-h-0 transition-[flex-grow] duration-200 ${dropTargetTileId === tile.id ? 'ring-2 ring-accent/70' : ''}`}
-                    style={{ flexGrow: tileWeightOf(tile), flexBasis: 0 }}
+                    className={`min-h-0 transition-[flex-grow] duration-200 ${tile.isCollapsed ? 'shrink-0' : ''} ${dropTargetTileId === tile.id ? 'ring-2 ring-accent/70' : ''}`}
+                    style={tile.isCollapsed ? undefined : { flexGrow: tileWeightOf(tile), flexBasis: 0 }}
                     onDragOver={(event) => handleTileDragOver(tile, event)}
                     onDragLeave={() => setDropTargetTileId((current) => (current === tile.id ? undefined : current))}
                     onDrop={(event) => handleTileDrop(lane, tile, event)}
@@ -163,6 +163,7 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
                       boardId={board.id}
                       tile={tile}
                       shouldMountTerminal={shouldMountTerminals}
+                      isCollapsible
                       keyboardHint={KEYBOARD_HINT}
                       onOpenShell={onOpenShell}
                       onArrow={(direction, isShift) => handleArrow(lane, tile, direction, isShift)}

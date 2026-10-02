@@ -1,8 +1,8 @@
-export type StrokeIcon = 'explorer' | 'editor' | 'shell' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'save' | 'fullView';
+import { CLICK_ORIGIN_PROPS } from '@renderer/app/clickFeedback';
+
+export type StrokeIcon = 'shell' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'save' | 'fullView';
 
 const ICON_DRAWINGS: Record<StrokeIcon, { viewBox: string; strokes: string }> = {
-  explorer: { viewBox: '0 0 16 16', strokes: 'M2 3.5h4l1.5 1.5H14v7.5H2z' },
-  editor: { viewBox: '0 0 16 16', strokes: 'M11.5 2v12M11.5 2 3 10M11.5 14 3 6' },
   shell: { viewBox: '0 0 18 16', strokes: 'M2 3.5 7.5 8 2 12.5M10 13.5h6.5' },
   chevronLeft: { viewBox: '0 0 16 16', strokes: 'M10 3.5 5.5 8l4.5 4.5' },
   chevronRight: { viewBox: '0 0 16 16', strokes: 'M6 3.5 10.5 8 6 12.5' },
@@ -17,6 +17,7 @@ interface StrokeIconButtonProps {
   onClick(): void;
   disabled?: boolean;
   expanded?: boolean;
+  isClickOrigin?: boolean;
 }
 
 function IconStrokes({ icon, className }: { icon: StrokeIcon; className: string }) {
@@ -28,11 +29,12 @@ function IconStrokes({ icon, className }: { icon: StrokeIcon; className: string 
   );
 }
 
-export function StrokeIconButton({ icon, label, onClick, disabled, expanded }: StrokeIconButtonProps) {
+export function StrokeIconButton({ icon, label, onClick, disabled, expanded, isClickOrigin }: StrokeIconButtonProps) {
   return (
     <button
       type="button"
       className="hud-glyph px-1 text-muted disabled:opacity-35"
+      {...(isClickOrigin ? CLICK_ORIGIN_PROPS : {})}
       onClick={onClick}
       disabled={disabled}
       aria-expanded={expanded}

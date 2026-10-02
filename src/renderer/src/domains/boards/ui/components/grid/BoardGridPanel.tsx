@@ -54,6 +54,7 @@ export function BoardGridPanel({ board, shouldMountTerminals, onOpenShell }: Boa
                 boardId={board.id}
                 tile={tile}
                 shouldMountTerminal={shouldMountTerminals}
+                isCollapsible={false}
                 keyboardHint={KEYBOARD_HINT}
                 onOpenShell={onOpenShell}
                 onArrow={(direction, isShift) => editor.nudgeTile(board.id, tile.id, (isShift ? RESIZE_DELTAS : MOVE_DELTAS)[direction])}

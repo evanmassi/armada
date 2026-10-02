@@ -1,5 +1,6 @@
 import { useState, type DragEvent } from 'react';
-import { CLICK_ORIGIN_PROPS, ROW_ORIGIN_CLICK_PROPS } from '@renderer/app/clickFeedback';
+import { ROW_ORIGIN_CLICK_PROPS } from '@renderer/app/clickFeedback';
+import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
 import { applyDragGhost, placementFromPointer, PLACEMENT_LINE_CLASS, type DropPlacement } from '@renderer/shared/utils/dragGhost';
 import { GROUP_DRAG_MIME, PROJECT_DRAG_MIME } from '../../../model/sidebarDragTypes';
@@ -89,9 +90,7 @@ export function SidebarGroupHeader({
       onDragLeave={() => setHover(undefined)}
       onDrop={handleDrop}
     >
-      <button type="button" className="hud-glyph px-1" data-glyph={isCollapsed ? '▸' : '▾'} {...CLICK_ORIGIN_PROPS} onClick={onToggleCollapsed} aria-expanded={!isCollapsed} aria-label={isCollapsed ? 'Expand group' : 'Collapse group'}>
-        {isCollapsed ? '▸' : '▾'}
-      </button>
+      <CollapseToggleButton isCollapsed={isCollapsed} target="group" isClickOrigin onToggle={onToggleCollapsed} />
       {isRenaming && onRename ? (
         <InlineRenameInput
           initialValue={name}

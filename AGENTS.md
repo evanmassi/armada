@@ -182,7 +182,10 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   weights); a board spanning more than one project renders lanes (`model/lanes.ts`), one column per project keyed
   by cwd with tiles stacked inside, lane order, width, and collapse saved on the board; the lane header's × closes every tile in it, asking first when there is more than one. A notes tile with a cwd lives in
   that project's lane; one without is board-wide and renders in a collapsible strip on the right, outside any layout. `free` is a scrolling grid
-  with explicit x/y/w/h (`react-grid-layout`); reflow rewrites its positions from the tiling. A Claude tile's title bar puts the title alone on its first row and, on a second, model and effort, context left before
+  with explicit x/y/w/h (`react-grid-layout`); reflow rewrites its positions from the tiling. In `auto`, a tile's title
+  bar chevron collapses it to its first title row (`isCollapsed` on the tile); the body is hidden, not unmounted, so the
+  session keeps running. A collapsed tile stays in place in a lane and gives its height to the rest; on a
+  single-project board it leaves the tiling and stacks under it. `free` ignores the flag. A Claude tile's title bar puts the title alone on its first row and, on a second, model and effort, context left before
   auto-compact as a draining bar, and the session's folder only when it has left the project folder, with the activity word at the right. Uncommitted +/- per
   project (`useProjectLineChangesQuery`, refetched when a turn ends) sits on the lane header, or on the board tab when the
   board holds one project. Opening a
@@ -204,7 +207,8 @@ or it is saved. Pan and zoom apply to Mermaid and SVG; an
   emits because the pty sets `FORCE_HYPERLINK`, bare URLs, and file paths (`model/pathLinkMatcher.ts`), joined back
   across a row break Claude Code drew itself. The renderer sends the raw target and the tile's cwd; main's `LinkOpener`
   is the only judge of what opens and where: folders and binary files (a zero byte in the first 8000, the check git
-  uses) in Explorer, text files of any extension in VS Code, never run. A Ctrl+click
+  uses) in Explorer, `.html` pages in the browser unless the link carries a line number, other text files of any
+  extension in VS Code, never run. A Ctrl+click
   on a link never reaches the pty, because fullscreen Claude Code would open the same link a second time. Files
   dropped on a tile paste in as paths, one per line in a Claude tile so Claude Code attaches each image and tells the
   model where it came from. Ctrl+V with only an image on the clipboard saves it through main and pastes that path. The
@@ -253,7 +257,8 @@ so the click feedback and every existing button keep working unchanged. Four tie
   On hover the rail flickers on like a tube catching and the wash rises from it, settling at half strength. The name and × are separate buttons inside it.
 - `hud-glyph` for small glyph buttons (×, +, ⋮, chevrons): one 14px mono size with a 20px target, glow and an offset
   copy from `data-glyph` on hover. Outline icons (tile title bar, diagram dock) come from `StrokeIconButton` in
-  `shared/ui`, one stroke drawing per icon rendered twice for the same glow and offset copy; add icons there. Every × carries `data-tone="neutral"` and lights white, like a normal close button.
+  `shared/ui`, one stroke drawing per icon rendered twice for the same glow and offset copy; add icons there. Every
+  collapse control is a `CollapseToggleButton` (outline chevrons) and sits first on the left of the bar it collapses. Every × carries `data-tone="neutral"` and lights white, like a normal close button.
 - `hud-row` for rows (menu items, conversation rows): the Odysseus lit-row recipe, a left bar, a left-weighted wash,
   inner edge glow, outer halo and faint dark scanlines; half strength on hover, full on `data-selected`. A conversation
   row is selected when it is open in a tile on the active board.

@@ -18,6 +18,7 @@ import {
   setTileWeights,
   swapTiles,
   toggleLaneCollapsed,
+  toggleTileCollapsed,
   updateDiagramDock,
 } from './boardEdits';
 
@@ -28,6 +29,7 @@ const tile = (id: string, x: number, y: number, w: number, h: number, weight = 1
   cwd,
   layout: { x, y, w, h },
   weight,
+  isCollapsed: false,
 });
 
 const workspaceWith = (...tiles: Tile[]): Workspace => ({
@@ -53,6 +55,7 @@ describe('addTile', () => {
     const added = workspace.boards[0]!.tiles[1]!;
     expect(added.layout).toEqual({ x: 6, y: 0, w: 6, h: 14 });
     expect(added.weight).toBe(1);
+    expect(added.isCollapsed).toBe(false);
     expect(workspace.projectColors).toEqual({ 'C:\\dev': 'red' });
   });
 
@@ -87,7 +90,7 @@ describe('createBoard', () => {
 
 describe('setNotesText', () => {
   it('updates notes tiles only', () => {
-    const notes: Tile = { kind: 'notes', id: 'n', text: '', layout: { x: 0, y: 0, w: 3, h: 6 }, weight: 1 };
+    const notes: Tile = { kind: 'notes', id: 'n', text: '', layout: { x: 0, y: 0, w: 3, h: 6 }, weight: 1, isCollapsed: false };
     const workspace = setNotesText(workspaceWith(tile('a', 0, 0, 3, 6), notes), 'board', 'n', 'hello');
     expect(workspace.boards[0]!.tiles[1]).toMatchObject({ kind: 'notes', text: 'hello' });
     expect(setNotesText(workspace, 'board', 'a', 'x').boards[0]!.tiles[0]).toEqual(tile('a', 0, 0, 3, 6));
@@ -112,6 +115,21 @@ describe('swapTiles and moveTile', () => {
     const noteId = withNote.boards[0]!.tiles[2]!.id;
     expect(tileIds(moveTile(withNote, 'board', 'a', 1))).toEqual(['b', 'a', noteId]);
     expect(tileIds(moveTile(withNote, 'board', 'b', 1))).toEqual(['a', 'b', noteId]);
+  });
+
+  it('steps past a collapsed tile, and moves a collapsed tile only among collapsed ones', () => {
+    const collapsed = toggleTileCollapsed(toggleTileCollapsed(workspaceWith(tile('a', 0, 0, 4, 6), tile('b', 4, 0, 4, 6), tile('c', 8, 0, 4, 6), tile('d', 0, 6, 4, 6)), 'board', 'b'), 'board', 'd');
+    expect(tileIds(moveTile(collapsed, 'board', 'a', 1))).toEqual(['c', 'b', 'a', 'd']);
+    expect(tileIds(moveTile(collapsed, 'board', 'b', 1))).toEqual(['a', 'd', 'c', 'b']);
+  });
+});
+
+describe('toggleTileCollapsed', () => {
+  it('flips one tile and leaves the others expanded', () => {
+    const start = workspaceWith(tile('a', 0, 0, 4, 6), tile('b', 4, 0, 4, 6));
+    const collapsed = toggleTileCollapsed(start, 'board', 'b');
+    expect(collapsed.boards[0]!.tiles.map((item) => item.isCollapsed)).toEqual([false, true]);
+    expect(toggleTileCollapsed(collapsed, 'board', 'b')).toEqual(start);
   });
 });
 
@@ -174,7 +192,7 @@ describe('rebindClaudeTile', () => {
   });
 
   it('returns the same workspace when the id is unchanged or the tile is not a claude tile', () => {
-    const notes: Tile = { kind: 'notes', id: 'n', text: '', layout: { x: 0, y: 0, w: 6, h: 14 }, weight: 1 };
+    const notes: Tile = { kind: 'notes', id: 'n', text: '', layout: { x: 0, y: 0, w: 6, h: 14 }, weight: 1, isCollapsed: false };
     const workspace = workspaceWith(tile('a', 0, 0, 6, 14), notes);
     expect(rebindClaudeTile(workspace, 'board', 'a', 'a')).toBe(workspace);
     expect(rebindClaudeTile(workspace, 'board', 'n', 'fresh')).toBe(workspace);
@@ -196,7 +214,7 @@ describe('updateDiagramDock', () => {
   });
 
   it('leaves tiles that are not Claude tiles alone', () => {
-    const notes: Tile = { kind: 'notes', id: 'n', text: '', layout: { x: 0, y: 0, w: 6, h: 14 }, weight: 1 };
+    const notes: Tile = { kind: 'notes', id: 'n', text: '', layout: { x: 0, y: 0, w: 6, h: 14 }, weight: 1, isCollapsed: false };
     const workspace = workspaceWith(notes);
     expect(updateDiagramDock(workspace, 'n', { isOpen: true })).toBe(workspace);
   });

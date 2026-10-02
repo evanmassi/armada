@@ -2,6 +2,7 @@ import type { CSSProperties, DragEvent } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
 import { ActivityDot } from '@renderer/shared/ui/components/ActivityDot';
+import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
 import { applyDragGhost } from '@renderer/shared/utils/dragGhost';
 import { LANE_DRAG_MIME } from '../../../model/boardDragTypes';
 import type { Lane } from '../../../model/lanes';
@@ -44,16 +45,7 @@ export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggl
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
-      <button
-        type="button"
-        className="hud-glyph"
-        data-glyph={lane.isCollapsed ? '▸' : '◂'}
-        onClick={onToggleCollapsed}
-        aria-expanded={!lane.isCollapsed}
-        aria-label={lane.isCollapsed ? `Expand ${name}` : `Collapse ${name}`}
-      >
-        {lane.isCollapsed ? '▸' : '◂'}
-      </button>
+      <CollapseToggleButton isCollapsed={lane.isCollapsed} target={name} collapsesToward="left" onToggle={onToggleCollapsed} />
       <span className={`truncate text-[12px] ${lane.isCollapsed ? '[writing-mode:vertical-rl]' : 'tile-project-plate'}`}>{name}</span>
       {lane.isCollapsed ? (
         <span className="flex flex-col gap-1">{activityDots}</span>

@@ -22,6 +22,7 @@ import {
   setTileWeights,
   swapTiles,
   toggleLaneCollapsed,
+  toggleTileCollapsed,
   updateDiagramDock,
   type BoardSeed,
   type PositionedLayout,
@@ -54,6 +55,7 @@ export function useBoardsEditor() {
       edit((workspace) => setTileWeights(workspace, boardId, weights)),
     scaleTileWeight: (boardId: string, tileId: string, factor: number) =>
       edit((workspace) => scaleTileWeight(workspace, boardId, tileId, factor)),
+    toggleTileCollapsed: (boardId: string, tileId: string) => edit((workspace) => toggleTileCollapsed(workspace, boardId, tileId)),
     setLaneWeights: (boardId: string, weights: Record<string, number>) => edit((workspace) => setLaneWeights(workspace, boardId, weights)),
     scaleLaneWeight: (boardId: string, key: string, factor: number) => edit((workspace) => scaleLaneWeight(workspace, boardId, key, factor)),
     toggleLaneCollapsed: (boardId: string, key: string) => edit((workspace) => toggleLaneCollapsed(workspace, boardId, key)),
