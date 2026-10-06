@@ -17,20 +17,29 @@ describe('parseUsageProbeOutput', () => {
       }),
     ].join('\n');
     expect(parseUsageProbeOutput(stdout, NOW)).toEqual({
-      fiveHour: { usedPercentage: 5, resetsAt: 1789772401 },
-      sevenDay: { usedPercentage: 42, resetsAt: 1789887601 },
-      modelScoped: [{ displayName: 'Fable', usedPercentage: 82, resetsAt: 1789887600 }],
-      reportedAt: NOW,
+      hasLimits: true,
+      usage: {
+        fiveHour: { usedPercentage: 5, resetsAt: 1789772401 },
+        sevenDay: { usedPercentage: 42, resetsAt: 1789887601 },
+        modelScoped: [{ displayName: 'Fable', usedPercentage: 82, resetsAt: 1789887600 }],
+        reportedAt: NOW,
+      },
     });
   });
 
   it('drops windows without a utilization and reports an empty model list when none is scoped', () => {
     const stdout = controlResponse({ five_hour: { utilization: 3, resets_at: null }, seven_day: null });
-    expect(parseUsageProbeOutput(stdout, NOW)).toEqual({ fiveHour: { usedPercentage: 3 }, sevenDay: undefined, modelScoped: [], reportedAt: NOW });
+    expect(parseUsageProbeOutput(stdout, NOW)).toEqual({
+      hasLimits: true,
+      usage: { fiveHour: { usedPercentage: 3 }, sevenDay: undefined, modelScoped: [], reportedAt: NOW },
+    });
   });
 
-  it('has nothing to report when plan limits do not apply or the answer is not ours', () => {
-    expect(parseUsageProbeOutput(controlResponse(null), NOW)).toBeUndefined();
+  it('answers without limits when plan limits do not apply', () => {
+    expect(parseUsageProbeOutput(controlResponse(null), NOW)).toEqual({ hasLimits: false });
+  });
+
+  it('has no answer when the response is not ours or not json', () => {
     expect(parseUsageProbeOutput(controlResponse({ five_hour: { utilization: 1, resets_at: null } }, 'other'), NOW)).toBeUndefined();
     expect(parseUsageProbeOutput('not json\n', NOW)).toBeUndefined();
   });

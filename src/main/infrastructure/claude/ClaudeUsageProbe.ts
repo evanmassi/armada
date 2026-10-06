@@ -73,11 +73,13 @@ export class ClaudeUsageProbe {
   }
 
   private accept(stdout: string, exitCode: number | null): void {
-    const usage = parseUsageProbeOutput(stdout, Date.now());
-    if (!usage) {
+    const answer = parseUsageProbeOutput(stdout, Date.now());
+    if (!answer) {
       this.deps.logger.error('usage.probe.rejected', { exitCode, stdout: stdout.slice(0, LOGGED_STDOUT_CHARS) });
       return;
     }
+    if (!answer.hasLimits) return;
+    const { usage } = answer;
     this.latest = usage;
     this.listeners.forEach((listener) => listener(usage));
   }

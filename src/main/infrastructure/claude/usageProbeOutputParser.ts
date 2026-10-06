@@ -40,17 +40,20 @@ const toUsageWindow = (probed: ProbedWindow | null | undefined): UsageWindow | u
   return resetsAt === undefined ? { usedPercentage: probed.utilization } : { usedPercentage: probed.utilization, resetsAt };
 };
 
-export function parseUsageProbeOutput(stdout: string, reportedAt: number): ClaudeUsage | undefined {
+export type UsageProbeAnswer = { hasLimits: false } | { hasLimits: true; usage: ClaudeUsage };
+
+export function parseUsageProbeOutput(stdout: string, reportedAt: number): UsageProbeAnswer | undefined {
   for (const line of stdout.split('\n')) {
     const parsed = probeResponseSchema.safeParse(parseJsonOrUndefined(line));
     if (!parsed.success) continue;
     const limits = parsed.data.response.response.rate_limits;
-    if (!limits) return undefined;
+    if (!limits) return { hasLimits: false };
     const modelScoped = (limits.model_scoped ?? []).flatMap((row): ModelUsageWindow[] => {
       const usageWindow = toUsageWindow(row);
       return usageWindow ? [{ ...usageWindow, displayName: row.display_name }] : [];
     });
-    return { fiveHour: toUsageWindow(limits.five_hour), sevenDay: toUsageWindow(limits.seven_day), modelScoped, reportedAt };
+    const usage = { fiveHour: toUsageWindow(limits.five_hour), sevenDay: toUsageWindow(limits.seven_day), modelScoped, reportedAt };
+    return { hasLimits: true, usage };
   }
   return undefined;
 }
