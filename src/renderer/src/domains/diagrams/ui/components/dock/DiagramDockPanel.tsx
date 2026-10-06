@@ -2,7 +2,7 @@ import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import type { DiagramSummary } from '@shared/diagrams/diagramSchemas';
 import { DEFAULT_DIAGRAM_DOCK, type DiagramDock } from '@shared/workspace/workspaceSchemas';
 import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
-import { StrokeIconButton } from '@renderer/shared/ui/components/StrokeIconButton';
+import { StrokeIconButton, StrokeIconDrawing } from '@renderer/shared/ui/components/StrokeIconButton';
 import { useDiagramSave } from '../../../hooks/useDiagramSave';
 import { useTileDiagramsQuery } from '../../../hooks/useTileDiagramsQuery';
 import { DiagramPagerControls } from './DiagramPagerControls';
@@ -88,7 +88,7 @@ function DiagramDockPanelContent({ tileId, dock, onDockChange, diagrams }: Diagr
       >
         <CollapseToggleButton isCollapsed={!dock.isOpen} target="diagram" onToggle={() => onDockChange({ isOpen: !dock.isOpen })} />
         <span
-          className="diagram-seam-label readout text-[10px]"
+          className="diagram-seam-label"
           role="separator"
           aria-orientation="horizontal"
           aria-label="Diagram panel height. Arrow up and down resize it."
@@ -96,9 +96,9 @@ function DiagramDockPanelContent({ tileId, dock, onDockChange, diagrams }: Diagr
           tabIndex={0}
           onKeyDown={resizeFromKeyboard}
         >
-          DIAGRAM
+          <StrokeIconDrawing icon="diagram" className="tile-accent-icon" />
         </span>
-        <span className="min-w-0 flex-1 truncate font-ui text-[12px] font-semibold tracking-wide text-fg">{diagram.fileName}</span>
+        <span className="tile-title min-w-0 flex-1 truncate">{diagram.fileName}</span>
         <StrokeIconButton icon="save" label={SAVE_LABELS[diagram.format]} onClick={() => save(diagram)} disabled={isSaving} />
         <StrokeIconButton icon="fullView" label="Full view" onClick={() => setIsFullView(true)} />
       </div>

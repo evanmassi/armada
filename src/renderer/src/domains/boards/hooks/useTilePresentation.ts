@@ -2,8 +2,8 @@ import type { Tile } from '@shared/workspace/workspaceSchemas';
 import { useConversationTitles, useProjectAccents } from '@renderer/domains/conversations';
 
 const NEW_SESSION_TITLE = 'New session';
-const SHELL_TITLE = 'shell';
-const NOTES_TITLE = 'notes';
+const SHELL_TITLE = 'Shell';
+const NOTES_TITLE = 'Notes';
 
 interface TilePresentation {
   title: string;

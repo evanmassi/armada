@@ -220,6 +220,14 @@ body,
   clip-path: inset(10px 0);
 }
 
+.tile-title {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  color: var(--color-fg);
+}
+
 .tile-titlebar-readouts {
   margin: 2px -0.5rem -0.25rem;
   padding: 5px 0.5rem 2px;
@@ -246,9 +254,18 @@ body,
 }
 
 .diagram-seam-label {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  min-height: 20px;
   color: var(--tile-accent);
-  letter-spacing: 0.12em;
-  text-shadow: 0 0 8px color-mix(in srgb, var(--tile-accent) 50%, transparent);
+}
+
+.tile-accent-icon {
+  flex-shrink: 0;
+  height: 14px;
+  color: var(--tile-accent);
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--tile-accent) 60%, transparent));
 }
 
 .diagram-canvas {

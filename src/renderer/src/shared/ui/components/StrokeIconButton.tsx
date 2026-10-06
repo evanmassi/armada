@@ -1,6 +1,6 @@
 import { CLICK_ORIGIN_PROPS } from '@renderer/app/clickFeedback';
 
-export type StrokeIcon = 'shell' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'save' | 'fullView';
+export type StrokeIcon = 'shell' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'save' | 'fullView' | 'diagram' | 'notes';
 
 const ICON_DRAWINGS: Record<StrokeIcon, { viewBox: string; strokes: string }> = {
   shell: { viewBox: '0 0 18 16', strokes: 'M2 3.5 7.5 8 2 12.5M10 13.5h6.5' },
@@ -9,6 +9,8 @@ const ICON_DRAWINGS: Record<StrokeIcon, { viewBox: string; strokes: string }> = 
   chevronDown: { viewBox: '0 0 16 16', strokes: 'M3.5 6 8 10.5 12.5 6' },
   save: { viewBox: '0 0 16 16', strokes: 'M8 2.5v7.5M4.5 6.5 8 10l3.5-3.5M2.5 11.5v2h11v-2' },
   fullView: { viewBox: '0 0 16 16', strokes: 'M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10' },
+  diagram: { viewBox: '0 0 16 16', strokes: 'M5.5 1.5h5v4h-5zM1.5 10.5h5v4h-5zM9.5 10.5h5v4h-5zM8 5.5V8M4 10.5V8h8v2.5' },
+  notes: { viewBox: '0 0 16 16', strokes: 'M3.5 1.5h9v13h-9zM6 5.5h4M6 8h4M6 10.5h2.5' },
 };
 
 interface StrokeIconButtonProps {
@@ -20,7 +22,7 @@ interface StrokeIconButtonProps {
   isClickOrigin?: boolean;
 }
 
-function IconStrokes({ icon, className }: { icon: StrokeIcon; className: string }) {
+export function StrokeIconDrawing({ icon, className }: { icon: StrokeIcon; className: string }) {
   const { viewBox, strokes } = ICON_DRAWINGS[icon];
   return (
     <svg className={className} viewBox={viewBox} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -41,8 +43,8 @@ export function StrokeIconButton({ icon, label, onClick, disabled, expanded, isC
       title={label}
       aria-label={label}
     >
-      <IconStrokes icon={icon} className="hud-glyph-echo" />
-      <IconStrokes icon={icon} className="hud-glyph-icon" />
+      <StrokeIconDrawing icon={icon} className="hud-glyph-echo" />
+      <StrokeIconDrawing icon={icon} className="hud-glyph-icon" />
     </button>
   );
 }

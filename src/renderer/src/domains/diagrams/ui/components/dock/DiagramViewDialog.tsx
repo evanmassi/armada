@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { DIAGRAM_PAGE_ESCAPE_MESSAGE, type DiagramSummary } from '@shared/diagrams/diagramSchemas';
+import { StrokeIconDrawing } from '@renderer/shared/ui/components/StrokeIconButton';
 import { DiagramCanvasPanel } from './DiagramCanvasPanel';
 
 interface DiagramViewDialogProps {
@@ -47,8 +48,10 @@ export function DiagramViewDialog({ tileId, diagram, isFullView, onExitFullView,
     >
       {isFullView && (
         <div className="diagram-seam flex items-center gap-2 px-3 py-1.5">
-          <span className="diagram-seam-label readout text-[11px]">DIAGRAM</span>
-          <span className="min-w-0 flex-1 truncate font-ui text-[13px] font-semibold tracking-wide text-fg">{diagram.fileName}</span>
+          <span className="diagram-seam-label">
+            <StrokeIconDrawing icon="diagram" className="tile-accent-icon" />
+          </span>
+          <span className="tile-title min-w-0 flex-1 truncate">{diagram.fileName}</span>
           <button
             type="button"
             className="hud-glyph px-1 text-muted"

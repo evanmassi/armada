@@ -6,7 +6,7 @@ import { DiagramDockPanel } from '@renderer/domains/diagrams';
 import { disposeLiveTerminal, TerminalSessionTile } from '@renderer/domains/terminal';
 import { ActivityDot } from '@renderer/shared/ui/components/ActivityDot';
 import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
-import { StrokeIconButton } from '@renderer/shared/ui/components/StrokeIconButton';
+import { StrokeIconButton, StrokeIconDrawing } from '@renderer/shared/ui/components/StrokeIconButton';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
 import { useTilePresentation } from '../../../hooks/useTilePresentation';
 import { BoardNotesTile } from '../notes/BoardNotesTile';
@@ -15,11 +15,6 @@ import { BoardTileSessionIndicator } from './BoardTileSessionIndicator';
 export const TILE_DRAG_HANDLE_CLASS = 'tile-drag-handle';
 
 export type ArrowDirection = 'left' | 'right' | 'up' | 'down';
-
-const STATUS_LABELS: Record<Tile['kind'], string> = { claude: 'idle', shell: 'shell', notes: 'notes' };
-
-const statusLabel = (tile: Tile, activity: ActivityState | undefined): string =>
-  activity && (tile.kind === 'claude' || activity === 'exited') ? activity : STATUS_LABELS[tile.kind];
 
 const STATUS_TONES: Record<ActivityState, string> = { working: 'text-accent', waiting: 'text-alert', approval: 'text-alert', idle: 'text-muted', exited: 'text-muted' };
 
@@ -64,6 +59,7 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
   const editor = useBoardsEditor();
   const { title, accentColor } = useTilePresentation()(tile);
   const isCollapsed = isCollapsible && tile.isCollapsed;
+  const isStatusInTitleRow = tile.kind === 'claude' ? isCollapsed : activity === 'exited';
   const relaunch = (): void => {
     disposeLiveTerminal(tile.id);
     setLaunchCount((count) => count + 1);
@@ -78,10 +74,9 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
     <span
       className={`tile-status readout ml-auto shrink-0 text-[11px] ${activity ? STATUS_TONES[activity] : 'text-muted'}`}
       data-tone={activity === 'waiting' || activity === 'approval' ? 'alert' : undefined}
-      style={activity || tile.kind === 'claude' ? undefined : { color: accentColor }}
       title={tile.cwd}
     >
-      {statusLabel(tile, activity)}
+      {activity ?? 'idle'}
     </span>
   );
 
@@ -109,9 +104,13 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
       >
         <div className="flex items-center gap-2">
           {isCollapsible && <CollapseToggleButton isCollapsed={isCollapsed} target="tile" onToggle={toggleCollapsed} />}
-          {activity ? <ActivityDot state={activity} /> : <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: accentColor }} />}
-          <span className="min-w-0 flex-1 truncate font-ui text-[13px] font-semibold tracking-wide text-fg">{title}</span>
-          {(tile.kind !== 'claude' || isCollapsed) && status}
+          {tile.kind === 'claude' ? (
+            activity ? <ActivityDot state={activity} /> : <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: accentColor }} />
+          ) : (
+            <StrokeIconDrawing icon={tile.kind} className="tile-accent-icon" />
+          )}
+          <span className="tile-title min-w-0 flex-1 truncate">{title}</span>
+          {isStatusInTitleRow && status}
           {activity === 'exited' && (
             <button type="button" className="hud-glyph px-1 text-muted" data-glyph="↻" onClick={relaunch} title="Relaunch" aria-label="Relaunch session">
               ↻

@@ -35,10 +35,10 @@ export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggl
 
   return (
     <header
-      className={`readout lane-titlebar flex shrink-0 cursor-grab items-center gap-2 border-b px-2 py-1 text-[11px] active:cursor-grabbing ${
+      className={`readout lane-titlebar flex text-fg shrink-0 cursor-grab items-center gap-2 border-b px-2 py-1 text-[11px] active:cursor-grabbing ${
         lane.isCollapsed ? 'h-full flex-col justify-start border-b-0 px-1 py-2' : ''
       } ${isDropTarget ? 'ring-1 ring-accent/70' : ''}`}
-      style={{ '--tile-accent': accentColor, borderColor: `color-mix(in srgb, ${accentColor} 45%, transparent)`, color: accentColor } as CSSProperties}
+      style={{ '--tile-accent': accentColor, borderColor: `color-mix(in srgb, ${accentColor} 45%, transparent)` } as CSSProperties}
       draggable
       onDragStart={handleDragStart}
       onDragOver={onDragOver}
@@ -57,10 +57,10 @@ export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggl
             <span className="ml-1 text-edge-strong">{lane.tiles.length}</span>
           </span>
           <span className="flex items-center gap-1">
-            <button type="button" className="hud-button hud-button-compact" onClick={onStartSession} title="New session in this project" aria-label={`New session in ${name}`}>
+            <button type="button" className="readout hud-button hud-button-compact text-muted" onClick={onStartSession} title="New session in this project" aria-label={`New session in ${name}`}>
               + session
             </button>
-            <button type="button" className="hud-button hud-button-compact" onClick={onAddNotes} title="Add notes to this lane" aria-label={`Add notes to ${name}`}>
+            <button type="button" className="readout hud-button hud-button-compact text-muted" onClick={onAddNotes} title="Add notes to this lane" aria-label={`Add notes to ${name}`}>
               + notes
             </button>
             <button type="button" className="hud-glyph text-muted" data-glyph="×" data-tone="neutral" onClick={onClose} aria-label={`Close ${name} lane`}>
