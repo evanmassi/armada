@@ -1,10 +1,11 @@
 import { useState, type CSSProperties, type ReactNode } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import type { Board } from '@shared/workspace/workspaceSchemas';
 import { CLICK_ORIGIN_PROPS, ROW_ORIGIN_CLICK_PROPS } from '@renderer/app/clickFeedback';
+import { useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
 import { useProjectColors } from '@renderer/domains/conversations';
+import { ActivityIndicator } from '@renderer/shared/ui/components/ActivityIndicator';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
-import { soleProjectCwd } from '../../../model/lanes';
-import { BoardProjectChangesIndicator } from '../changes/BoardProjectChangesIndicator';
 
 interface BoardSwitcherBarProps {
   boards: Board[];
@@ -19,6 +20,7 @@ interface BoardSwitcherBarProps {
 export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, onRename, onRemove, children }: BoardSwitcherBarProps) {
   const [editingBoardId, setEditingBoardId] = useState<string>();
   const { colorOf } = useProjectColors();
+  const approvalTileIds = useSessionActivityStore(useShallow((state) => Object.keys(state.byTileId).filter((tileId) => state.byTileId[tileId]?.state === 'approval')));
 
   const confirmRemove = (board: Board): void => {
     if (board.tiles.length === 0 || window.confirm(`Remove board "${board.name}" and its ${board.tiles.length} tiles?`)) {
@@ -30,12 +32,11 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
     <nav className="flex items-center gap-2 border-b border-edge bg-panel/80 px-3 py-1.5 backdrop-blur" aria-label="Boards">
       {boards.map((board, index) => {
         const isActive = board.id === activeBoardId;
-        const projectCwd = soleProjectCwd(board);
         const projectColor = board.projectCwd ? colorOf(board.projectCwd) : undefined;
         return (
           <div
             key={board.id}
-            className="readout hud-tab group -mt-1.5 -mb-[7px] flex items-center self-stretch text-muted"
+            className="readout hud-tab group -mt-1.5 -mb-[7px] flex items-center self-stretch pb-[2px] text-muted"
             style={projectColor ? ({ '--hud-line': projectColor } as CSSProperties) : undefined}
             {...CLICK_ORIGIN_PROPS}
           >
@@ -64,7 +65,7 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
               >
                 <span className="text-edge-strong">{String(index + 1).padStart(2, '0')}</span>
                 <span>{board.name}</span>
-                {projectCwd !== undefined && <BoardProjectChangesIndicator cwd={projectCwd} />}
+                {board.tiles.some((tile) => approvalTileIds.includes(tile.id)) && <ActivityIndicator state="approval" />}
               </button>
             )}
             <button

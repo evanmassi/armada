@@ -19,11 +19,6 @@ const laneKeysInAppearanceOrder = (tiles: Tile[]): string[] => [...new Set(tiles
 
 export const hasMultipleLanes = (board: Board): boolean => laneKeysInAppearanceOrder(board.tiles).length > 1;
 
-export function soleProjectCwd(board: Board): string | undefined {
-  const keys = laneKeysInAppearanceOrder(board.tiles);
-  return keys.length === 1 ? keys[0] : undefined;
-}
-
 export function computeLanes(board: Board): Lane[] {
   const tiles = lanedTiles(board);
   const present = laneKeysInAppearanceOrder(tiles);

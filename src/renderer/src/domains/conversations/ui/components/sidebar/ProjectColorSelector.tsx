@@ -47,10 +47,10 @@ export function ProjectColorSelector({ color, onChange }: ProjectColorSelectorPr
   );
 
   return (
-    <div className="relative flex items-center">
+    <div className="relative mr-1 flex items-center">
       <button
         type="button"
-        className="h-3 w-3 rounded-full border border-muted"
+        className="h-[8px] w-[8px] rounded-full border border-muted"
         style={color ? { background: color, borderColor: 'transparent', boxShadow: `0 0 7px ${color}` } : undefined}
         onClick={() => setIsOpen((value) => !value)}
         aria-label={color ? `Color ${color}. Change color` : 'Assign a color'}
@@ -60,8 +60,8 @@ export function ProjectColorSelector({ color, onChange }: ProjectColorSelectorPr
         <div className="absolute top-5 left-0 z-10 flex w-max flex-col gap-1.5 border border-edge-strong bg-panel/95 p-2 backdrop-blur">
           <div className="grid grid-cols-9 gap-1.5">{VIVID_PROJECT_COLORS.map(renderSwatch)}</div>
           <div className="grid grid-cols-9 gap-1.5">{SOFT_PROJECT_COLORS.map(renderSwatch)}</div>
-          <div className="flex items-center gap-2 pt-1 text-[11px] text-muted">
-            <button type="button" className="rounded border border-muted px-1.5 hover:text-fg" onClick={() => customInputRef.current?.click()}>
+          <div className="flex items-center gap-2 pt-1.5">
+            <button type="button" className="readout hud-button hud-button-compact text-muted" onClick={() => customInputRef.current?.click()}>
               custom
             </button>
             <input
@@ -72,7 +72,7 @@ export function ProjectColorSelector({ color, onChange }: ProjectColorSelectorPr
               onChange={(event) => setCustomDraft(event.target.value)}
               aria-label="Custom color"
             />
-            <button type="button" className="rounded border border-muted px-1.5 hover:text-fg" onClick={() => choose(undefined)}>
+            <button type="button" className="readout hud-button hud-button-compact text-muted" onClick={() => choose(undefined)}>
               none
             </button>
           </div>

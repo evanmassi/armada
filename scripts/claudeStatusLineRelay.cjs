@@ -52,6 +52,9 @@ const saveSessionStatus = (input) => {
     modelName: input.model?.display_name,
     effortLevel: input.effort?.level,
     contextWindow: contextWindow(input.context_window),
+    linesAdded: input.cost?.total_lines_added,
+    linesRemoved: input.cost?.total_lines_removed,
+    durationMs: input.cost?.total_duration_ms,
     cwd: input.workspace?.current_dir ?? input.cwd,
     reportedAt: Date.now(),
   });

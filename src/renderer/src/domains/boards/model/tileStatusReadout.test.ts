@@ -1,13 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { SessionStatus } from '@shared/sessions/sessionSchemas';
-import { contextLeftPercentage, modelLabel, sessionFolderLabel } from './tileStatusReadout';
-
-const status = (overrides: Partial<SessionStatus>): SessionStatus => ({
-  terminalId: '00000000-0000-4000-8000-000000000001',
-  sessionId: '00000000-0000-4000-8000-000000000002',
-  reportedAt: 1,
-  ...overrides,
-});
+import { contextLeftPercentage, contextSizeLabel, durationLabel, sessionFolderLabel, shortModelName } from './tileStatusReadout';
 
 describe('contextLeftPercentage', () => {
   it('counts down to the auto-compact point, not to an empty window', () => {
@@ -38,10 +30,24 @@ describe('sessionFolderLabel', () => {
   });
 });
 
-describe('modelLabel', () => {
-  it('joins model and effort, and drops what is missing', () => {
-    expect(modelLabel(status({ modelName: 'Opus 5.5', effortLevel: 'xhigh' }))).toBe('Opus 5.5 · xhigh');
-    expect(modelLabel(status({ modelName: 'Opus 5.5' }))).toBe('Opus 5.5');
-    expect(modelLabel(status({}))).toBeUndefined();
+describe('shortModelName', () => {
+  it('drops the context note Claude Code appends to the model name', () => {
+    expect(shortModelName('Opus 5.5 (1M context)')).toBe('Opus 5.5');
+    expect(shortModelName('Sonnet 5.5')).toBe('Sonnet 5.5');
+  });
+});
+
+describe('contextSizeLabel', () => {
+  it('writes millions as M and thousands as K', () => {
+    expect(contextSizeLabel(1_000_000)).toBe('1M');
+    expect(contextSizeLabel(200_000)).toBe('200K');
+  });
+});
+
+describe('durationLabel', () => {
+  it('shows minutes, and hours with padded minutes past the hour', () => {
+    expect(durationLabel(59_000)).toBe('0m');
+    expect(durationLabel(42 * 60_000)).toBe('42m');
+    expect(durationLabel((65 * 60 + 30) * 1000)).toBe('1h 05m');
   });
 });

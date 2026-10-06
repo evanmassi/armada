@@ -135,13 +135,13 @@ export function ConversationProjectSection({
   return (
     <section
       className={`border-b border-edge transition-opacity ${dropPlacement ? PLACEMENT_LINE_CLASS[dropPlacement] : ''} ${isBeingDragged ? 'opacity-40' : ''}`}
+      style={{ '--project-accent': accentFor(project.cwd) } as CSSProperties}
       onDragOver={handleDragOver}
       onDragLeave={() => setDropPlacement(undefined)}
       onDrop={handleDrop}
     >
       <header
         className="project-header flex cursor-grab items-center gap-1 px-2 py-1 active:cursor-grabbing"
-        style={{ '--project-accent': accentFor(project.cwd) } as CSSProperties}
         draggable
         onDragStart={handleDragStart}
         onDragEnd={endDrag}
@@ -186,7 +186,7 @@ export function ConversationProjectSection({
         <ActionMenu label={`${displayName} actions`} entries={menuEntries} />
       </header>
       {isOpen && (
-        <div className="flex flex-col pb-1">
+        <div className="project-conversations flex flex-col pb-1">
           {active.map((conversation) => renderRow(conversation, false))}
           {archived.length > 0 && (
             <button

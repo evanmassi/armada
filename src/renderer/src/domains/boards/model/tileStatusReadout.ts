@@ -21,5 +21,13 @@ export function sessionFolderLabel(projectCwd: string, sessionCwd: string | unde
   return session;
 }
 
-export const modelLabel = ({ modelName, effortLevel }: SessionStatus): string | undefined =>
-  [modelName, effortLevel].filter(Boolean).join(' · ') || undefined;
+export const shortModelName = (modelName: string): string => modelName.replace(/\s*\(.*\)$/, '');
+
+export const contextSizeLabel = (size: number): string => (size >= 1_000_000 ? `${size / 1_000_000}M` : `${Math.round(size / 1000)}K`);
+
+export function durationLabel(durationMs: number): string {
+  const totalMinutes = Math.floor(durationMs / 60_000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return hours ? `${hours}h ${String(minutes).padStart(2, '0')}m` : `${minutes}m`;
+}

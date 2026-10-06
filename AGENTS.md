@@ -40,7 +40,8 @@ id under the tile and the tile rebinds to it; the other events drive the tile's 
 The same install wraps the user's `statusLine` command in `scripts/claudeStatusLineRelay.cjs`, the original command
 base64-encoded as its argument. Only the status line input carries `rate_limits`; hooks do not. Inside a tile the relay
 writes the 5 hour and weekly numbers to `userData/claude-usage/usage.json` (latest value, replaced by rename) and the
-session's model, effort, context window, and folder to `userData/claude-session-status/<terminalId>.json`, and draws
+session's model, effort, context window, folder, lines added and removed, and run time to
+`userData/claude-session-status/<terminalId>.json`, and draws
 nothing: the tile title bar shows that instead. Outside a tile it runs the original command on the same input.
 `ClaudeUsageFile` watches the usage file; `ClaudeSessionStatusFiles` watches the status folder, clears it on launch, and
 pushes each report to the renderer, which keeps it only while the session id matches the tile's. Per-model weekly limits (the Fable limit) never
@@ -86,7 +87,6 @@ src/main/
 ├── infrastructure/
 │   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser, ClaudeHookInbox, ClaudeUsageFile, ClaudeSessionStatusFiles, ClaudeUsageProbe + usageProbeOutputParser, ClaudeSettingsFile + claudeSettingsIntegration, ClaudeRelayScripts
 │   ├── diagrams/     # TileDiagramFiles (list, read, watch, prune), diagramPageProtocol (serves .html diagrams)
-│   ├── git/          # GitChangeCounter: uncommitted lines added and removed under a project folder
 │   ├── folders/      # FolderOpener: Explorer and VS Code
 │   ├── links/        # LinkOpener + linkTargets + binaryFileCheck: the only judge of what a clicked terminal link opens
 │   ├── clipboard/    # ClipboardImageSaver: a copied screenshot written to userData/clipboard-images
@@ -161,7 +161,8 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
 - **UI state**: Zustand. `boardSelectionStore` (active board, opened boards, focused tile), `sessionActivityStore`
   (per-tile working / waiting / approval / idle / exited, driven by Claude hook events, Enter and Escape typed into the
   tile, and process exit),
-  `sessionStatusStore` (per-tile model, effort, context window, and folder from the status line relay), `notificationStore`.
+  `sessionStatusStore` (per-tile model, effort, context window, folder, lines changed, and run time from the status line
+  relay), `notificationStore`.
 - Never store main-owned data in Zustand.
 - **Terminal stream** is neither. Pty output arrives on a per-session IPC channel and is written straight into the
   xterm instance. It is never held in React state.
@@ -173,7 +174,10 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   `workspace.sidebar`; `model/sidebarLayout.ts` turns projects plus that state into sections (groups, Other,
   Archived) and `model/sidebarEdits.ts` holds the pure edits. Color belongs to the project, not the tile, so every
   tile from one project wears the same color. Colors are free hex; the swatch grid in `ui/projectColorPalette.ts` is
-  a suggestion list, and legacy hue names convert at parse time. It does not know about grids.
+  a suggestion list, and legacy hue names convert at parse time. It does not know about grids. The sidebar reads as a
+  tree: groups are spaced apart under capitalized names, and a project's conversations indent under its name beside a
+  guide line in the project color, which the open conversation's row lights up. A row's archive and pin buttons take
+  no width until hover or focus slides them in.
 - `boards` owns Tile placement, size, and order. Tiles come in three kinds (`claude`, `shell`, `notes`), a
   discriminated union in the schema; files written before kinds existed default to `claude`. A Claude tile references
   a session by id and nothing else; it asks `conversations` for its title and accent. New tiles insert after the
@@ -185,10 +189,13 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   with explicit x/y/w/h (`react-grid-layout`); reflow rewrites its positions from the tiling. In `auto`, a tile's title
   bar chevron collapses it to its first title row (`isCollapsed` on the tile); the body is hidden, not unmounted, so the
   session keeps running. A collapsed tile stays in place in a lane and gives its height to the rest; on a
-  single-project board it leaves the tiling and stacks under it. `free` ignores the flag. A Claude tile's title bar puts the title alone on its first row and, on a second, model and effort, context left before
-  auto-compact as a draining bar, and the session's folder only when it has left the project folder, with the activity word at the right. Uncommitted +/- per
-  project (`useProjectLineChangesQuery`, refetched when a turn ends) sits on the lane header, or on the board tab when the
-  board holds one project. Opening a
+  single-project board it leaves the tiling and stacks under it. `free` ignores the flag. A Claude tile's title bar puts its
+  spark icon and title on the first row and, on a second, model, context size, and effort, context left before
+  auto-compact (also a draining bar), the session's folder only when it has left the project folder, and the lines the
+  session added and removed with its run time, with the activity state at the right. That row is a size container: as
+  the tile narrows it drops context size, then run time, then context left, then folder and model, then line counts,
+  and always keeps effort and state. Lane headers dim with their tiles when focus is in another lane, and a board tab
+  shows the approval beacon while any of its tiles waits for approval. Opening a
   conversation while another project's board is active routes it to that project's own board unless shift is held.
 - `diagrams` renders a tile's diagrams and knows nothing about boards. `DiagramDockPanel` takes the dock state
   (`diagramDock` on the Claude tile: open, height, selected file) and a change callback from `boards`, which owns the
@@ -244,7 +251,18 @@ and saving a clipboard image.
 
 **Design tokens**: colors and fonts live once, in `app/styles/index.css` under `@theme static`. Code that needs a
 literal value (the xterm theme, the drag ghost) reads the CSS variable; `static` keeps every token emitted even when
-no utility class uses it.
+no utility class uses it. Rajdhani is declared there too, with ascent and descent overrides that center its capitals in
+their line box, so plain flex centering lines text up with icons and framed buttons.
+
+**Activity states** draw through one component, `ActivityIndicator` in `shared/ui`, wherever they appear (tile status,
+lane headers, sidebar rows, board tabs): a stepping star for working, a white target for waiting, a hollow-and-solid
+amber beacon for approval, a grey dot for idle, a ring for exited. The working word in a tile also carries a glint
+that passes back and forth.
+
+**Keyboard focus** is one rule at the end of the stylesheet: a halo (a line plus an outer glow in the accent, or the
+project color in a tile title bar) that stutters on like a tube when focus lands. Rows, board tabs, and tile title
+bars draw it just inside their edge, since they sit against something that would clip it, and a lit `hud-row` is its
+own focus mark. Text inputs keep their own focus styles.
 
 **Control styles** (Strand OS, from `overload/refs/ui_design_ideas`) are CSS classes in the same file, not components,
 so the click feedback and every existing button keep working unchanged. Four tiers, all tinted by `--hud-line`
@@ -256,12 +274,14 @@ so the click feedback and every existing button keep working unchanged. Four tie
   bottom rail that sits on the switcher's bottom edge, in the board's project color; full when the board is current.
   On hover the rail flickers on like a tube catching and the wash rises from it, settling at half strength. The name and × are separate buttons inside it.
 - `hud-glyph` for small glyph buttons (×, +, ⋮, chevrons): one 14px mono size with a 20px target, glow and an offset
-  copy from `data-glyph` on hover. Outline icons (tile title bar, diagram dock) come from `StrokeIconButton` in
+  copy from `data-glyph` on hover. Outline icons (each tile's kind, tile title bar, diagram dock) come from `StrokeIconButton` in
   `shared/ui`, one stroke drawing per icon rendered twice for the same glow and offset copy; add icons there. Every
   collapse control is a `CollapseToggleButton` (outline chevrons) and sits first on the left of the bar it collapses. Every × carries `data-tone="neutral"` and lights white, like a normal close button.
 - `hud-row` for rows (menu items, conversation rows): the Odysseus lit-row recipe, a left bar, a left-weighted wash,
   inner edge glow, outer halo and faint dark scanlines; half strength on hover, full on `data-selected`. A conversation
   row is selected when it is open in a tile on the active board.
+- `tile-project-plate` for a lane's name: a chamfered tab with a lit left edge and a tint that fades to the right, in
+  the project color.
 
 ---
 

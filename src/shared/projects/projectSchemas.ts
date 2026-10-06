@@ -5,8 +5,3 @@ export const folderRequestSchema = z.object({
 });
 
 export type FolderRequest = z.infer<typeof folderRequestSchema>;
-
-export interface ProjectLineChanges {
-  added: number;
-  removed: number;
-}

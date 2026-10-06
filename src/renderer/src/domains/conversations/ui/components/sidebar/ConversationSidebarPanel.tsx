@@ -133,7 +133,7 @@ export function ConversationSidebarPanel({ footer, onOpenConversation, onOpenPro
     };
     const groupId = section.group?.id;
     return (
-      <section key={section.key}>
+      <section key={section.key} className="sidebar-group">
         {section.kind !== 'other' || sections.length > 1 ? (
           <SidebarGroupHeader
             name={section.group?.name ?? (isArchivedSection ? 'Archived' : 'Other')}
@@ -205,8 +205,8 @@ export function ConversationSidebarPanel({ footer, onOpenConversation, onOpenPro
           {isPending && <p className="px-3 py-2 text-muted">Reading conversations…</p>}
           {isError && <p className="px-3 py-2 text-alert">{getErrorMessage(error)}</p>}
           {!isSearching && pinnedConversations.length > 0 && (
-            <section className="border-b border-edge pb-1">
-              <h2 className="readout rule-label px-3 py-1.5 text-muted">Pinned</h2>
+            <section className="sidebar-group border-b border-edge pb-1">
+              <h2 className="readout rule-label px-3 py-1.5 text-[12px] text-fg">Pinned</h2>
               {pinnedConversations.map((conversation) => (
                 <ConversationRow
                   key={conversation.sessionId}

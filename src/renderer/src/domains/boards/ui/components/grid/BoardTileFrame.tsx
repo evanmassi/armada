@@ -4,7 +4,7 @@ import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore
 import { useSessionActivityStore, type ActivityState } from '@renderer/app/stores/sessionActivityStore';
 import { DiagramDockPanel } from '@renderer/domains/diagrams';
 import { disposeLiveTerminal, TerminalSessionTile } from '@renderer/domains/terminal';
-import { ActivityDot } from '@renderer/shared/ui/components/ActivityDot';
+import { ActivityIndicator } from '@renderer/shared/ui/components/ActivityIndicator';
 import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
 import { StrokeIconButton, StrokeIconDrawing } from '@renderer/shared/ui/components/StrokeIconButton';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
@@ -16,7 +16,9 @@ export const TILE_DRAG_HANDLE_CLASS = 'tile-drag-handle';
 
 export type ArrowDirection = 'left' | 'right' | 'up' | 'down';
 
-const STATUS_TONES: Record<ActivityState, string> = { working: 'text-accent', waiting: 'text-alert', approval: 'text-alert', idle: 'text-muted', exited: 'text-muted' };
+const STATUS_TONES: Record<ActivityState, string> = { working: 'text-accent', waiting: 'text-fg', approval: 'text-alert', idle: 'text-muted', exited: 'text-muted' };
+
+const STATES_WITH_ICON = new Set<ActivityState>(['working', 'waiting', 'approval']);
 
 const ARROW_KEYS: Record<string, ArrowDirection> = {
   ArrowLeft: 'left',
@@ -72,11 +74,18 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
 
   const status = (
     <span
-      className={`tile-status readout ml-auto shrink-0 text-[11px] ${activity ? STATUS_TONES[activity] : 'text-muted'}`}
-      data-tone={activity === 'waiting' || activity === 'approval' ? 'alert' : undefined}
+      className={`tile-status readout ml-auto inline-flex shrink-0 items-baseline gap-1.5 text-[11px] ${activity ? STATUS_TONES[activity] : 'text-muted'}`}
+      data-tone={activity === 'approval' ? 'alert' : undefined}
       title={tile.cwd}
     >
-      {activity ?? 'idle'}
+      {activity && STATES_WITH_ICON.has(activity) && <ActivityIndicator state={activity} />}
+      {activity === 'working' ? (
+        <span className="activity-glint" data-text={activity}>
+          {activity}
+        </span>
+      ) : (
+        (activity ?? 'idle')
+      )}
     </span>
   );
 
@@ -93,7 +102,7 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
       style={{ '--tile-accent': accentColor } as CSSProperties}
     >
       <div
-        className={`${TILE_DRAG_HANDLE_CLASS} tile-titlebar relative z-20 flex cursor-move flex-col gap-0.5 px-2 py-1 text-[11px] focus:outline-none focus:ring-1 focus:ring-accent/60 ${isCollapsed ? '' : 'border-b border-edge'}`}
+        className={`${TILE_DRAG_HANDLE_CLASS} tile-titlebar relative z-20 flex cursor-move flex-col gap-0.5 px-2 py-1 text-[11px] ${isCollapsed ? '' : 'border-b border-edge'}`}
         tabIndex={0}
         role="group"
         aria-label={`${title} tile. ${keyboardHint}`}
@@ -104,11 +113,7 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
       >
         <div className="flex items-center gap-2">
           {isCollapsible && <CollapseToggleButton isCollapsed={isCollapsed} target="tile" onToggle={toggleCollapsed} />}
-          {tile.kind === 'claude' ? (
-            activity ? <ActivityDot state={activity} /> : <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: accentColor }} />
-          ) : (
-            <StrokeIconDrawing icon={tile.kind} className="tile-accent-icon" />
-          )}
+          <StrokeIconDrawing icon={tile.kind} className="tile-accent-icon" />
           <span className="tile-title min-w-0 flex-1 truncate">{title}</span>
           {isStatusInTitleRow && status}
           {activity === 'exited' && (

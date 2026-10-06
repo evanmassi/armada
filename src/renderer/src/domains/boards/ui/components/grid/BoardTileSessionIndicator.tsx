@@ -1,6 +1,6 @@
 import { useSessionStatusStore } from '@renderer/app/stores/sessionStatusStore';
 import { headroomColor } from '@renderer/domains/usage';
-import { contextLeftPercentage, modelLabel, sessionFolderLabel } from '../../../model/tileStatusReadout';
+import { contextLeftPercentage, contextSizeLabel, durationLabel, sessionFolderLabel, shortModelName } from '../../../model/tileStatusReadout';
 
 interface BoardTileSessionIndicatorProps {
   tileId: string;
@@ -11,22 +11,28 @@ export function BoardTileSessionIndicator({ tileId, projectCwd }: BoardTileSessi
   const status = useSessionStatusStore((state) => state.byTileId[tileId]);
   if (!status) return null;
   const folder = sessionFolderLabel(projectCwd, status.cwd);
-  const model = modelLabel(status);
+  const hasChanges = Boolean(status.linesAdded || status.linesRemoved);
   const contextLeft = status.contextWindow && contextLeftPercentage(status.contextWindow);
   const contextColor = contextLeft === undefined ? undefined : headroomColor(100 - contextLeft);
 
   return (
     <>
       <span className="divided-readouts flex min-w-0 items-center gap-2 pl-4">
+        {(status.modelName || status.effortLevel) && (
+          <span className="readout min-w-0 truncate text-muted">
+            {status.modelName && <span className="readout-model-name">{shortModelName(status.modelName)}</span>}
+            {status.modelName && status.contextWindow && <span className="readout-window"> · {contextSizeLabel(status.contextWindow.size)}</span>}
+            {status.effortLevel && <span className={status.modelName ? 'readout-effort' : undefined}>{status.effortLevel}</span>}
+          </span>
+        )}
         {folder && (
-          <span className="min-w-0 max-w-[18ch] truncate font-mono text-[11px] text-muted" title={status.cwd}>
+          <span className="readout-folder min-w-0 max-w-[18ch] truncate font-mono text-[11px] text-muted" title={status.cwd}>
             {folder}
           </span>
         )}
-        {model && <span className="readout min-w-0 truncate text-muted">{model}</span>}
         {contextLeft !== undefined && (
           <span
-            className="readout shrink-0"
+            className="readout-context readout shrink-0"
             style={{ color: contextColor }}
             role="meter"
             aria-label="Context left before auto-compact"
@@ -36,6 +42,21 @@ export function BoardTileSessionIndicator({ tileId, projectCwd }: BoardTileSessi
             title="Context left before auto-compact"
           >
             {contextLeft}%
+          </span>
+        )}
+        {(hasChanges || status.durationMs !== undefined) && (
+          <span className={`readout-changes readout shrink-0 text-muted ${hasChanges ? '' : 'readout-duration'}`} title="Lines this session changed, and how long it has run">
+            {hasChanges && (
+              <>
+                <span className="text-added">+{status.linesAdded ?? 0}</span> <span className="text-removed">−{status.linesRemoved ?? 0}</span>
+              </>
+            )}
+            {status.durationMs !== undefined && (
+              <span className="readout-duration">
+                {hasChanges && ' · '}
+                {durationLabel(status.durationMs)}
+              </span>
+            )}
           </span>
         )}
       </span>

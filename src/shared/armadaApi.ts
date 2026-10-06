@@ -8,7 +8,7 @@ import type {
 } from './diagrams/diagramSchemas';
 import type { ClaudeIntegrationStatus } from './integration/integrationTypes';
 import type { OpenLinkRequest } from './links/linkSchemas';
-import type { FolderRequest, ProjectLineChanges } from './projects/projectSchemas';
+import type { FolderRequest } from './projects/projectSchemas';
 import type {
   ClaudeHookEvent,
   OpenSessionRequest,
@@ -33,7 +33,6 @@ export interface ArmadaApi {
     pickFolder(): Promise<string | undefined>;
     reveal(request: FolderRequest): Promise<void>;
     openInEditor(request: FolderRequest): Promise<void>;
-    countLineChanges(request: FolderRequest): Promise<ProjectLineChanges | undefined>;
   };
   links: {
     open(request: OpenLinkRequest): Promise<void>;

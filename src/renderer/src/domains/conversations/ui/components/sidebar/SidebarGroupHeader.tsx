@@ -81,7 +81,7 @@ export function SidebarGroupHeader({
   return (
     <header
       className={`readout flex items-center gap-1 px-2 py-1.5 transition-colors ${
-        isProjectTarget ? 'bg-accent/15 text-accent' : 'text-muted'
+        isProjectTarget ? 'bg-accent/15 text-accent' : 'text-fg'
       } ${projectDropLabel ? 'surface-hatched' : ''} ${groupId ? 'cursor-grab active:cursor-grabbing' : ''} ${isBeingDragged ? 'opacity-40' : ''} ${groupLine}`}
       draggable={groupId !== undefined}
       onDragStart={handleDragStart}
@@ -104,7 +104,7 @@ export function SidebarGroupHeader({
       ) : (
         <button
           type="button"
-          className="rule-label min-w-0 flex-1 truncate text-left hover:text-fg"
+          className="rule-label min-w-0 flex-1 truncate text-left text-[12px] uppercase hover:text-white"
           onDoubleClick={() => canRename && setIsRenaming(true)}
           onKeyDown={(event) => event.key === 'F2' && canRename && setIsRenaming(true)}
           onClick={onToggleCollapsed}
@@ -117,14 +117,14 @@ export function SidebarGroupHeader({
             {!isProjectTarget && (
               <>
                 <span className="mx-2 text-muted" aria-hidden="true">·</span>
-                <span className="text-fg">{projectCount}</span>
+                <span className="text-muted">{projectCount}</span>
               </>
             )}
           </span>
         </button>
       )}
       {onRemove && (
-        <button type="button" className="hud-glyph px-1" data-glyph="×" data-tone="neutral" onClick={confirmRemove} aria-label="Remove group">
+        <button type="button" className="hud-glyph px-1 text-muted" data-glyph="×" data-tone="neutral" onClick={confirmRemove} aria-label="Remove group">
           ×
         </button>
       )}

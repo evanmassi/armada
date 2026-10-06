@@ -46,6 +46,9 @@ export const sessionStatusSchema = terminalRefSchema.extend({
   modelName: z.string().optional(),
   effortLevel: z.string().optional(),
   contextWindow: z.object({ remainingPercentage: z.number(), size: z.number().positive() }).optional(),
+  linesAdded: z.number().optional(),
+  linesRemoved: z.number().optional(),
+  durationMs: z.number().optional(),
   cwd: z.string().optional(),
   reportedAt: z.number(),
 });

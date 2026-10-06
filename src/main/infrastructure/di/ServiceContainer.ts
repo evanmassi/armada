@@ -14,7 +14,6 @@ import { ClaudeUsageProbe } from '@main/infrastructure/claude/ClaudeUsageProbe';
 import { ClipboardImageSaver } from '@main/infrastructure/clipboard/ClipboardImageSaver';
 import { TileDiagramFiles } from '@main/infrastructure/diagrams/TileDiagramFiles';
 import { FolderOpener } from '@main/infrastructure/folders/FolderOpener';
-import { GitChangeCounter } from '@main/infrastructure/git/GitChangeCounter';
 import { LinkOpener } from '@main/infrastructure/links/LinkOpener';
 import { FileLogger } from '@main/infrastructure/logging/FileLogger';
 import {
@@ -51,7 +50,6 @@ export interface ServiceContainer {
   clipboardImageSaver: ClipboardImageSaver;
   tileDiagramFiles: TileDiagramFiles;
   folderOpener: FolderOpener;
-  gitChangeCounter: GitChangeCounter;
   linkOpener: LinkOpener;
   logger: FileLogger;
 }
@@ -85,7 +83,6 @@ export function createServiceContainer(): ServiceContainer {
     clipboardImageSaver: new ClipboardImageSaver({ imagesDir: getClipboardImagesDir(), logger }),
     tileDiagramFiles,
     folderOpener,
-    gitChangeCounter: new GitChangeCounter(),
     linkOpener: new LinkOpener({ folderOpener, logger }),
     logger,
   };

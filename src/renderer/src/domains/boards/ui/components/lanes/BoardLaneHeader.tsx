@@ -1,12 +1,12 @@
 import type { CSSProperties, DragEvent } from 'react';
 import { useShallow } from 'zustand/react/shallow';
+import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
-import { ActivityDot } from '@renderer/shared/ui/components/ActivityDot';
+import { ActivityIndicator } from '@renderer/shared/ui/components/ActivityIndicator';
 import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
 import { applyDragGhost } from '@renderer/shared/utils/dragGhost';
 import { LANE_DRAG_MIME } from '../../../model/boardDragTypes';
 import type { Lane } from '../../../model/lanes';
-import { BoardProjectChangesIndicator } from '../changes/BoardProjectChangesIndicator';
 
 interface BoardLaneHeaderProps {
   lane: Lane;
@@ -23,9 +23,10 @@ interface BoardLaneHeaderProps {
 }
 
 export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggleCollapsed, onStartSession, onAddNotes, onClose, onDragOver, onDrop, onDragLeave }: BoardLaneHeaderProps) {
+  const isDimmed = useBoardSelectionStore((state) => state.focusedTileId !== undefined && !lane.tiles.some((tile) => tile.id === state.focusedTileId));
   const activities = useSessionActivityStore(useShallow((state) => lane.tiles.map((tile) => state.byTileId[tile.id]?.state)));
 
-  const activityDots = activities.map((activity, index) => (activity ? <ActivityDot key={index} state={activity} /> : null));
+  const activityDots = activities.map((activity, index) => (activity ? <ActivityIndicator key={index} state={activity} /> : null));
 
   const handleDragStart = (event: DragEvent<HTMLElement>): void => {
     event.dataTransfer.setData(LANE_DRAG_MIME, lane.key);
@@ -35,7 +36,7 @@ export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggl
 
   return (
     <header
-      className={`readout lane-titlebar flex text-fg shrink-0 cursor-grab items-center gap-2 border-b px-2 py-1 text-[11px] active:cursor-grabbing ${
+      className={`readout lane-titlebar flex text-fg shrink-0 cursor-grab items-center gap-2 border-b px-2 py-1 text-[11px] transition-opacity duration-200 active:cursor-grabbing ${isDimmed ? 'opacity-70' : ''} ${
         lane.isCollapsed ? 'h-full flex-col justify-start border-b-0 px-1 py-2' : ''
       } ${isDropTarget ? 'ring-1 ring-accent/70' : ''}`}
       style={{ '--tile-accent': accentColor, borderColor: `color-mix(in srgb, ${accentColor} 45%, transparent)` } as CSSProperties}
@@ -51,8 +52,7 @@ export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggl
         <span className="flex flex-col gap-1">{activityDots}</span>
       ) : (
         <span className="divided-readouts ml-auto flex shrink-0 items-center gap-2">
-          <BoardProjectChangesIndicator cwd={lane.key} />
-          <span className="flex items-center gap-1">
+          <span className="flex items-baseline gap-1">
             {activityDots}
             <span className="ml-1 text-edge-strong">{lane.tiles.length}</span>
           </span>
