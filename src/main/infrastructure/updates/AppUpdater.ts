@@ -12,6 +12,7 @@ interface AppUpdaterDeps {
 
 export class AppUpdater {
   private readyVersion: string | undefined;
+  private isRestartingToInstall = false;
   private listeners = new Set<(status: AppUpdateStatus) => void>();
 
   constructor(private deps: AppUpdaterDeps) {}
@@ -32,6 +33,9 @@ export class AppUpdater {
       const isOffline = OFFLINE_ERROR_CODES.some((code) => error.message.includes(code));
       if (isOffline) logger.info('update.offline', { error });
       else logger.error('update.failed', { error });
+    });
+    app.on('will-quit', () => {
+      if (this.readyVersion && !this.isRestartingToInstall) logger.info('update.installingOnQuit', { version: this.readyVersion });
     });
     const checkForUpdates = (): void => {
       // PITFALL: a failed check or download also arrives as the error event above, so both rejections are only silenced here.
@@ -55,6 +59,7 @@ export class AppUpdater {
   install(): void {
     if (!this.readyVersion) throw new Error('No downloaded update is waiting to install');
     this.deps.logger.info('update.installing', { version: this.readyVersion });
+    this.isRestartingToInstall = true;
     autoUpdater.quitAndInstall(true, true);
   }
 
