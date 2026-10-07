@@ -62,6 +62,8 @@ the installer isn't signed; choose **More info**, then **Run anyway**.
 The app isn't signed, so the first time you open it macOS refuses; open **System Settings → Privacy & Security**, scroll
 down to the note about Armada, and click **Open Anyway**. You only do this once. A Mac copy can't update itself: when a
 new release is out, a banner says so, and **Download** opens the release page; drag the new copy over the old one.
+Once it's running, macOS may ask whether Armada can reach folders like Desktop, Documents or Downloads. Those requests
+come from the shells and Claude sessions in your tiles, which macOS counts as Armada; allow the folders you work in.
 
 On first launch a banner says Armada isn't connected to Claude Code. Click **Fix**. It adds a few hooks and a relay
 around your status line in `~/.claude/settings.json`, so tiles can show what Claude is doing and the sidebar can show
