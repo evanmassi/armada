@@ -1,0 +1,10 @@
+flowchart TD
+  items[Pantry items] --> soon{Expires within<br/>3 days?}
+  soon -- yes --> weight[Score by days left<br/>today = 4, day 3 = 1]
+  soon -- no --> zero[Score 0]
+  weight --> sum[Recipe score = sum of<br/>its ingredients]
+  zero --> sum
+  sum --> tie{Tied?}
+  tie -- yes --> missing[Fewest missing<br/>ingredients wins]
+  tie -- no --> ranked[Ranked suggestions]
+  missing --> ranked

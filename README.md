@@ -32,11 +32,19 @@ Windows only for now. Install it from the latest release; see Get it running bel
 - A color per project, worn by every tile, tab and lane from it.
 - Sidebar housekeeping: rename, group, reorder, pin, archive and search, all saved between launches and none of it
   touching your files.
-- Diagrams: Claude can draw a flowchart, figure, or interactive page, and it opens in a dock under its tile.
+
+  <img src="docs/screenshots/sidebar.png" alt="The sidebar: pinned conversations, groups, and projects with their conversations" width="260">
+
+## Diagrams
+
+Ask Claude to show you something and it draws it in a dock under its tile: an interactive page with sliders and
+playback, a mockup of a screen, or a flowchart. Each one opens full view for a closer look and saves to a file.
+
+![An interactive sky map of a satellite pass, with a time slider and live readouts](docs/screenshots/diagram-interactive.png)
 
 <p>
-  <img src="docs/screenshots/sidebar.png" alt="The sidebar: pinned conversations, groups, and projects with their conversations" width="260">
-  <img src="docs/screenshots/diagram-dock.png" alt="A Mermaid flowchart docked under a session" width="400">
+  <img src="docs/screenshots/diagram-mockup.png" alt="A phone screen mockup with callouts explaining each part" width="560">
+  <img src="docs/screenshots/diagram-dock.png" alt="A flowchart of how recipes are ranked" width="240">
 </p>
 
 ## Get it running

@@ -1,7 +1,8 @@
 import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { existsSync, mkdirSync, utimesSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, utimesSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const DEMO_ROOT = 'C:\\armada-demo';
 const CLAUDE_DIR = join(DEMO_ROOT, 'claude');
@@ -210,6 +211,7 @@ const conversationId = (projectName, index) => projects.find((project) => projec
 const cwd = (projectName) => cwdOf(projects.find((project) => project.name === projectName));
 const layout = { x: 0, y: 0, w: 6, h: 10 };
 
+const ORBIT_TILE_ID = '76f3be56-7488-4be6-9bc8-e1506e63fd5d';
 const PANTRY_TILE_ID = '2bebb536-1aec-46aa-adf7-24972eeab671';
 
 const workspace = {
@@ -220,7 +222,7 @@ const workspace = {
       layoutMode: 'auto',
       laneOrder: [cwd('orbit-tracker'), cwd('pantry'), cwd('lumen-docs')],
       tiles: [
-        { id: '76f3be56-7488-4be6-9bc8-e1506e63fd5d', kind: 'claude', sessionId: conversationId('orbit-tracker', 0), cwd: cwd('orbit-tracker'), layout },
+        { id: ORBIT_TILE_ID, kind: 'claude', sessionId: conversationId('orbit-tracker', 0), cwd: cwd('orbit-tracker'), layout, diagramDock: { isOpen: true, heightFraction: 0.55, selectedFileName: 'sky-pass.html' } },
         { id: '01af047f-027e-4621-86e1-e3d80c72dd23', kind: 'claude', sessionId: conversationId('orbit-tracker', 1), cwd: cwd('orbit-tracker'), layout },
         {
           id: 'a98fc93f-f47c-4767-b89e-e0d51858d499',
@@ -229,7 +231,7 @@ const workspace = {
           text: 'Launch checklist\n- pass times within 30 s of Heavens-Above\n- reminders only above 30°\n- store screenshots',
           layout,
         },
-        { id: PANTRY_TILE_ID, kind: 'claude', sessionId: conversationId('pantry', 0), cwd: cwd('pantry'), layout, diagramDock: { isOpen: true, heightFraction: 0.45, selectedFileName: 'recipe-ranking.mmd' } },
+        { id: PANTRY_TILE_ID, kind: 'claude', sessionId: conversationId('pantry', 0), cwd: cwd('pantry'), layout, diagramDock: { isOpen: true, heightFraction: 0.55, selectedFileName: 'use-soon-screen.svg' } },
         { id: '8a98a2da-ad95-4a16-9dd7-bd600dd87224', kind: 'claude', sessionId: conversationId('lumen-docs', 0), cwd: cwd('lumen-docs'), layout },
         { id: '00860636-b475-4688-908b-30bf00ea1097', kind: 'shell', cwd: cwd('lumen-docs'), layout },
       ],
@@ -257,21 +259,19 @@ const workspace = {
   },
 };
 
-const RECIPE_DIAGRAM = `flowchart LR
-  inventory[Pantry items] --> expiring{Expires within 3 days?}
-  expiring -- yes --> weight[Weight by days left]
-  expiring -- no --> skip[Score 0]
-  weight --> score[Recipe score]
-  skip --> score
-  score --> ties{Tie?}
-  ties -- yes --> missing[Fewest missing ingredients]
-  ties -- no --> ranked[Ranked suggestions]
-  missing --> ranked
-`;
+const DEMO_DIAGRAMS_DIR = fileURLToPath(new URL('./diagrams/', import.meta.url));
+const TILE_DIAGRAMS = {
+  [ORBIT_TILE_ID]: ['sky-pass.html'],
+  [PANTRY_TILE_ID]: ['recipe-ranking.mmd', 'use-soon-screen.svg'],
+};
 
 const seedArmadaData = () => {
   writeFile(join(USER_DATA_DIR, 'workspace.json'), JSON.stringify(workspace, null, 2));
-  writeFile(join(USER_DATA_DIR, 'diagrams', PANTRY_TILE_ID, 'recipe-ranking.mmd'), RECIPE_DIAGRAM);
+  for (const [tileId, fileNames] of Object.entries(TILE_DIAGRAMS)) {
+    const tileDir = join(USER_DATA_DIR, 'diagrams', tileId);
+    mkdirSync(tileDir, { recursive: true });
+    for (const fileName of fileNames) copyFileSync(join(DEMO_DIAGRAMS_DIR, fileName), join(tileDir, fileName));
+  }
 };
 
 const isSeeded = existsSync(join(USER_DATA_DIR, 'workspace.json'));
