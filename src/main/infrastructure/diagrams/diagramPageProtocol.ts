@@ -1,5 +1,6 @@
 import { protocol } from 'electron';
 import { DIAGRAM_PAGE_ESCAPE_MESSAGE, DIAGRAM_PAGE_SCHEME, diagramRefSchema } from '@shared/diagrams/diagramSchemas';
+import { DIAGRAM_PAGE_SCROLLBAR_STYLE } from './diagramPageScrollbarStyle';
 import { diagramFormatOf, type TileDiagramFiles } from './TileDiagramFiles';
 
 const LIBRARY_HOSTS = 'https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com';
@@ -29,7 +30,7 @@ export const serveDiagramPages = (tileDiagramFiles: TileDiagramFiles): void =>
     if (!ref.success || diagramFormatOf(ref.data.fileName) !== 'html') return notFound();
     const page = await tileDiagramFiles.read(ref.data).catch(() => undefined);
     if (page === undefined) return notFound();
-    return new Response(page.replace(LEADING_DOCTYPE, (doctype) => doctype + ESCAPE_RELAY), {
+    return new Response(page.replace(LEADING_DOCTYPE, (doctype) => doctype + DIAGRAM_PAGE_SCROLLBAR_STYLE + ESCAPE_RELAY), {
       headers: { 'content-type': 'text/html; charset=utf-8', 'content-security-policy': DIAGRAM_PAGE_POLICY },
     });
   });

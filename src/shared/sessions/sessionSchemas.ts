@@ -50,6 +50,7 @@ export const sessionStatusSchema = terminalRefSchema.extend({
   linesRemoved: z.number().optional(),
   durationMs: z.number().optional(),
   cwd: z.string().optional(),
+  gitBranch: z.string().optional(),
   reportedAt: z.number(),
 });
 

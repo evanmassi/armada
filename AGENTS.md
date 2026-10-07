@@ -40,7 +40,8 @@ id under the tile and the tile rebinds to it; the other events drive the tile's 
 The same install wraps the user's `statusLine` command in `scripts/claudeStatusLineRelay.cjs`, the original command
 base64-encoded as its argument. Only the status line input carries `rate_limits`; hooks do not. Inside a tile the relay
 writes the 5 hour and weekly numbers to `userData/claude-usage/usage.json` (latest value, replaced by rename) and the
-session's model, effort, context window, folder, lines added and removed, and run time to
+session's model, effort, context window, folder, git branch (read from the repo's own files, no git run), lines added
+and removed, and run time to
 `userData/claude-session-status/<terminalId>.json`, and draws
 nothing: the tile title bar shows that instead. Outside a tile it runs the original command on the same input.
 `ClaudeUsageFile` watches the usage file; `ClaudeSessionStatusFiles` watches the status folder, clears it on launch, and
@@ -70,7 +71,8 @@ and the renderer opens the newest in a dock under that tile. On launch it delete
 workspace and files untouched for 14 days, and deletes nothing when the workspace cannot be read. An `.html` diagram
 is served from the `armada-diagram:` scheme into an iframe sandboxed to scripts only, under its own policy: no network
 but script and style tags from three CDN hosts. A subframe may never navigate anywhere else. The served page gets a
-one-line relay that posts Escape to the app, since keys inside the frame never reach it.
+one-line relay that posts Escape to the app, since keys inside the frame never reach it, and the app's scrollbar style,
+which the app stylesheet cannot reach; a test holds its colors to the design tokens.
 
 ---
 
@@ -161,7 +163,7 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
 - **UI state**: Zustand. `boardSelectionStore` (active board, opened boards, focused tile), `sessionActivityStore`
   (per-tile working / waiting / approval / idle / exited, driven by Claude hook events, Enter and Escape typed into the
   tile, and process exit),
-  `sessionStatusStore` (per-tile model, effort, context window, folder, lines changed, and run time from the status line
+  `sessionStatusStore` (per-tile model, effort, context window, folder, git branch, lines changed, and run time from the status line
   relay), `notificationStore`.
 - Never store main-owned data in Zustand.
 - **Terminal stream** is neither. Pty output arrives on a per-session IPC channel and is written straight into the
@@ -192,9 +194,9 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   single-project board it leaves the tiling and stacks under it. `free` ignores the flag. A Claude tile's title bar puts its
   spark icon and title on the first row and, on a second, model, context size, and effort, context left before
   auto-compact (also a draining bar), the session's folder only when it has left the project folder, and the lines the
-  session added and removed with its run time, with the activity state at the right. That row is a size container: as
-  the tile narrows it drops context size, then run time, then context left, then folder and model, then line counts,
-  and always keeps effort and state. Lane headers dim with their tiles when focus is in another lane, and a board tab
+  session added and removed with its run time, then the current git branch (a short commit id when detached), with the
+  activity state at the right. That row is a size container: as the tile narrows it drops context size, then run time,
+  then context left, then folder and model, then line counts, and always keeps effort, branch (truncating), and state. Lane headers dim with their tiles when focus is in another lane, and a board tab
   shows the approval beacon while any of its tiles waits for approval. Opening a
   conversation while another project's board is active routes it to that project's own board unless shift is held.
 - `diagrams` renders a tile's diagrams and knows nothing about boards. `DiagramDockPanel` takes the dock state

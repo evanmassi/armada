@@ -1,5 +1,6 @@
 import { useSessionStatusStore } from '@renderer/app/stores/sessionStatusStore';
 import { headroomColor } from '@renderer/domains/usage';
+import { StrokeIconDrawing } from '@renderer/shared/ui/components/StrokeIconButton';
 import { contextLeftPercentage, contextSizeLabel, durationLabel, sessionFolderLabel, shortModelName } from '../../../model/tileStatusReadout';
 
 interface BoardTileSessionIndicatorProps {
@@ -57,6 +58,12 @@ export function BoardTileSessionIndicator({ tileId, projectCwd }: BoardTileSessi
                 {durationLabel(status.durationMs)}
               </span>
             )}
+          </span>
+        )}
+        {status.gitBranch && (
+          <span className="readout flex min-w-0 items-center gap-1 text-muted" title={status.gitBranch}>
+            <StrokeIconDrawing icon="branch" className="size-3 shrink-0" />
+            <span className="truncate normal-case">{status.gitBranch}</span>
           </span>
         )}
       </span>

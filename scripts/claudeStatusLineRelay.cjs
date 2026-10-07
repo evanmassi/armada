@@ -1,6 +1,6 @@
 const { spawn } = require('node:child_process');
-const { existsSync, mkdirSync, renameSync, writeFileSync } = require('node:fs');
-const { dirname, join } = require('node:path');
+const { existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } = require('node:fs');
+const { dirname, join, resolve } = require('node:path');
 
 const usageFile = process.env.ARMADA_USAGE_FILE;
 const terminalId = process.env.ARMADA_TERMINAL_ID;
@@ -44,8 +44,38 @@ const contextWindow = (context) =>
     ? { remainingPercentage: context.remaining_percentage, size: context.context_window_size }
     : undefined;
 
+const GIT_DIR_POINTER = /^gitdir:\s*(.+)$/m;
+const BRANCH_REF = /^ref: refs\/heads\/(.+)$/;
+const SHORT_COMMIT_LENGTH = 7;
+
+const readTrimmed = (file) => readFileSync(file, 'utf8').trim();
+
+const enclosingWorktree = (folder) => {
+  for (let current = resolve(folder); ; current = dirname(current)) {
+    if (existsSync(join(current, '.git'))) return current;
+    if (dirname(current) === current) return undefined;
+  }
+};
+
+const gitDirOf = (worktree) => {
+  const dotGit = join(worktree, '.git');
+  return statSync(dotGit).isDirectory() ? dotGit : resolve(worktree, readTrimmed(dotGit).match(GIT_DIR_POINTER)[1]);
+};
+
+const gitBranch = (folder) => {
+  try {
+    const worktree = folder && enclosingWorktree(folder);
+    if (!worktree) return undefined;
+    const head = readTrimmed(join(gitDirOf(worktree), 'HEAD'));
+    return head.match(BRANCH_REF)?.[1] ?? head.slice(0, SHORT_COMMIT_LENGTH);
+  } catch {
+    return undefined;
+  }
+};
+
 const saveSessionStatus = (input) => {
   if (!input.session_id) return;
+  const cwd = input.workspace?.current_dir ?? input.cwd;
   saveQuietly(join(sessionStatusDir, `${terminalId}.json`), {
     terminalId,
     sessionId: input.session_id,
@@ -55,7 +85,8 @@ const saveSessionStatus = (input) => {
     linesAdded: input.cost?.total_lines_added,
     linesRemoved: input.cost?.total_lines_removed,
     durationMs: input.cost?.total_duration_ms,
-    cwd: input.workspace?.current_dir ?? input.cwd,
+    cwd,
+    gitBranch: gitBranch(cwd),
     reportedAt: Date.now(),
   });
 };
