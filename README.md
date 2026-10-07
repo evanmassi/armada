@@ -6,7 +6,7 @@ arrange on boards, grouped by project instead of scattered across windows.
 Armada reads the conversations Claude Code already keeps on disk, so there's nothing to import. Open it and your
 history is the sidebar.
 
-Windows only for now. Install it from the latest release; see Get it running below.
+Runs on Windows and on Intel Macs. Install it from the latest release; see Get it running below.
 
 ![A board with three project lanes: one session working, one waiting for approval on a file edit, and a diagram docked under another](docs/screenshots/board.png)
 
@@ -23,11 +23,11 @@ Windows only for now. Install it from the latest release; see Get it running bel
 
   ![Tile title bars showing working, waiting, and approval states](docs/screenshots/tile-states.png)
 - Shows how much of your 5 hour, weekly and Fable limits you have left, and when each resets.
-- Opens links, files and folders from the terminal with Ctrl+click.
+- Opens links, files and folders from the terminal with Ctrl+click (Cmd+click on a Mac).
 
 ## What's in it
 
-- Three kinds of tile: **Claude** sessions, **Shell** tiles that open PowerShell in the same folder, and **Notes** for
+- Three kinds of tile: **Claude** sessions, **Shell** tiles that open PowerShell (your login shell on a Mac) in the same folder, and **Notes** for
   scratch.
 - A color per project, worn by every tile, tab and lane from it.
 - Sidebar housekeeping: rename, group, reorder, pin, archive and search, all saved between launches and none of it
@@ -49,14 +49,19 @@ playback, a mockup of a screen, or a flowchart. Each one opens full view for a c
 
 ## Get it running
 
-You need Node.js 22 or newer on PATH (Claude Code runs Armada's hooks with it) and Claude Code from its native
-installer, which provides `claude.exe` (the npm package's `claude.cmd` won't launch). PowerShell 7 is only needed for
-shell tiles, VS Code only for the Open in VS Code menu.
+You need Node.js 22 or newer (Claude Code runs Armada's hooks with it) and Claude Code from its native installer. VS
+Code is only needed for the Open in VS Code menu and for file links; without it a clicked file is shown in its folder.
 
-Download `Armada-Setup-<version>.exe` from the [latest release](https://github.com/evanmassi/armada/releases/latest)
+**Windows.** Claude Code's native installer provides `claude.exe` (the npm package's `claude.cmd` won't launch), and
+PowerShell 7 is only needed for shell tiles. Download `Armada-Setup-<version>.exe` from the [latest release](https://github.com/evanmassi/armada/releases/latest)
 and run it. It installs for your user only, adds Armada to the Start Menu, and updates itself: a new release downloads
 in the background and installs the next time you quit. Windows warns about an unknown publisher on first run because
 the installer isn't signed; choose **More info**, then **Run anyway**.
+
+**Mac.** Download `Armada-<version>-mac-x64.dmg` from the same release, open it, and drag Armada into Applications.
+The app isn't signed, so the first time you open it macOS refuses; open **System Settings → Privacy & Security**, scroll
+down to the note about Armada, and click **Open Anyway**. You only do this once. A Mac copy can't update itself: when a
+new release is out, a banner says so, and **Download** opens the release page; drag the new copy over the old one.
 
 On first launch a banner says Armada isn't connected to Claude Code. Click **Fix**. It adds a few hooks and a relay
 around your status line in `~/.claude/settings.json`, so tiles can show what Claude is doing and the sidebar can show
@@ -69,7 +74,8 @@ Armada never changes your conversations. It reads them from `~/.claude/projects`
 
 If you've moved Claude Code's folder with `CLAUDE_CONFIG_DIR`, Armada follows it.
 
-Its own state (boards, tiles, colors, sidebar layout) lives in `%APPDATA%\armada\workspace.json`. Delete it and you're
+Its own state (boards, tiles, colors, sidebar layout) lives in `workspace.json`, in `%APPDATA%\armada` on Windows and
+`~/Library/Application Support/armada` on a Mac. Delete it and you're
 back to a blank slate with every conversation still there. If something goes wrong, the last few lines of `armada.log`
 in the same folder usually say why.
 
@@ -84,8 +90,8 @@ Claude Code folder, so screenshots never show real work. Log in once inside a de
 `npm run dev:demo -- --reset` puts the demo data back.
 
 To release, run `npm version <x.y.z>` and `git push --follow-tags`. The tag builds the installer on GitHub and publishes
-it as a release, which installed copies pick up on their next launch. `npm run dist` builds the same installer into
-`dist/` locally without publishing.
+it as a release, which installed copies pick up on their next launch. `npm run dist` builds the installer for the system
+you run it on (the Windows installer, or the Mac disk image) into `dist/` without publishing.
 
 ## License
 

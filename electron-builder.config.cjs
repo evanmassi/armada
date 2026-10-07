@@ -9,6 +9,17 @@ module.exports = {
   npmRebuild: false,
   asarUnpack: ['node_modules/node-pty/**'],
   win: { target: 'nsis', icon: 'build/armada.ico' },
+  mac: {
+    target: [
+      { target: 'dmg', arch: 'x64' },
+      { target: 'zip', arch: 'x64' },
+    ],
+    icon: 'build/armada-mac-icon.png',
+    category: 'public.app-category.developer-tools',
+    artifactName: '${productName}-${version}-mac-${arch}.${ext}',
+    // PITFALL: there is no Apple Developer ID, so the app ships unsigned; macOS asks once for Open Anyway and Squirrel.Mac cannot install updates.
+    identity: null,
+  },
   nsis: {
     artifactName: '${productName}-Setup-${version}.${ext}',
     oneClick: true,

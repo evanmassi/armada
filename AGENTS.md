@@ -520,7 +520,10 @@ Commits: `audit: <directory scope> — <specific changes, comma-separated>`, no 
 
 ## Packaging and Releases
 
-`electron-builder.config.cjs` packages a per-user NSIS installer. Only `node-pty`, `zod`, and `electron-updater` are runtime
+`electron-builder.config.cjs` packages a per-user NSIS installer, and on a Mac an unsigned x64 disk image plus a zip
+whose only job is to make electron-builder write `latest-mac.yml`. The release workflow's Windows job typechecks, tests,
+and creates the release; its Mac job, on GitHub's macOS runner, attaches the Mac files to it. Squirrel.Mac installs only
+signed apps, so on a Mac `AppUpdater` checks without downloading and the banner's **Download** opens the release page. Only `node-pty`, `zod`, and `electron-updater` are runtime
 `dependencies`; everything the renderer uses is bundled by Vite and stays in `devDependencies`, out of the installer.
 The packaged app checks the latest GitHub Release on launch and every hour after, downloads in the
 background, and installs on quit. `AppUpdater` pushes the downloaded version to the renderer, whose banner offers **Restart now**
