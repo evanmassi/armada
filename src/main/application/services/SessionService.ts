@@ -15,14 +15,16 @@ interface Launch {
   args: string[];
 }
 
-const SHELL_COMMAND = process.platform === 'win32' ? 'pwsh.exe' : (process.env['SHELL'] ?? 'bash');
+// PITFALL: zsh reads ~/.zprofile, where Homebrew and installers put PATH, only as a login shell, which is how a Mac terminal starts one.
+const SHELL_LAUNCH: Launch =
+  process.platform === 'win32' ? { command: 'pwsh.exe', args: [] } : { command: process.env['SHELL'] ?? 'bash', args: ['-l'] };
 
 export class SessionService {
   constructor(private deps: SessionServiceDeps) {}
 
   async open(request: OpenSessionRequest): Promise<TerminalRef> {
     const { command, args } =
-      request.kind === 'claude' ? await this.claudeLaunch(request.sessionId, request.tileId) : { command: SHELL_COMMAND, args: [] };
+      request.kind === 'claude' ? await this.claudeLaunch(request.sessionId, request.tileId) : SHELL_LAUNCH;
     const terminalId = this.deps.terminalHost.spawn({ command, args, cwd: request.cwd, cols: request.cols, rows: request.rows });
     return { terminalId };
   }

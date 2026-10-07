@@ -31,7 +31,7 @@ export class LinkOpener {
     // PITFALL: shell.openPath on a file runs it, so a file is only ever shown selected in the file manager, opened in the editor, or, as a web page, handed to the browser.
     if (stats.isDirectory()) await this.deps.folderOpener.revealInFileManager(link.path);
     else if (link.position === undefined && WEB_PAGE_EXTENSIONS.has(extname(link.path).toLowerCase())) await shell.openExternal(pathToFileURL(link.path).href);
-    else if (await isBinaryFile(link.path)) shell.showItemInFolder(link.path);
+    else if ((await isBinaryFile(link.path)) || !this.deps.folderOpener.isEditorInstalled()) shell.showItemInFolder(link.path);
     else this.deps.folderOpener.openInEditor(link.path, link.position);
   }
 }

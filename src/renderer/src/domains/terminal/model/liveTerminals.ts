@@ -81,7 +81,7 @@ class LiveTerminalEntry implements LiveTerminal {
     private launch: SessionLaunch,
     fontSize: number,
   ) {
-    this.terminal = new Terminal({ ...terminalAppearance(), fontSize, cursorBlink: true });
+    this.terminal = new Terminal({ ...terminalAppearance(), fontSize, cursorBlink: true, macOptionIsMeta: true });
     this.terminal.loadAddon(this.fit);
     this.terminal.attachCustomKeyEventHandler((event) => !isGlobalShortcut(event) && !handleClipboardKey(this.terminal, event));
   }

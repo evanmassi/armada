@@ -89,7 +89,7 @@ src/main/
 ├── infrastructure/
 │   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser, ClaudeHookInbox, ClaudeUsageFile, ClaudeSessionStatusFiles, ClaudeUsageProbe + usageProbeOutputParser, ClaudeSettingsFile + claudeSettingsIntegration, ClaudeRelayScripts
 │   ├── diagrams/     # TileDiagramFiles (list, read, watch, prune), diagramPageProtocol (serves .html diagrams)
-│   ├── folders/      # FolderOpener: Explorer and VS Code
+│   ├── folders/      # FolderOpener: Explorer or Finder, and VS Code
 │   ├── links/        # LinkOpener + linkTargets + binaryFileCheck: the only judge of what a clicked terminal link opens
 │   ├── clipboard/    # ClipboardImageSaver: a copied screenshot written to userData/clipboard-images
 │   ├── updates/      # AppUpdater: electron-updater against GitHub Releases, packaged app only
@@ -213,12 +213,14 @@ or it is saved. Pan and zoom apply to Mermaid and SVG; an
   component attaches the existing terminal element on mount and detaches on unmount, so a layout change that
   remounts the tile never restarts the process. `App` disposes terminals whose tile has left the workspace. It owns
   the activity tracker (`model/activityTracker.ts`) and lets global shortcuts (`app/keyboardShortcuts.ts`) bubble
-  past xterm. Links (`model/terminalLinks.ts`) open on Ctrl+click (Cmd+click on a Mac, `shared/utils/commandKey.ts`) from three sources: embedded hyperlinks Claude Code
+  past xterm. Every Ctrl shortcut is Cmd on a Mac (`shared/utils/commandKey.ts`, which also names the file manager), and
+  Option is Meta in the terminal. Links (`model/terminalLinks.ts`) open on Ctrl+click from three sources: embedded hyperlinks Claude Code
   emits because the pty sets `FORCE_HYPERLINK`, bare URLs, and file paths (`model/pathLinkMatcher.ts`), joined back
   across a row break Claude Code drew itself. The renderer sends the raw target and the tile's cwd; main's `LinkOpener`
   is the only judge of what opens and where: folders and binary files (a zero byte in the first 8000, the check git
-  uses) in Explorer, `.html` pages in the browser unless the link carries a line number, other text files of any
-  extension in VS Code, never run. A Ctrl+click
+  uses) in Explorer or Finder, `.html` pages in the browser unless the link carries a line number, other text files of any
+  extension in VS Code (on PATH, or on a Mac the CLI inside its app bundle; shown in the file manager when VS Code is
+  missing), never run. A Ctrl+click
   on a link never reaches the pty, because fullscreen Claude Code would open the same link a second time. Files
   dropped on a tile paste in as paths, one per line in a Claude tile so Claude Code attaches each image and tells the
   model where it came from. Ctrl+V with only an image on the clipboard saves it through main and pastes that path. The

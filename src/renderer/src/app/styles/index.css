@@ -36,8 +36,8 @@
   --color-alert: #f0b35b;
   --color-added: #6fbf73;
   --color-removed: #d97a7a;
-  --font-mono: 'Cascadia Code', Consolas, monospace;
-  --font-ui: 'Rajdhani', 'Segoe UI', sans-serif;
+  --font-mono: 'Cascadia Code', Consolas, Menlo, monospace;
+  --font-ui: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
 }
 
 html,

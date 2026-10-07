@@ -1,3 +1,5 @@
+import { isCommandKeyHeld } from '@renderer/shared/utils/commandKey';
+
 export const GLOBAL_SHORTCUTS = {
   newSession: 'n',
   fontLarger: ['=', '+'],
@@ -13,4 +15,4 @@ const GLOBAL_SHORTCUT_KEYS = new Set<string>([
 ]);
 
 export const isGlobalShortcut = (event: KeyboardEvent): boolean =>
-  event.ctrlKey && !event.altKey && !event.metaKey && GLOBAL_SHORTCUT_KEYS.has(event.key);
+  isCommandKeyHeld(event) && !event.altKey && !(event.ctrlKey && event.metaKey) && GLOBAL_SHORTCUT_KEYS.has(event.key);

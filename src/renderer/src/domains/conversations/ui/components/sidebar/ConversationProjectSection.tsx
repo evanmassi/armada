@@ -5,6 +5,7 @@ import type { ActivityState } from '@renderer/app/stores/sessionActivityStore';
 import { ActionMenu, type ActionMenuEntry, type ActionMenuItem } from '@renderer/shared/ui/components/ActionMenu';
 import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
+import { COMMAND_KEY_LABEL, FILE_MANAGER_NAME, isCommandKeyHeld } from '@renderer/shared/utils/commandKey';
 import { applyDragGhost, placementFromPointer, PLACEMENT_LINE_CLASS, type DropPlacement } from '@renderer/shared/utils/dragGhost';
 import { useFolderActions } from '../../../hooks/useFolderActions';
 import { useProjectAccents, useProjectColors } from '../../../hooks/useProjectColors';
@@ -66,7 +67,7 @@ export function ConversationProjectSection({
   const [dropPlacement, setDropPlacement] = useState<DropPlacement>();
   const { colorOf, setColor } = useProjectColors();
   const accentFor = useProjectAccents();
-  const { revealInExplorer, openInEditor } = useFolderActions();
+  const { revealInFileManager, openInEditor } = useFolderActions();
   const isAnyDragging = useSidebarDragStore(selectIsSidebarDragging);
   const isBeingDragged = useSidebarDragStore((state) => state.draggingCwd === project.cwd);
   const { beginProjectDrag, endDrag } = useSidebarDragStore.getState();
@@ -101,7 +102,7 @@ export function ConversationProjectSection({
 
   const handleNameKeyDown = (event: KeyboardEvent<HTMLButtonElement>): void => {
     if (event.key === 'F2') setIsRenaming(true);
-    if (!event.ctrlKey) return;
+    if (!isCommandKeyHeld(event.nativeEvent)) return;
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
       event.preventDefault();
       onNudge(event.key === 'ArrowUp' ? -1 : 1);
@@ -110,7 +111,7 @@ export function ConversationProjectSection({
 
   const menuEntries: ActionMenuEntry[] = [
     { label: hasBoard ? 'Go to' : 'Open as', emphasis: 'Board', onSelect: () => onOpenProjectBoard(project) },
-    { label: 'Open in', emphasis: 'Explorer', onSelect: () => revealInExplorer(project.cwd) },
+    { label: 'Open in', emphasis: FILE_MANAGER_NAME, onSelect: () => revealInFileManager(project.cwd) },
     { label: 'Open in', emphasis: 'VS Code', onSelect: () => openInEditor(project.cwd) },
     ...(moveTargets.length > 0 ? ['divider' as const, { label: 'Move to', items: moveTargets }] : []),
     'divider',
@@ -166,7 +167,7 @@ export function ConversationProjectSection({
             onKeyDown={handleNameKeyDown}
             aria-expanded={isOpen}
             {...ROW_ORIGIN_CLICK_PROPS}
-            title={`${project.cwd}\nF2 renames. Ctrl+Up/Down moves.`}
+            title={`${project.cwd}\nF2 renames. ${COMMAND_KEY_LABEL}+Up/Down moves.`}
           >
             <span className="truncate font-ui text-[15px] font-semibold tracking-wide">{displayName}</span>
             <span className="shrink-0 text-muted" aria-hidden="true">·</span>
