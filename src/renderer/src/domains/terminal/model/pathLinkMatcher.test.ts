@@ -5,8 +5,8 @@ describe('continuesOnNextRow', () => {
   it('joins a path Claude Code broke at the right edge onto an indented next row', () => {
     expect(
       continuesOnNextRow(
-        String.raw`● C:\Users\evanmassi\Games\Emulators\shadPS4-v0.18.0\launche`,
-        String.raw`  r\shadPS4QtLauncher.exe          `,
+        String.raw`● C:\Users\someone\Tools\Emulators\emulator-v0.18.0\launche`,
+        String.raw`  r\EmulatorLauncher.exe          `,
       ),
     ).toBe(true);
   });

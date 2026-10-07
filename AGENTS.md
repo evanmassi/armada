@@ -518,13 +518,16 @@ Commits: `audit: <directory scope> — <specific changes, comma-separated>`, no 
 The packaged app checks the latest GitHub Release on launch and every hour after, downloads in the
 background, and installs on quit. `AppUpdater` pushes the downloaded version to the renderer, whose banner offers **Restart now**
 (`quitAndInstall`, relaunching after a silent install). An unpackaged run (`npm run dev`, or `electron .`) is **Armada Dev**: its own `userData`
-(`armada-dev`), window title, and AppUserModelID, set by `separateDevDataFolder` before anything reads a path, so it
-runs beside the installed copy.
+(`armada-dev`, or `ARMADA_DEV_USER_DATA` when set), window title, and AppUserModelID, set by `separateDevDataFolder`
+before anything reads a path, so it runs beside the installed copy. Claude Code's folder follows `CLAUDE_CONFIG_DIR`
+like Claude Code itself does; `scripts/demo/seedDemo.mjs` sets both to folders under `C:\armada-demo`, seeds projects,
+conversations, boards, and a diagram there, and starts Armada Dev on them.
 
 ## Commands
 
 ```bash
 npm run dev           # Electron with hot reload
+npm run dev:demo      # Armada Dev on seeded demo data under C:\armada-demo (--reset to reseed), for screenshots
 npm run build         # Build main, preload, and renderer into out/
 npm run dist          # Build the installer into dist/ without publishing
 npm run typecheck     # Type check main, preload, renderer

@@ -35,7 +35,7 @@ export class ClaudeSettingsFile {
   }
 
   private status(gaps: ClaudeIntegrationGap[]): ClaudeIntegrationStatus {
-    return { gaps, isNodeAvailable: resolveOnPath(this.deps.relayRuntime) !== undefined };
+    return { gaps, isNodeAvailable: resolveOnPath(this.deps.relayRuntime) !== undefined, settingsPath: this.deps.settingsPath };
   }
 
   private async read(): Promise<ClaudeSettings> {

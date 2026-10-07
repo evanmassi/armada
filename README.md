@@ -8,6 +8,8 @@ history is the sidebar.
 
 Windows only for now. Install it from the latest release; see Get it running below.
 
+![A board with three project lanes: one session working, one waiting for approval on a file edit, and a diagram docked under another](docs/screenshots/board.png)
+
 ## What it does
 
 - Lists every project you've run Claude Code in, with its conversations underneath, most recent first. Click one and
@@ -16,7 +18,10 @@ Windows only for now. Install it from the latest release; see Get it running bel
   interrupts a running session.
 - Arranges tiles for you, or lets you place them freely. Rearranging never restarts a session.
 - Shows what each session is doing (working, waiting on you, needs approval, idle) so you can tell which one wants
-  attention without reading any of them.
+  attention without reading any of them. Each tile also shows its model, effort, context left, and the lines its
+  session changed.
+
+  ![Tile title bars showing working, waiting, and approval states](docs/screenshots/tile-states.png)
 - Shows how much of your 5 hour, weekly and Fable limits you have left, and when each resets.
 - Opens links, files and folders from the terminal with Ctrl+click.
 
@@ -27,6 +32,12 @@ Windows only for now. Install it from the latest release; see Get it running bel
 - A color per project, worn by every tile, tab and lane from it.
 - Sidebar housekeeping: rename, group, reorder, pin, archive and search, all saved between launches and none of it
   touching your files.
+- Diagrams: Claude can draw a flowchart, figure, or interactive page, and it opens in a dock under its tile.
+
+<p>
+  <img src="docs/screenshots/sidebar.png" alt="The sidebar: pinned conversations, groups, and projects with their conversations" width="260">
+  <img src="docs/screenshots/diagram-dock.png" alt="A Mermaid flowchart docked under a session" width="400">
+</p>
 
 ## Get it running
 
@@ -48,6 +59,8 @@ your limits. Your status line looks the same, and nothing else in the file chang
 Armada never changes your conversations. It reads them from `~/.claude/projects`, and only writes to
 `~/.claude/settings.json` when you click **Fix**.
 
+If you've moved Claude Code's folder with `CLAUDE_CONFIG_DIR`, Armada follows it.
+
 Its own state (boards, tiles, colors, sidebar layout) lives in `%APPDATA%\armada\workspace.json`. Delete it and you're
 back to a blank slate with every conversation still there. If something goes wrong, the last few lines of `armada.log`
 in the same folder usually say why.
@@ -57,6 +70,10 @@ in the same folder usually say why.
 `npm run dev` runs **Armada Dev** with hot reload. It keeps its boards in `%APPDATA%\armada-dev`, so it runs beside the
 installed Armada without touching your real workspace. Both copies list the same conversations; don't open one
 conversation in both at once. How the code is organized, and the rules it follows, are in [AGENTS.md](AGENTS.md).
+
+`npm run dev:demo` runs Armada Dev on made-up projects, conversations and boards under `C:\armada-demo`, with its own
+Claude Code folder, so screenshots never show real work. Log in once inside a demo tile with `/login` and click **Fix**;
+`npm run dev:demo -- --reset` puts the demo data back.
 
 To release, run `npm version <x.y.z>` and `git push --follow-tags`. The tag builds the installer on GitHub and publishes
 it as a release, which installed copies pick up on their next launch. `npm run dist` builds the same installer into

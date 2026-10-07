@@ -4,7 +4,7 @@ import { app } from 'electron';
 
 export const getHomeDir = (): string => homedir();
 
-const getClaudeDir = (): string => join(getHomeDir(), '.claude');
+const getClaudeDir = (): string => process.env['CLAUDE_CONFIG_DIR'] || join(getHomeDir(), '.claude');
 
 export const getClaudeProjectsDir = (): string => join(getClaudeDir(), 'projects');
 
@@ -13,7 +13,8 @@ export const getClaudeSettingsFilePath = (): string => join(getClaudeDir(), 'set
 const DEV_DATA_FOLDER = 'armada-dev';
 
 export const separateDevDataFolder = (): void => {
-  if (!app.isPackaged) app.setPath('userData', join(app.getPath('appData'), DEV_DATA_FOLDER));
+  if (app.isPackaged) return;
+  app.setPath('userData', process.env['ARMADA_DEV_USER_DATA'] || join(app.getPath('appData'), DEV_DATA_FOLDER));
 };
 
 export const getBundledRelayScriptsDir = (): string => join(app.getAppPath(), 'scripts');

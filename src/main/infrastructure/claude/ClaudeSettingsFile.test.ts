@@ -19,9 +19,9 @@ describe('ClaudeSettingsFile', () => {
   afterEach(() => rm(home, { recursive: true, force: true }));
 
   it('reports every gap when Claude Code has no settings file, and repairs by creating it', async () => {
-    expect(await settingsFile.checkIntegration()).toEqual({ gaps: ['hooks', 'statusLine'], isNodeAvailable: true });
-    expect(await settingsFile.repairIntegration()).toEqual({ gaps: [], isNodeAvailable: true });
-    expect(await settingsFile.checkIntegration()).toEqual({ gaps: [], isNodeAvailable: true });
+    expect(await settingsFile.checkIntegration()).toEqual({ gaps: ['hooks', 'statusLine'], isNodeAvailable: true, settingsPath });
+    expect(await settingsFile.repairIntegration()).toEqual({ gaps: [], isNodeAvailable: true, settingsPath });
+    expect(await settingsFile.checkIntegration()).toEqual({ gaps: [], isNodeAvailable: true, settingsPath });
   });
 
   it('reports when the runtime the relays need is not installed', async () => {

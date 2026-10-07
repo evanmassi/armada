@@ -30,7 +30,7 @@ export function IntegrationBanner() {
     <StatusBanner
       tone="alert"
       message={`Armada is not fully connected to Claude Code: ${status.gaps.map((gap) => CONSEQUENCE_BY_GAP[gap]).join(', and ')}.`}
-      note="Fixing edits ~/.claude/settings.json"
+      note={`Fixing edits ${status.settingsPath}`}
       action={{ label: 'Fix', isActing: isRepairing, onSelect: repair }}
     />
   );
