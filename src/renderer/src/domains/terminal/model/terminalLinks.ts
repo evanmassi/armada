@@ -1,5 +1,6 @@
 import type { IBufferCellPosition, ILink, ILinkProvider, Terminal } from '@xterm/xterm';
 import { WebLinksAddon } from '@xterm/addon-web-links';
+import { isCommandKeyHeld } from '@renderer/shared/utils/commandKey';
 import { continuesOnNextRow, findPathLinks } from './pathLinkMatcher';
 
 type LinkCallbacks = Pick<ILink, 'activate' | 'hover' | 'leave'>;
@@ -70,9 +71,9 @@ const createPathLinkProvider = (terminal: Terminal, callbacks: LinkCallbacks): I
 export function enableTerminalLinks(terminal: Terminal, openTarget: (target: string) => void): void {
   let isLinkHovered = false;
   const callbacks: LinkCallbacks = {
-    // PITFALL: a plain click is how a tile gets focus, so a link only opens on Ctrl+click.
+    // PITFALL: a plain click is how a tile gets focus, so a link only opens on Ctrl+click, Cmd+click on a Mac.
     activate: (event, target) => {
-      if (event.ctrlKey) openTarget(target);
+      if (isCommandKeyHeld(event)) openTarget(target);
     },
     hover: () => {
       isLinkHovered = true;
@@ -86,7 +87,7 @@ export function enableTerminalLinks(terminal: Terminal, openTarget: (target: str
   terminal.registerLinkProvider(createPathLinkProvider(terminal, callbacks));
   // PITFALL: fullscreen Claude Code opens a Ctrl+clicked link itself; xterm reports the mouse from the parent element, so stopping the press on the screen element hides it from the pty.
   terminal.element?.querySelector<HTMLElement>('.xterm-screen')?.addEventListener('mousedown', (event) => {
-    if (!event.ctrlKey || !isLinkHovered) return;
+    if (!isCommandKeyHeld(event) || !isLinkHovered) return;
     event.preventDefault();
     event.stopPropagation();
     terminal.focus();

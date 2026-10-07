@@ -6,6 +6,7 @@
   "description": "Desktop dashboard for Claude Code conversations",
   "main": "out/main/index.js",
   "scripts": {
+    "postinstall": "install-electron && node scripts/markSpawnHelperExecutable.mjs",
     "dev": "electron-vite dev",
     "dev:demo": "node scripts/demo/seedDemo.mjs",
     "build": "electron-vite build",

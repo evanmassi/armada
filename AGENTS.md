@@ -98,6 +98,7 @@ src/main/
 │   ├── logging/      # FileLogger: JSON lines in userData/armada.log, rotated at startup
 │   ├── di/           # ServiceContainer
 │   ├── launchChecks.ts # resolveOnPath and assertLaunchable, shared by pty spawns and the editor launch
+│   ├── loginShellPath.ts # On a Mac, merges the login shell's PATH in at startup so claude, node and code are found
 │   ├── fileErrors.ts # isMissingPath
 │   ├── safeJson.ts   # parseJsonOrUndefined for files and output that may be partial or foreign
 │   └── paths.ts      # The only place userData and ~/.claude paths are built
@@ -212,7 +213,7 @@ or it is saved. Pan and zoom apply to Mermaid and SVG; an
   component attaches the existing terminal element on mount and detaches on unmount, so a layout change that
   remounts the tile never restarts the process. `App` disposes terminals whose tile has left the workspace. It owns
   the activity tracker (`model/activityTracker.ts`) and lets global shortcuts (`app/keyboardShortcuts.ts`) bubble
-  past xterm. Links (`model/terminalLinks.ts`) open on Ctrl+click from three sources: embedded hyperlinks Claude Code
+  past xterm. Links (`model/terminalLinks.ts`) open on Ctrl+click (Cmd+click on a Mac, `shared/utils/commandKey.ts`) from three sources: embedded hyperlinks Claude Code
   emits because the pty sets `FORCE_HYPERLINK`, bare URLs, and file paths (`model/pathLinkMatcher.ts`), joined back
   across a row break Claude Code drew itself. The renderer sends the raw target and the tile's cwd; main's `LinkOpener`
   is the only judge of what opens and where: folders and binary files (a zero byte in the first 8000, the check git
@@ -503,6 +504,8 @@ get one named home.
 - Prefer dedicated tools: Read, Glob, Grep. Use Bash for npm, node, git, builds, tests.
 - node-pty loads its N-API prebuilds in Electron without a rebuild. `npmRebuild` is off in `electron-builder.config.cjs`
   because building it from source fails in winpty's build script.
+- `postinstall` downloads Electron's binary (Electron 44 no longer does it on install) and marks node-pty's macOS
+  `spawn-helper` executable (`scripts/markSpawnHelperExecutable.mjs`), which node-pty publishes without the bit.
 
 ---
 

@@ -3,6 +3,7 @@ import { app, BrowserWindow, Menu } from 'electron';
 import { createServiceContainer } from '@main/infrastructure/di/ServiceContainer';
 import { DIAGRAM_PAGE_SCHEME } from '@shared/diagrams/diagramSchemas';
 import { registerDiagramPageScheme, serveDiagramPages } from '@main/infrastructure/diagrams/diagramPageProtocol';
+import { adoptLoginShellPath } from '@main/infrastructure/loginShellPath';
 import { separateDevDataFolder } from '@main/infrastructure/paths';
 import { registerDiagramHandlers } from '@main/ipc/registerDiagramHandlers';
 import { registerConversationHandlers } from '@main/ipc/registerConversationHandlers';
@@ -56,7 +57,10 @@ function createMainWindow(): BrowserWindow {
 separateDevDataFolder();
 registerDiagramPageScheme();
 app.setAppUserModelId(APP_USER_MODEL_ID);
-Menu.setApplicationMenu(null);
+// PITFALL: a Mac sends Cmd+C, Cmd+V, Cmd+A and Cmd+Q through the app menu, so without one nothing copies, pastes or quits.
+Menu.setApplicationMenu(
+  process.platform === 'darwin' ? Menu.buildFromTemplate([{ role: 'appMenu' }, { role: 'editMenu' }]) : null,
+);
 
 const isPrimaryInstance = app.requestSingleInstanceLock();
 if (!isPrimaryInstance) app.quit();
@@ -64,6 +68,7 @@ if (!isPrimaryInstance) app.quit();
 app.whenReady().then(() => {
   if (!isPrimaryInstance) return;
   const container = createServiceContainer();
+  adoptLoginShellPath(container.logger);
   serveDiagramPages(container.tileDiagramFiles);
   container.logger.info('app.started', { version: app.getVersion(), electron: process.versions.electron });
   process.on('uncaughtException', (error) => container.logger.error('main.uncaughtException', { error }));

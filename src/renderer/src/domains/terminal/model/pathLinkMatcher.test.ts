@@ -29,6 +29,12 @@ describe('findPathLinks', () => {
     expect(textsIn('see ./docs and ../armada/build/')).toEqual(['./docs', '../armada/build/']);
   });
 
+  it('finds an absolute path from the filesystem root but not a slash command', () => {
+    expect(textsIn('● Wrote /Users/someone/dev/armada/src/main/index.ts:59 after /clear')).toEqual([
+      '/Users/someone/dev/armada/src/main/index.ts:59',
+    ]);
+  });
+
   it('keeps a line and column suffix and reports where the match starts', () => {
     expect(findPathLinks('  at src/main/index.ts:14:3')).toEqual([{ text: 'src/main/index.ts:14:3', startIndex: 5 }]);
   });

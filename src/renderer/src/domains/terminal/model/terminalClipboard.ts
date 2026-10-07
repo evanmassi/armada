@@ -1,6 +1,7 @@
 import type { Terminal } from '@xterm/xterm';
 import { notifyError } from '@renderer/app/stores/notificationStore';
 import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
+import { IS_MAC, isCommandKeyHeld } from '@renderer/shared/utils/commandKey';
 import { cleanCopiedText } from './copiedText';
 import { quotePathForInput } from './terminalPathInput';
 
@@ -26,18 +27,17 @@ const pasteFromClipboard = (terminal: Terminal): void => {
   });
 };
 
-const isCopyChord = (event: KeyboardEvent): boolean =>
-  (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'c') || (event.ctrlKey && event.key === 'Insert');
+// PITFALL: Ctrl+C is the interrupt everywhere but a Mac, so off a Mac it copies only with Shift or a selection.
+const isCopyChord = (terminal: Terminal, event: KeyboardEvent): boolean =>
+  (isCommandKeyHeld(event) && event.key.toLowerCase() === 'c' && (IS_MAC || event.shiftKey || terminal.hasSelection())) ||
+  (event.ctrlKey && event.key === 'Insert');
 
 const isPasteChord = (event: KeyboardEvent): boolean =>
-  (event.ctrlKey && event.key.toLowerCase() === 'v') || (event.shiftKey && event.key === 'Insert');
-
-const isInterruptWithSelection = (terminal: Terminal, event: KeyboardEvent): boolean =>
-  event.ctrlKey && !event.shiftKey && event.key.toLowerCase() === 'c' && terminal.hasSelection();
+  (isCommandKeyHeld(event) && event.key.toLowerCase() === 'v') || (event.shiftKey && event.key === 'Insert');
 
 export function handleClipboardKey(terminal: Terminal, event: KeyboardEvent): boolean {
   if (event.type !== 'keydown') return false;
-  if (isCopyChord(event) || isInterruptWithSelection(terminal, event)) {
+  if (isCopyChord(terminal, event)) {
     event.preventDefault();
     copySelection(terminal);
     return true;

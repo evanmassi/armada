@@ -5,7 +5,9 @@ interface PathLinkMatch {
 
 const SEGMENT = String.raw`[^\s\\/:*?"'\x60<>|(){}\[\],;]+`;
 const ROOT = String.raw`(?:[A-Za-z]:|~|\.{1,2})`;
-const ROOTED_PATH = String.raw`${ROOT}(?:[\\/]${SEGMENT})+[\\/]?`;
+// PITFALL: a lone /word is a Claude Code slash command like /clear, so an absolute path from the filesystem root needs two segments.
+const ABSOLUTE_UNIX_PATH = String.raw`(?:/${SEGMENT}){2,}`;
+const ROOTED_PATH = String.raw`(?:${ROOT}(?:[\\/]${SEGMENT})+|${ABSOLUTE_UNIX_PATH})[\\/]?`;
 const RELATIVE_PATH = String.raw`${SEGMENT}(?:[\\/]${SEGMENT})+`;
 const POSITION = String.raw`(?::\d+(?::\d+)?)?`;
 const PATH_PATTERN = new RegExp(String.raw`(?<=^|[\s"'\x60(\[{<])(?:${ROOTED_PATH}|(${RELATIVE_PATH}))${POSITION}`, 'g');
