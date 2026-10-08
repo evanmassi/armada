@@ -234,7 +234,8 @@ or it is saved. Pan and zoom apply to Mermaid and SVG; an
   installed once at startup, so a dev hot reload of `clickFeedback.ts` needs a restart to take effect.
 - Tooltips are app-wide the same way: `app/tooltips.ts` shows a `data-tooltip` attribute's text after a short hover or on
   keyboard focus, in the same fixed layer as the rings, tinted by the control's `--hud-line` (else the tile or project
-  color). Never use `title` for a hover hint; Electron draws it in the system style. An iframe keeps `title` as its name.
+  color). `TRUNCATED_TOOLTIP_PROPS` on a truncating name shows its full text, only while it is cut off. Never use `title`
+  for a hover hint; Electron draws it in the system style. An iframe keeps `title` as its name.
 
 ---
 
@@ -524,7 +525,8 @@ Commits: `audit: <directory scope> — <specific changes, comma-separated>`, no 
 ## Packaging and Releases
 
 `electron-builder.config.cjs` packages a per-user NSIS installer, and on a Mac an unsigned x64 disk image plus a zip
-whose only job is to make electron-builder write `latest-mac.yml`. The release workflow's Windows job typechecks, tests,
+whose only job is to make electron-builder write `latest-mac.yml`. Its Info.plist gives each macOS folder-access prompt
+a reason, since the shells and Claude sessions in tiles ask as Armada. The release workflow's Windows job typechecks, tests,
 and creates the release; its Mac job, on GitHub's macOS runner, attaches the Mac files to it. Squirrel.Mac installs only
 signed apps, so on a Mac `AppUpdater` checks without downloading and the banner's **Download** opens the release page. Only `node-pty`, `zod`, and `electron-updater` are runtime
 `dependencies`; everything the renderer uses is bundled by Vite and stays in `devDependencies`, out of the installer.

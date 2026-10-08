@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { DIAGRAM_PAGE_ESCAPE_MESSAGE, type DiagramSummary } from '@shared/diagrams/diagramSchemas';
+import { TRUNCATED_TOOLTIP_PROPS } from '@renderer/app/tooltips';
 import { StrokeIconDrawing } from '@renderer/shared/ui/components/StrokeIconButton';
 import { DiagramCanvasPanel } from './DiagramCanvasPanel';
 
@@ -51,7 +52,7 @@ export function DiagramViewDialog({ tileId, diagram, isFullView, onExitFullView,
           <span className="diagram-seam-label">
             <StrokeIconDrawing icon="diagram" className="tile-accent-icon" />
           </span>
-          <span className="tile-title min-w-0 flex-1 truncate">{diagram.fileName}</span>
+          <span className="tile-title min-w-0 flex-1 truncate" {...TRUNCATED_TOOLTIP_PROPS}>{diagram.fileName}</span>
           <button
             type="button"
             className="hud-glyph px-1 text-muted"

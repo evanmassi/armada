@@ -184,7 +184,7 @@ export function ConversationSidebarPanel({ footer, onOpenConversation, onOpenPro
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center gap-1 border-b border-edge bg-panel/80 px-3 py-2 backdrop-blur">
           <img src={armadaIcon} alt="" className="h-4 w-4" />
-          <strong className="readout glow-accent flex-1 text-accent">Armada</strong>
+          <strong className="readout armada-wordmark flex-1">Armada</strong>
           <button type="button" className="readout hud-button text-muted" onClick={() => void startSessionInPickedFolder()} data-tooltip="Start a session in a folder">
             + folder
           </button>

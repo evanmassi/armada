@@ -1,6 +1,7 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import type { DiagramSummary } from '@shared/diagrams/diagramSchemas';
 import { DEFAULT_DIAGRAM_DOCK, type DiagramDock } from '@shared/workspace/workspaceSchemas';
+import { TRUNCATED_TOOLTIP_PROPS } from '@renderer/app/tooltips';
 import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
 import { StrokeIconButton, StrokeIconDrawing } from '@renderer/shared/ui/components/StrokeIconButton';
 import { useDiagramSave } from '../../../hooks/useDiagramSave';
@@ -98,7 +99,7 @@ function DiagramDockPanelContent({ tileId, dock, onDockChange, diagrams }: Diagr
         >
           <StrokeIconDrawing icon="diagram" className="tile-accent-icon" />
         </span>
-        <span className="tile-title min-w-0 flex-1 truncate">{diagram.fileName}</span>
+        <span className="tile-title min-w-0 flex-1 truncate" {...TRUNCATED_TOOLTIP_PROPS}>{diagram.fileName}</span>
         <StrokeIconButton icon="save" label={SAVE_LABELS[diagram.format]} onClick={() => save(diagram)} disabled={isSaving} />
         <StrokeIconButton icon="fullView" label="Full view" onClick={() => setIsFullView(true)} />
       </div>

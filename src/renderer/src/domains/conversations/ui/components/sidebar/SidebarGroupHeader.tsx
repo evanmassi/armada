@@ -81,7 +81,7 @@ export function SidebarGroupHeader({
   return (
     <header
       className={`readout flex items-center gap-1 px-2 py-1.5 transition-colors ${
-        isProjectTarget ? 'bg-accent/15 text-accent' : 'text-fg'
+        isProjectTarget ? 'bg-accent/15 text-accent' : 'sidebar-group-header text-fg'
       } ${projectDropLabel ? 'surface-hatched' : ''} ${groupId ? 'cursor-grab active:cursor-grabbing' : ''} ${isBeingDragged ? 'opacity-40' : ''} ${groupLine}`}
       draggable={groupId !== undefined}
       onDragStart={handleDragStart}

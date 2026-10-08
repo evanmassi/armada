@@ -2,6 +2,7 @@ import type { CSSProperties, DragEvent } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
+import { TRUNCATED_TOOLTIP_PROPS } from '@renderer/app/tooltips';
 import { ActivityIndicator } from '@renderer/shared/ui/components/ActivityIndicator';
 import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
 import { applyDragGhost } from '@renderer/shared/utils/dragGhost';
@@ -47,7 +48,7 @@ export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggl
       onDrop={onDrop}
     >
       <CollapseToggleButton isCollapsed={lane.isCollapsed} target={name} collapsesToward="left" onToggle={onToggleCollapsed} />
-      <span className={`truncate text-[12px] ${lane.isCollapsed ? '[writing-mode:vertical-rl]' : 'tile-project-plate'}`}>{name}</span>
+      <span className={`truncate text-[12px] ${lane.isCollapsed ? '[writing-mode:vertical-rl]' : 'tile-project-plate'}`} {...TRUNCATED_TOOLTIP_PROPS}>{name}</span>
       {lane.isCollapsed ? (
         <span className="flex flex-col gap-1">{activityDots}</span>
       ) : (

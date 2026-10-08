@@ -1,5 +1,8 @@
 const appIdentity = require('./build/appIdentity.json');
 
+const folderAccessReason = (folder) =>
+  `The shells and Claude sessions in your tiles are asking to reach your ${folder}. Allow it if you work there.`;
+
 module.exports = {
   appId: appIdentity.appUserModelId,
   productName: appIdentity.displayName,
@@ -16,6 +19,13 @@ module.exports = {
     ],
     icon: 'build/armada-mac-icon.png',
     category: 'public.app-category.developer-tools',
+    extendInfo: {
+      NSDesktopFolderUsageDescription: folderAccessReason('Desktop folder'),
+      NSDocumentsFolderUsageDescription: folderAccessReason('Documents folder'),
+      NSDownloadsFolderUsageDescription: folderAccessReason('Downloads folder'),
+      NSRemovableVolumesUsageDescription: folderAccessReason('external drives'),
+      NSNetworkVolumesUsageDescription: folderAccessReason('network drives'),
+    },
     artifactName: '${productName}-${version}-mac-${arch}.${ext}',
     // PITFALL: there is no Apple Developer ID, so the app ships unsigned; macOS asks once for Open Anyway and Squirrel.Mac cannot install updates.
     identity: null,

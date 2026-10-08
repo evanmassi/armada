@@ -1,6 +1,7 @@
 import type { Conversation } from '@shared/conversations/conversationTypes';
 import { CLICK_ORIGIN_PROPS } from '@renderer/app/clickFeedback';
 import type { ActivityState } from '@renderer/app/stores/sessionActivityStore';
+import { TRUNCATED_TOOLTIP_PROPS } from '@renderer/app/tooltips';
 import { ActivityIndicator } from '@renderer/shared/ui/components/ActivityIndicator';
 
 interface ConversationRowProps {
@@ -39,7 +40,7 @@ export function ConversationRow({ conversation, activity, isPinned, isArchived, 
         <span className="flex w-[12px] shrink-0" {...CLICK_ORIGIN_PROPS}>
           {activity && <ActivityIndicator state={activity} />}
         </span>
-        <span className="hud-row-label min-w-0 flex-1 truncate">{conversation.title}</span>
+        <span className="hud-row-label min-w-0 flex-1 truncate" {...TRUNCATED_TOOLTIP_PROPS}>{conversation.title}</span>
         <span className="readout shrink-0 text-[10px] tracking-[0.08em] text-muted tabular-nums">{formatLastActive(conversation.lastActiveAt)}</span>
       </button>
       <span className="conversation-actions">

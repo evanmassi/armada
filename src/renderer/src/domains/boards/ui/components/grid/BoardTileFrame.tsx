@@ -2,13 +2,14 @@ import { useState, type CSSProperties, type DragEvent, type KeyboardEvent } from
 import type { Tile } from '@shared/workspace/workspaceSchemas';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useSessionActivityStore, type ActivityState } from '@renderer/app/stores/sessionActivityStore';
+import { TRUNCATED_TOOLTIP_PROPS } from '@renderer/app/tooltips';
 import { useFolderActions } from '@renderer/domains/conversations';
 import { DiagramDockPanel } from '@renderer/domains/diagrams';
 import { disposeLiveTerminal, TerminalSessionTile } from '@renderer/domains/terminal';
 import { ActivityIndicator } from '@renderer/shared/ui/components/ActivityIndicator';
-import { FILE_MANAGER_NAME } from '@renderer/shared/utils/commandKey';
 import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
 import { StrokeIconButton, StrokeIconDrawing } from '@renderer/shared/ui/components/StrokeIconButton';
+import { FILE_MANAGER_NAME } from '@renderer/shared/utils/commandKey';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
 import { useTilePresentation } from '../../../hooks/useTilePresentation';
 import { BoardNotesTile } from '../notes/BoardNotesTile';
@@ -118,7 +119,7 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
         <div className="flex items-center gap-2">
           {isCollapsible && <CollapseToggleButton isCollapsed={isCollapsed} target="tile" onToggle={toggleCollapsed} />}
           <StrokeIconDrawing icon={tile.kind} className="tile-accent-icon" />
-          <span className="tile-title min-w-0 flex-1 truncate">{title}</span>
+          <span className="tile-title min-w-0 flex-1 truncate" {...TRUNCATED_TOOLTIP_PROPS}>{title}</span>
           {isStatusInTitleRow && status}
           {activity === 'exited' && (
             <button type="button" className="hud-glyph px-1 text-muted" data-glyph="↻" onClick={relaunch} data-tooltip="Relaunch" aria-label="Relaunch session">

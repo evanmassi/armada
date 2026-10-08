@@ -1,20 +1,42 @@
 import { overlayHost } from '@renderer/app/overlayHost';
 
 const TOOLTIP_ATTRIBUTE = 'data-tooltip';
+const TRUNCATED_TOOLTIP_ATTRIBUTE = 'data-tooltip-truncated';
+const ANCHOR_SELECTOR = `[${TOOLTIP_ATTRIBUTE}], [${TRUNCATED_TOOLTIP_ATTRIBUTE}]`;
 const TOOLTIP_ID = 'app-tooltip';
-const SHOW_DELAY_MS = 400;
+const SHOW_DELAY_MS = 700;
 const QUICK_REOPEN_MS = 300;
 const ANCHOR_GAP_PX = 8;
 const WINDOW_MARGIN_PX = 4;
 const LINE_COLOR_PROPERTIES = ['--hud-line', '--tile-accent', '--project-accent'];
 
+export const TRUNCATED_TOOLTIP_PROPS = { [TRUNCATED_TOOLTIP_ATTRIBUTE]: true } as const;
+
 let anchor: Element | undefined;
 let tip: HTMLElement | undefined;
+let describedElement: Element | undefined;
 let showTimer: number | undefined;
 let tipRemovedAt = 0;
 
+const isTruncated = (element: Element): boolean => element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight;
+
+const tooltipTextOf = (element: Element): string | undefined => {
+  const text = element.hasAttribute(TRUNCATED_TOOLTIP_ATTRIBUTE)
+    ? isTruncated(element) && element.textContent
+    : element.getAttribute(TOOLTIP_ATTRIBUTE);
+  return text || undefined;
+};
+
 const tooltipAnchorOf = (target: EventTarget | null): Element | undefined =>
-  (target instanceof Element ? target.closest(`[${TOOLTIP_ATTRIBUTE}]`) : null) ?? undefined;
+  (target instanceof Element ? target.closest(ANCHOR_SELECTOR) : null) ?? undefined;
+
+function tooltipOwnerOf(element: Element): { owner: Element; text: string } | undefined {
+  for (let owner: Element | null = element; owner; owner = owner.parentElement?.closest(ANCHOR_SELECTOR) ?? null) {
+    const text = tooltipTextOf(owner);
+    if (text) return { owner, text };
+  }
+  return undefined;
+}
 
 const lineColorOf = (element: Element): string | undefined => {
   const style = getComputedStyle(element);
@@ -30,18 +52,22 @@ function place(shown: HTMLElement, element: Element): void {
 }
 
 function show(element: Element): void {
-  const text = element.getAttribute(TOOLTIP_ATTRIBUTE);
-  if (!text || !element.isConnected) return;
+  const found = element.isConnected ? tooltipOwnerOf(element) : undefined;
+  if (!found) return;
+  const { owner, text } = found;
   tip = document.createElement('div');
   tip.id = TOOLTIP_ID;
   tip.className = 'app-tooltip';
   tip.setAttribute('role', 'tooltip');
   tip.textContent = text;
-  const lineColor = lineColorOf(element);
+  const lineColor = lineColorOf(owner);
   if (lineColor) tip.style.setProperty('--tooltip-line', lineColor);
   overlayHost().appendChild(tip);
-  place(tip, element);
-  if (element.getAttribute('aria-label') !== text) element.setAttribute('aria-describedby', TOOLTIP_ID);
+  place(tip, owner);
+  if (owner.getAttribute('aria-label') !== text && owner.textContent !== text) {
+    owner.setAttribute('aria-describedby', TOOLTIP_ID);
+    describedElement = owner;
+  }
 }
 
 function dismiss(): void {
@@ -50,7 +76,8 @@ function dismiss(): void {
   tip.remove();
   tip = undefined;
   tipRemovedAt = performance.now();
-  if (anchor?.getAttribute('aria-describedby') === TOOLTIP_ID) anchor.removeAttribute('aria-describedby');
+  describedElement?.removeAttribute('aria-describedby');
+  describedElement = undefined;
 }
 
 function release(): void {

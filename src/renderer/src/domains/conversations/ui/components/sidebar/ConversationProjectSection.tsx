@@ -135,7 +135,7 @@ export function ConversationProjectSection({
 
   return (
     <section
-      className={`border-b border-edge transition-opacity ${dropPlacement ? PLACEMENT_LINE_CLASS[dropPlacement] : ''} ${isBeingDragged ? 'opacity-40' : ''}`}
+      className={`transition-opacity ${dropPlacement ? PLACEMENT_LINE_CLASS[dropPlacement] : ''} ${isBeingDragged ? 'opacity-40' : ''}`}
       style={{ '--project-accent': accentFor(project.cwd) } as CSSProperties}
       onDragOver={handleDragOver}
       onDragLeave={() => setDropPlacement(undefined)}
