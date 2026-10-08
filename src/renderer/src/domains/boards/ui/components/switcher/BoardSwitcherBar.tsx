@@ -61,7 +61,7 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
                 onDoubleClick={() => setEditingBoardId(board.id)}
                 onKeyDown={(event) => event.key === 'F2' && setEditingBoardId(board.id)}
                 aria-current={isActive ? 'page' : undefined}
-                title="Double-click or F2 to rename"
+                data-tooltip="Double-click or F2 to rename"
               >
                 <span className="text-edge-strong">{String(index + 1).padStart(2, '0')}</span>
                 <span>{board.name}</span>

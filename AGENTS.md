@@ -232,6 +232,9 @@ or it is saved. Pan and zoom apply to Mermaid and SVG; an
   row ring and squish its sibling origin instead of itself, or ring from its parent when the parent is the origin (a
   board tab). Both switch off under reduced motion. The listener is
   installed once at startup, so a dev hot reload of `clickFeedback.ts` needs a restart to take effect.
+- Tooltips are app-wide the same way: `app/tooltips.ts` shows a `data-tooltip` attribute's text after a short hover or on
+  keyboard focus, in the same fixed layer as the rings, tinted by the control's `--hud-line` (else the tile or project
+  color). Never use `title` for a hover hint; Electron draws it in the system style. An iframe keeps `title` as its name.
 
 ---
 

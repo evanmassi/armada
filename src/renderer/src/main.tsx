@@ -4,8 +4,10 @@ import { App } from '@renderer/app/App';
 import { installClickFeedback } from '@renderer/app/clickFeedback';
 import { queryClient } from '@renderer/app/queryClient';
 import '@renderer/app/styles/index.css';
+import { installTooltips } from '@renderer/app/tooltips';
 
 installClickFeedback();
+installTooltips();
 
 createRoot(document.getElementById('root')!).render(
   <QueryClientProvider client={queryClient}>

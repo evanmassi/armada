@@ -1,9 +1,11 @@
 import { CLICK_ORIGIN_PROPS } from '@renderer/app/clickFeedback';
 
-export type StrokeIcon = 'claude' | 'shell' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'save' | 'fullView' | 'diagram' | 'notes' | 'branch';
+export type StrokeIcon = 'claude' | 'folder' | 'editor' | 'shell' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'save' | 'fullView' | 'diagram' | 'notes' | 'branch';
 
 const ICON_DRAWINGS: Record<StrokeIcon, { viewBox: string; strokes: string }> = {
   claude: { viewBox: '0 0 16 16', strokes: 'M8.21 6.51L8.88 1.76M8.92 6.82L10.83 4.38M9.39 7.44L13.28 5.86M9.49 8.21L12.16 8.58M9.18 8.92L12.81 11.76M8.56 9.39L9.84 12.54M7.79 9.49L7.11 14.34M7.08 9.18L5.29 11.47M6.61 8.56L2.90 10.06M6.51 7.79L3.25 7.33M6.82 7.08L3.27 4.31M7.44 6.61L6.39 4.01' },
+  folder: { viewBox: '0 0 16 16', strokes: 'M2 3.5h4l1.5 1.5H14v7.5H2z' },
+  editor: { viewBox: '0 0 16 16', strokes: 'M11.5 2v12M11.5 2 3 10M11.5 14 3 6' },
   shell: { viewBox: '0 0 18 16', strokes: 'M2 3.5 7.5 8 2 12.5M10 13.5h6.5' },
   chevronLeft: { viewBox: '0 0 16 16', strokes: 'M10 3.5 5.5 8l4.5 4.5' },
   chevronRight: { viewBox: '0 0 16 16', strokes: 'M6 3.5 10.5 8 6 12.5' },
@@ -42,7 +44,7 @@ export function StrokeIconButton({ icon, label, onClick, disabled, expanded, isC
       onClick={onClick}
       disabled={disabled}
       aria-expanded={expanded}
-      title={label}
+      data-tooltip={label}
       aria-label={label}
     >
       <StrokeIconDrawing icon={icon} className="hud-glyph-echo" />

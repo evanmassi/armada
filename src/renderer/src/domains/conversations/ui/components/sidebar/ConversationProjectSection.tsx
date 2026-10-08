@@ -167,7 +167,7 @@ export function ConversationProjectSection({
             onKeyDown={handleNameKeyDown}
             aria-expanded={isOpen}
             {...ROW_ORIGIN_CLICK_PROPS}
-            title={`${project.cwd}\nF2 renames. ${COMMAND_KEY_LABEL}+Up/Down moves.`}
+            data-tooltip={`${project.cwd}\nF2 renames. ${COMMAND_KEY_LABEL}+Up/Down moves.`}
           >
             <span className="truncate font-ui text-[15px] font-semibold tracking-wide">{displayName}</span>
             <span className="shrink-0 text-muted" aria-hidden="true">·</span>
@@ -179,7 +179,7 @@ export function ConversationProjectSection({
           className="hud-glyph px-1.5 text-muted"
           data-glyph="+"
           onClick={(event) => onStartSession(project.cwd, event.shiftKey)}
-          title="New session in this project"
+          data-tooltip="New session in this project"
           aria-label="New session in this project"
         >
           +

@@ -57,7 +57,7 @@ export function UsageIndicator() {
   return (
     <footer
       className={`readout grid grid-cols-[auto_1fr_auto] items-baseline gap-x-2.5 gap-y-1 border-t border-edge bg-panel/80 px-3 py-2 transition-opacity ${isStale ? 'opacity-50' : ''}`}
-      title={isStale ? 'Usage as last reported; it refreshes when a session is active' : 'Claude usage: 5 hour, weekly, and per-model limits, with time until reset'}
+      data-tooltip={isStale ? 'Usage as last reported; it refreshes when a session is active' : 'Claude usage: 5 hour, weekly, and per-model limits, with time until reset'}
     >
       {usage.fiveHour && <UsageWindowReadout label="5h" usageWindow={usage.fiveHour} now={now} />}
       {usage.sevenDay && <UsageWindowReadout label="week" usageWindow={usage.sevenDay} now={now} />}

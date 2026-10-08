@@ -59,7 +59,7 @@ export function DiagramViewDialog({ tileId, diagram, isFullView, onExitFullView,
             data-tone="neutral"
             onClick={onExitFullView}
             aria-label="Close full view"
-            title="Close (Esc)"
+            data-tooltip="Close (Esc)"
           >
             ×
           </button>

@@ -185,10 +185,10 @@ export function ConversationSidebarPanel({ footer, onOpenConversation, onOpenPro
         <header className="flex items-center gap-1 border-b border-edge bg-panel/80 px-3 py-2 backdrop-blur">
           <img src={armadaIcon} alt="" className="h-4 w-4" />
           <strong className="readout glow-accent flex-1 text-accent">Armada</strong>
-          <button type="button" className="readout hud-button text-muted" onClick={() => void startSessionInPickedFolder()} title="Start a session in a folder">
+          <button type="button" className="readout hud-button text-muted" onClick={() => void startSessionInPickedFolder()} data-tooltip="Start a session in a folder">
             + folder
           </button>
-          <button type="button" className="readout hud-button ml-1.5 text-muted" onClick={createGroup} title="New group">
+          <button type="button" className="readout hud-button ml-1.5 text-muted" onClick={createGroup} data-tooltip="New group">
             + group
           </button>
           <ActionMenu label="Sort projects" entries={sortMenuItems} />

@@ -1,3 +1,5 @@
+import { overlayHost } from '@renderer/app/overlayHost';
+
 const RING_LAYERS = ['halo', 'hair', 'hair-echo'] as const;
 const MIN_RING_BASE_PX = 28;
 const BURST_LIFETIME_MS = 900;
@@ -29,7 +31,7 @@ function drawRings(origin: Element, color: string): void {
     ring.className = `click-burst-${layer}`;
     burst.appendChild(ring);
   }
-  (document.querySelector('dialog:modal') ?? document.body).appendChild(burst);
+  overlayHost().appendChild(burst);
   window.setTimeout(() => burst.remove(), BURST_LIFETIME_MS);
 }
 

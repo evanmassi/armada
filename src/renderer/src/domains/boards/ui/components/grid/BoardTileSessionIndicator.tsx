@@ -27,7 +27,7 @@ export function BoardTileSessionIndicator({ tileId, projectCwd }: BoardTileSessi
           </span>
         )}
         {folder && (
-          <span className="readout-folder min-w-0 max-w-[18ch] truncate font-mono text-[11px] text-muted" title={status.cwd}>
+          <span className="readout-folder min-w-0 max-w-[18ch] truncate font-mono text-[11px] text-muted" data-tooltip={status.cwd}>
             {folder}
           </span>
         )}
@@ -40,13 +40,13 @@ export function BoardTileSessionIndicator({ tileId, projectCwd }: BoardTileSessi
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={contextLeft}
-            title="Context left before auto-compact"
+            data-tooltip="Context left before auto-compact"
           >
             {contextLeft}%
           </span>
         )}
         {(hasChanges || status.durationMs !== undefined) && (
-          <span className={`readout-changes readout shrink-0 text-muted ${hasChanges ? '' : 'readout-duration'}`} title="Lines this session changed, and how long it has run">
+          <span className={`readout-changes readout shrink-0 text-muted ${hasChanges ? '' : 'readout-duration'}`} data-tooltip="Lines this session changed, and how long it has run">
             {hasChanges && (
               <>
                 <span className="text-added">+{status.linesAdded ?? 0}</span> <span className="text-removed">−{status.linesRemoved ?? 0}</span>
@@ -61,7 +61,7 @@ export function BoardTileSessionIndicator({ tileId, projectCwd }: BoardTileSessi
           </span>
         )}
         {status.gitBranch && (
-          <span className="readout flex min-w-0 items-center gap-1 text-muted" title={status.gitBranch}>
+          <span className="readout flex min-w-0 items-center gap-1 text-muted" data-tooltip={status.gitBranch}>
             <StrokeIconDrawing icon="branch" className="size-3 shrink-0" />
             <span className="truncate normal-case">{status.gitBranch}</span>
           </span>

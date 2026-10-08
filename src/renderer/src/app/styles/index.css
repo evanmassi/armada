@@ -926,6 +926,37 @@ button[data-pressed] {
     click-ring-flicker var(--click-echo-clock) steps(1, end) calc(var(--click-echo-lag) + var(--click-flicker-offset)) both;
 }
 
+.app-tooltip {
+  --tooltip-line: var(--color-accent);
+  position: fixed;
+  z-index: 70;
+  max-width: 360px;
+  padding: 4px 10px 4px 12px;
+  border: 1px solid color-mix(in srgb, var(--tooltip-line) 65%, transparent);
+  background:
+    var(--scanline-ground),
+    color-mix(in srgb, var(--tooltip-line) 6%, var(--color-ink));
+  box-shadow:
+    inset 2px 0 0 var(--tooltip-line),
+    0 0 18px rgba(0, 0, 0, 0.7),
+    0 0 10px color-mix(in srgb, var(--tooltip-line) 35%, transparent);
+  color: var(--color-fg);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+  animation: tooltip-rise 180ms var(--ease-settle) both;
+}
+
+@keyframes tooltip-rise {
+  0% { opacity: 0; translate: 0 3px; }
+  100% { opacity: 1; translate: 0 0; }
+}
+
 @keyframes click-press {
   0% { transform: scale(1); }
   12% { transform: scale(0.966); }
@@ -994,6 +1025,7 @@ button[data-pressed] {
   .activity-beacon::before,
   .activity-glint::after,
   .meter-segment.is-tip,
+  .app-tooltip,
   button[data-pressed] {
     animation: none;
   }

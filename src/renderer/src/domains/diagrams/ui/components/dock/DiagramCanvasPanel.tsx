@@ -74,7 +74,7 @@ function StaticDiagramCanvasPanel({ tileId, diagram }: DiagramCanvasPanelProps) 
       onPointerMove={pan}
       onLostPointerCapture={() => (dragOrigin.current = undefined)}
       onDoubleClick={() => setView(IDENTITY_VIEW)}
-      title="Scroll to zoom, drag to pan, double-click to reset"
+      data-tooltip="Scroll to zoom, drag to pan, double-click to reset"
     >
       {isPending && <p className="readout p-3 text-[11px] text-muted">drawing…</p>}
       {isError && <p className="readout p-3 text-[11px] text-alert">{getErrorMessage(error)}</p>}

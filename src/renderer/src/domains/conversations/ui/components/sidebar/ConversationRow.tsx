@@ -49,7 +49,7 @@ export function ConversationRow({ conversation, activity, isPinned, isArchived, 
           data-glyph={isArchived ? '↩' : '⌫'}
           onClick={() => onSetArchived(conversation.sessionId, !isArchived)}
           aria-label={isArchived ? 'Restore conversation' : 'Archive conversation'}
-          title={isArchived ? 'Restore' : 'Archive'}
+          data-tooltip={isArchived ? 'Restore' : 'Archive'}
         >
           {isArchived ? '↩' : '⌫'}
         </button>

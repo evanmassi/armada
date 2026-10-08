@@ -2,9 +2,11 @@ import { useState, type CSSProperties, type DragEvent, type KeyboardEvent } from
 import type { Tile } from '@shared/workspace/workspaceSchemas';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useSessionActivityStore, type ActivityState } from '@renderer/app/stores/sessionActivityStore';
+import { useFolderActions } from '@renderer/domains/conversations';
 import { DiagramDockPanel } from '@renderer/domains/diagrams';
 import { disposeLiveTerminal, TerminalSessionTile } from '@renderer/domains/terminal';
 import { ActivityIndicator } from '@renderer/shared/ui/components/ActivityIndicator';
+import { FILE_MANAGER_NAME } from '@renderer/shared/utils/commandKey';
 import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
 import { StrokeIconButton, StrokeIconDrawing } from '@renderer/shared/ui/components/StrokeIconButton';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
@@ -59,7 +61,9 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
   const activity = useSessionActivityStore((state) => state.byTileId[tile.id]?.state);
   const [launchCount, setLaunchCount] = useState(0);
   const editor = useBoardsEditor();
+  const { revealInFileManager, openInEditor } = useFolderActions();
   const { title, accentColor } = useTilePresentation()(tile);
+  const { cwd } = tile;
   const isCollapsed = isCollapsible && tile.isCollapsed;
   const isStatusInTitleRow = tile.kind === 'claude' ? isCollapsed : activity === 'exited';
   const relaunch = (): void => {
@@ -76,7 +80,7 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
     <span
       className={`tile-status readout ml-auto inline-flex shrink-0 items-baseline gap-1.5 text-[11px] ${activity ? STATUS_TONES[activity] : 'text-muted'}`}
       data-tone={activity === 'approval' ? 'alert' : undefined}
-      title={tile.cwd}
+      data-tooltip={tile.cwd}
     >
       {activity && STATES_WITH_ICON.has(activity) && <ActivityIndicator state={activity} />}
       {activity === 'working' ? (
@@ -117,9 +121,15 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
           <span className="tile-title min-w-0 flex-1 truncate">{title}</span>
           {isStatusInTitleRow && status}
           {activity === 'exited' && (
-            <button type="button" className="hud-glyph px-1 text-muted" data-glyph="↻" onClick={relaunch} title="Relaunch" aria-label="Relaunch session">
+            <button type="button" className="hud-glyph px-1 text-muted" data-glyph="↻" onClick={relaunch} data-tooltip="Relaunch" aria-label="Relaunch session">
               ↻
             </button>
+          )}
+          {cwd !== undefined && (
+            <>
+              <StrokeIconButton icon="folder" label={`Open in ${FILE_MANAGER_NAME}`} onClick={() => revealInFileManager(cwd)} />
+              <StrokeIconButton icon="editor" label="Open in VS Code" onClick={() => openInEditor(cwd)} />
+            </>
           )}
           {tile.kind === 'claude' && onOpenShell && (
             <StrokeIconButton icon="shell" label="Open a shell in this folder" onClick={() => onOpenShell(tile.cwd, tile.id)} />

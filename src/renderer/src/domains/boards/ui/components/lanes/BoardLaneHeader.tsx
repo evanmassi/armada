@@ -57,10 +57,10 @@ export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggl
             <span className="ml-1 text-edge-strong">{lane.tiles.length}</span>
           </span>
           <span className="flex items-center gap-1">
-            <button type="button" className="readout hud-button hud-button-compact text-muted" onClick={onStartSession} title="New session in this project" aria-label={`New session in ${name}`}>
+            <button type="button" className="readout hud-button hud-button-compact text-muted" onClick={onStartSession} data-tooltip="New session in this project" aria-label={`New session in ${name}`}>
               + session
             </button>
-            <button type="button" className="readout hud-button hud-button-compact text-muted" onClick={onAddNotes} title="Add notes to this lane" aria-label={`Add notes to ${name}`}>
+            <button type="button" className="readout hud-button hud-button-compact text-muted" onClick={onAddNotes} data-tooltip="Add notes to this lane" aria-label={`Add notes to ${name}`}>
               + notes
             </button>
             <button type="button" className="hud-glyph text-muted" data-glyph="×" data-tone="neutral" onClick={onClose} aria-label={`Close ${name} lane`}>

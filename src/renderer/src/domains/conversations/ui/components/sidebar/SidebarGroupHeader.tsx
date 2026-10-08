@@ -110,7 +110,7 @@ export function SidebarGroupHeader({
           onClick={onToggleCollapsed}
           aria-expanded={!isCollapsed}
           {...ROW_ORIGIN_CLICK_PROPS}
-          title={canRename ? 'Double-click or F2 to rename. Drag to reorder.' : undefined}
+          data-tooltip={canRename ? 'Double-click or F2 to rename. Drag to reorder.' : undefined}
         >
           <span>
             {isProjectTarget ? (projectDropLabel ?? `Move to ${name}`) : name}
