@@ -1,15 +1,18 @@
-import type { CSSProperties, DragEvent } from 'react';
+import { useState, type CSSProperties, type DragEvent } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
 import { TRUNCATED_TOOLTIP_PROPS } from '@renderer/app/tooltips';
+import { contextMenuOpeningOf, type ContextMenuOpening } from '@renderer/shared/ui/components/ActionContextMenu';
 import { ActivityIndicator } from '@renderer/shared/ui/components/ActivityIndicator';
 import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
 import { applyDragGhost } from '@renderer/shared/utils/dragGhost';
 import { LANE_DRAG_MIME } from '../../../model/boardDragTypes';
 import type { Lane } from '../../../model/lanes';
+import { BoardTileMoveMenu } from '../grid/BoardTileMoveMenu';
 
 interface BoardLaneHeaderProps {
+  boardId: string;
   lane: Lane;
   name: string;
   accentColor: string;
@@ -23,8 +26,9 @@ interface BoardLaneHeaderProps {
   onDragLeave(): void;
 }
 
-export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggleCollapsed, onStartSession, onAddNotes, onClose, onDragOver, onDrop, onDragLeave }: BoardLaneHeaderProps) {
+export function BoardLaneHeader({ boardId, lane, name, accentColor, isDropTarget, onToggleCollapsed, onStartSession, onAddNotes, onClose, onDragOver, onDrop, onDragLeave }: BoardLaneHeaderProps) {
   const isDimmed = useBoardSelectionStore((state) => state.focusedTileId !== undefined && !lane.tiles.some((tile) => tile.id === state.focusedTileId));
+  const [moveMenu, setMoveMenu] = useState<ContextMenuOpening>();
   const activities = useSessionActivityStore(useShallow((state) => lane.tiles.map((tile) => state.byTileId[tile.id]?.state)));
 
   const activityDots = activities.map((activity, index) => (activity ? <ActivityIndicator key={index} state={activity} /> : null));
@@ -46,7 +50,9 @@ export function BoardLaneHeader({ lane, name, accentColor, isDropTarget, onToggl
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
+      onContextMenu={(event) => setMoveMenu(contextMenuOpeningOf(event))}
     >
+      {moveMenu && <BoardTileMoveMenu boardId={boardId} tiles={lane.tiles} {...moveMenu} onClose={() => setMoveMenu(undefined)} />}
       <CollapseToggleButton isCollapsed={lane.isCollapsed} target={name} collapsesToward="left" onToggle={onToggleCollapsed} />
       <span className={`truncate text-[12px] ${lane.isCollapsed ? '[writing-mode:vertical-rl]' : 'tile-project-plate'}`} {...TRUNCATED_TOOLTIP_PROPS}>{name}</span>
       {lane.isCollapsed ? (

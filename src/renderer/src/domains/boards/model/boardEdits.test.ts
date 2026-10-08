@@ -8,6 +8,7 @@ import {
   GRID_COLUMNS,
   hasLayoutChanged,
   moveTile,
+  moveTiles,
   nudgeTile,
   rebindClaudeTile,
   reflowFreeLayout,
@@ -121,6 +122,34 @@ describe('swapTiles and moveTile', () => {
     const collapsed = toggleTileCollapsed(toggleTileCollapsed(workspaceWith(tile('a', 0, 0, 4, 6), tile('b', 4, 0, 4, 6), tile('c', 8, 0, 4, 6), tile('d', 0, 6, 4, 6)), 'board', 'b'), 'board', 'd');
     expect(tileIds(moveTile(collapsed, 'board', 'a', 1))).toEqual(['c', 'b', 'a', 'd']);
     expect(tileIds(moveTile(collapsed, 'board', 'b', 1))).toEqual(['a', 'd', 'c', 'b']);
+  });
+});
+
+describe('moveTiles', () => {
+  const withTarget = (workspace: Workspace, ...tiles: Tile[]): Workspace => ({
+    ...workspace,
+    boards: [...workspace.boards, { id: 'target', name: 'Target', layoutMode: 'auto', rowWeights: [], lanes: {}, laneOrder: [], tiles }],
+  });
+  const tileIdsOn = (workspace: Workspace, boardId: string): string[] => workspace.boards.find((board) => board.id === boardId)!.tiles.map((item) => item.id);
+
+  it('keeps the tile id so its session keeps running, and places it after its project siblings without overlap', () => {
+    const start = withTarget(workspaceWith(tile('a', 0, 0, 4, 6), tile('b', 4, 0, 4, 6)), tile('x', 0, 0, 6, 6), tile('y', 6, 0, 6, 6, 1, 'C:\\other'));
+    const moved = moveTiles(start, 'board', ['b'], 'target');
+    expect(tileIdsOn(moved, 'board')).toEqual(['a']);
+    expect(tileIdsOn(moved, 'target')).toEqual(['x', 'b', 'y']);
+    expect(moved.boards[1]!.tiles[1]!.layout).toEqual({ x: 0, y: 6, w: 4, h: 6 });
+  });
+
+  it('moves several tiles in board order and leaves the source board empty', () => {
+    const moved = moveTiles(withTarget(workspaceWith(tile('a', 0, 0, 4, 6), tile('b', 4, 0, 4, 6))), 'board', ['b', 'a'], 'target');
+    expect(tileIdsOn(moved, 'board')).toEqual([]);
+    expect(tileIdsOn(moved, 'target')).toEqual(['a', 'b']);
+  });
+
+  it('ignores a move onto the same board or to a board that does not exist', () => {
+    const start = withTarget(workspaceWith(tile('a', 0, 0, 4, 6)));
+    expect(moveTiles(start, 'board', ['a'], 'board')).toBe(start);
+    expect(moveTiles(start, 'board', ['a'], 'missing')).toBe(start);
   });
 });
 

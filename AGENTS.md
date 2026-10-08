@@ -198,7 +198,10 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   session added and removed with its run time, then the current git branch (a short commit id when detached), with the
   activity state at the right. That row is a size container: as the tile narrows it drops context size, then run time,
   then context left, then folder and model, then line counts, and always keeps effort, branch (truncating), and state. Lane headers dim with their tiles when focus is in another lane, and a board tab
-  shows the approval beacon while any of its tiles waits for approval. Opening a
+  shows the approval beacon while any of its tiles waits for approval. A tile or a whole lane moves to another board
+  when dropped on its tab, or to a new board named for the project when dropped on + board; the context menu on a tile's title bar or a lane header (right-click or the menu key)
+  offers the same moves, which is how free-layout tiles move. The tile keeps its id,
+  so its session keeps running, and an emptied board stays. Opening a
   conversation while another project's board is active routes it to that project's own board unless shift is held.
 - `diagrams` renders a tile's diagrams and knows nothing about boards. `DiagramDockPanel` takes the dock state
   (`diagramDock` on the Claude tile: open, height, selected file) and a change callback from `boards`, which owns the

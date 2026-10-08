@@ -6,6 +6,7 @@ import { TRUNCATED_TOOLTIP_PROPS } from '@renderer/app/tooltips';
 import { useFolderActions } from '@renderer/domains/conversations';
 import { DiagramDockPanel } from '@renderer/domains/diagrams';
 import { disposeLiveTerminal, TerminalSessionTile } from '@renderer/domains/terminal';
+import { contextMenuOpeningOf, type ContextMenuOpening } from '@renderer/shared/ui/components/ActionContextMenu';
 import { ActivityIndicator } from '@renderer/shared/ui/components/ActivityIndicator';
 import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
 import { StrokeIconButton, StrokeIconDrawing } from '@renderer/shared/ui/components/StrokeIconButton';
@@ -13,6 +14,7 @@ import { FILE_MANAGER_NAME } from '@renderer/shared/utils/commandKey';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
 import { useTilePresentation } from '../../../hooks/useTilePresentation';
 import { BoardNotesTile } from '../notes/BoardNotesTile';
+import { BoardTileMoveMenu } from './BoardTileMoveMenu';
 import { BoardTileSessionIndicator } from './BoardTileSessionIndicator';
 
 export const TILE_DRAG_HANDLE_CLASS = 'tile-drag-handle';
@@ -61,6 +63,7 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
   const setFocusedTile = useBoardSelectionStore((state) => state.setFocusedTile);
   const activity = useSessionActivityStore((state) => state.byTileId[tile.id]?.state);
   const [launchCount, setLaunchCount] = useState(0);
+  const [moveMenu, setMoveMenu] = useState<ContextMenuOpening>();
   const editor = useBoardsEditor();
   const { revealInFileManager, openInEditor } = useFolderActions();
   const { title, accentColor } = useTilePresentation()(tile);
@@ -94,7 +97,7 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
     </span>
   );
 
-  const handleHeaderKeyDown =(event: KeyboardEvent<HTMLDivElement>): void => {
+  const handleHeaderKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const direction = ARROW_KEYS[event.key];
     if (!direction) return;
     event.preventDefault();
@@ -110,12 +113,14 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
         className={`${TILE_DRAG_HANDLE_CLASS} tile-titlebar relative z-20 flex cursor-move flex-col gap-0.5 px-2 py-1 text-[11px] ${isCollapsed ? '' : 'border-b border-edge'}`}
         tabIndex={0}
         role="group"
-        aria-label={`${title} tile. ${keyboardHint}`}
+        aria-label={`${title} tile. ${keyboardHint} The menu key moves it to another board.`}
         draggable={onDragStart !== undefined}
         onDragStart={onDragStart}
         onKeyDown={handleHeaderKeyDown}
         onMouseDown={() => setFocusedTile(isCollapsed ? undefined : tile.id)}
+        onContextMenu={(event) => setMoveMenu(contextMenuOpeningOf(event))}
       >
+        {moveMenu && <BoardTileMoveMenu boardId={boardId} tiles={[tile]} {...moveMenu} onClose={() => setMoveMenu(undefined)} />}
         <div className="flex items-center gap-2">
           {isCollapsible && <CollapseToggleButton isCollapsed={isCollapsed} target="tile" onToggle={toggleCollapsed} />}
           <StrokeIconDrawing icon={tile.kind} className="tile-accent-icon" />

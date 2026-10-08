@@ -6,6 +6,7 @@ import {
   applyLayouts,
   createBoard,
   moveTile,
+  moveTiles,
   nudgeTile,
   rebindClaudeTile,
   reflowFreeLayout,
@@ -40,6 +41,13 @@ export function useBoardsEditor() {
     },
     renameBoard: (boardId: string, name: string) => edit((workspace) => renameBoard(workspace, boardId, name)),
     removeBoard: (boardId: string) => edit((workspace) => removeBoard(workspace, boardId)),
+    moveTilesToBoard: (fromBoardId: string, tileIds: string[], toBoardId: string) =>
+      edit((workspace) => moveTiles(workspace, fromBoardId, tileIds, toBoardId)),
+    moveTilesToNewBoard: (fromBoardId: string, tileIds: string[], seed: BoardSeed): string => {
+      const board = createBoard(seed);
+      edit((workspace) => moveTiles(addBoard(workspace, board), fromBoardId, tileIds, board.id));
+      return board.id;
+    },
     setLayoutMode: (boardId: string, layoutMode: LayoutMode) => edit((workspace) => setLayoutMode(workspace, boardId, layoutMode)),
     addTile: (boardId: string, seed: TileSeed, afterTileId?: string) =>
       edit((workspace) => addTile(workspace, boardId, seed, afterTileId)),

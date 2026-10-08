@@ -6,7 +6,8 @@ import { selectActivityBySession, useSessionActivityStore } from '@renderer/app/
 import armadaIcon from '@renderer/assets/armada-icon.png';
 import { useWorkspaceQuery } from '@renderer/domains/workspace';
 import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
-import { ActionMenu, type ActionMenuItem } from '@renderer/shared/ui/components/ActionMenu';
+import { ActionMenu } from '@renderer/shared/ui/components/ActionMenu';
+import type { ActionMenuItem } from '@renderer/shared/ui/components/ActionMenuList';
 import { DragSplitter } from '@renderer/shared/ui/components/DragSplitter';
 import type { DropPlacement } from '@renderer/shared/utils/dragGhost';
 import { getErrorMessage } from '@renderer/shared/utils/getErrorMessage';

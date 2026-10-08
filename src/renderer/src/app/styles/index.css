@@ -574,7 +574,8 @@ button[data-pressed] {
     opacity 170ms ease;
 }
 
-.hud-button:hover:not(:disabled) {
+.hud-button:hover:not(:disabled),
+.hud-button[data-drop-target] {
   border-color: var(--hud-line);
   color: var(--color-fg);
   background:
@@ -585,7 +586,8 @@ button[data-pressed] {
     inset 0 0 10px color-mix(in srgb, var(--hud-line) 14%, transparent);
 }
 
-.hud-button:hover:not(:disabled)::after {
+.hud-button:hover:not(:disabled)::after,
+.hud-button[data-drop-target]::after {
   animation: hud-bracket-lock 340ms cubic-bezier(0.16, 0.9, 0.3, 1) both;
 }
 
@@ -740,25 +742,30 @@ button[data-pressed] {
 }
 
 .hud-tab:hover,
-.hud-tab:focus-within {
+.hud-tab:focus-within,
+.hud-tab[data-drop-target] {
   color: var(--color-fg);
 }
 
 .hud-tab:hover::before,
-.hud-tab:focus-within::before {
+.hud-tab:focus-within::before,
+.hud-tab[data-drop-target]::before {
   opacity: 0.5;
 }
 
 .hud-tab:hover::after,
-.hud-tab:focus-within::after {
+.hud-tab:focus-within::after,
+.hud-tab[data-drop-target]::after {
   opacity: 0.55;
 }
 
-.hud-tab:hover:not(:has([aria-current='page']))::after {
+.hud-tab:hover:not(:has([aria-current='page']))::after,
+.hud-tab[data-drop-target]::after {
   animation: hud-rail-power-on 340ms linear both;
 }
 
-.hud-tab:hover:not(:has([aria-current='page']))::before {
+.hud-tab:hover:not(:has([aria-current='page']))::before,
+.hud-tab[data-drop-target]::before {
   animation: hud-wash-rise 260ms var(--ease-settle) 110ms both;
 }
 

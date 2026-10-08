@@ -128,7 +128,21 @@ export const addTile = (workspace: Workspace, boardId: string, seed: TileSeed, a
 export const removeTiles = (workspace: Workspace, boardId: string, tileIds: string[]): Workspace =>
   updateBoard(workspace, boardId, (board) => ({ ...board, tiles: board.tiles.filter((tile) => !tileIds.includes(tile.id)) }));
 
-export const rebindClaudeTile = (workspace: Workspace, boardId: string, tileId: string, sessionId: string): Workspace => {
+const placeTile = (board: Board, tile: Tile): Board => {
+  const position = findFreePosition(board.tiles, tile.layout.w, tile.layout.h);
+  const tiles = [...board.tiles];
+  tiles.splice(insertionIndex(board.tiles, tile, undefined), 0, { ...tile, layout: { ...tile.layout, ...position } });
+  return { ...board, tiles };
+};
+
+export const moveTiles = (workspace: Workspace, fromBoardId: string, tileIds: string[], toBoardId: string): Workspace => {
+  const moving = findBoard(workspace, fromBoardId)?.tiles.filter((tile) => tileIds.includes(tile.id)) ?? [];
+  if (fromBoardId === toBoardId || moving.length === 0 || !findBoard(workspace, toBoardId)) return workspace;
+  const removed = removeTiles(workspace, fromBoardId, tileIds);
+  return updateBoard(removed, toBoardId, (board) => moving.reduce(placeTile, board));
+};
+
+export const rebindClaudeTile =(workspace: Workspace, boardId: string, tileId: string, sessionId: string): Workspace => {
   const tile = findTile(workspace, boardId, tileId);
   if (tile?.kind !== 'claude' || tile.sessionId === sessionId) return workspace;
   return updateTile(workspace, boardId, tileId, (current) => ({ ...current, sessionId }));

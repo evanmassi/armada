@@ -1,11 +1,15 @@
-import { useState, type CSSProperties, type ReactNode } from 'react';
+import { useState, type CSSProperties, type DragEvent, type ReactNode } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import type { Board } from '@shared/workspace/workspaceSchemas';
+import type { Board, Tile } from '@shared/workspace/workspaceSchemas';
 import { CLICK_ORIGIN_PROPS, ROW_ORIGIN_CLICK_PROPS } from '@renderer/app/clickFeedback';
 import { useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
 import { useProjectColors } from '@renderer/domains/conversations';
 import { ActivityIndicator } from '@renderer/shared/ui/components/ActivityIndicator';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
+import { useTileBoardMoves } from '../../../hooks/useTileBoardMoves';
+import { LANE_DRAG_MIME, TILE_DRAG_MIME } from '../../../model/boardDragTypes';
+
+const NEW_BOARD_DROP_TARGET = 'new-board';
 
 interface BoardSwitcherBarProps {
   boards: Board[];
@@ -17,16 +21,47 @@ interface BoardSwitcherBarProps {
   children?: ReactNode;
 }
 
+const isTileDrag = (event: DragEvent<HTMLElement>): boolean =>
+  event.dataTransfer.types.includes(TILE_DRAG_MIME) || event.dataTransfer.types.includes(LANE_DRAG_MIME);
+
+const draggedTilesOf = (event: DragEvent<HTMLElement>, board: Board): Tile[] => {
+  const tileId = event.dataTransfer.getData(TILE_DRAG_MIME);
+  if (tileId) return board.tiles.filter((tile) => tile.id === tileId);
+  const laneKey = event.dataTransfer.getData(LANE_DRAG_MIME);
+  return laneKey ? board.tiles.filter((tile) => tile.cwd === laneKey) : [];
+};
+
 export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, onRename, onRemove, children }: BoardSwitcherBarProps) {
   const [editingBoardId, setEditingBoardId] = useState<string>();
+  const [dropTarget, setDropTarget] = useState<string>();
   const { colorOf } = useProjectColors();
+  const { moveToBoard, moveToNewBoard } = useTileBoardMoves();
   const approvalTileIds = useSessionActivityStore(useShallow((state) => Object.keys(state.byTileId).filter((tileId) => state.byTileId[tileId]?.state === 'approval')));
+  const activeBoard = boards.find((board) => board.id === activeBoardId);
 
   const confirmRemove = (board: Board): void => {
     if (board.tiles.length === 0 || window.confirm(`Remove board "${board.name}" and its ${board.tiles.length} tiles?`)) {
       onRemove(board.id);
     }
   };
+
+  const dropZoneProps = (target: string, onTilesDropped: (fromBoard: Board, tiles: Tile[]) => void) => ({
+    'data-drop-target': dropTarget === target || undefined,
+    onDragOver: (event: DragEvent<HTMLElement>) => {
+      if (!activeBoard || target === activeBoard.id || !isTileDrag(event)) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+      if (dropTarget !== target) setDropTarget(target);
+    },
+    onDragLeave: (event: DragEvent<HTMLElement>) => {
+      if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDropTarget(undefined);
+    },
+    onDrop: (event: DragEvent<HTMLElement>) => {
+      event.preventDefault();
+      setDropTarget(undefined);
+      if (activeBoard) onTilesDropped(activeBoard, draggedTilesOf(event, activeBoard));
+    },
+  });
 
   return (
     <nav className="flex items-center gap-2 border-b border-edge bg-panel/80 px-3 py-1.5 backdrop-blur" aria-label="Boards">
@@ -39,6 +74,7 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
             className="readout hud-tab group -mt-1.5 -mb-[7px] flex items-center self-stretch pb-[2px] text-muted"
             style={projectColor ? ({ '--hud-line': projectColor } as CSSProperties) : undefined}
             {...CLICK_ORIGIN_PROPS}
+            {...dropZoneProps(board.id, (fromBoard, tiles) => moveToBoard(fromBoard.id, tiles, board.id))}
           >
             {editingBoardId === board.id ? (
               <span className="py-[5px] pl-[11px] pr-1">
@@ -81,7 +117,14 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
           </div>
         );
       })}
-      <button type="button" className="readout hud-button ml-1 text-muted" onClick={onCreate} aria-label="New board">
+      <button
+        type="button"
+        className="readout hud-button ml-1 text-muted"
+        onClick={onCreate}
+        aria-label="New board"
+        data-tooltip="New board. Drop a tile or lane here to move it to one."
+        {...dropZoneProps(NEW_BOARD_DROP_TARGET, (fromBoard, tiles) => moveToNewBoard(fromBoard.id, tiles))}
+      >
         + board
       </button>
       {children}

@@ -133,6 +133,7 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
             }}
           >
             <BoardLaneHeader
+              boardId={board.id}
               lane={lane}
               name={laneName(lane)}
               accentColor={laneAccent(lane)}

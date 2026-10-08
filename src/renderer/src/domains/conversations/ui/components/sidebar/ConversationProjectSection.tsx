@@ -2,7 +2,8 @@ import { useState, type CSSProperties, type DragEvent, type KeyboardEvent } from
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
 import { QUIET_CLICK_PROPS, ROW_ORIGIN_CLICK_PROPS } from '@renderer/app/clickFeedback';
 import type { ActivityState } from '@renderer/app/stores/sessionActivityStore';
-import { ActionMenu, type ActionMenuEntry, type ActionMenuItem } from '@renderer/shared/ui/components/ActionMenu';
+import { ActionMenu } from '@renderer/shared/ui/components/ActionMenu';
+import type { ActionMenuEntry, ActionMenuItem } from '@renderer/shared/ui/components/ActionMenuList';
 import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
 import { COMMAND_KEY_LABEL, FILE_MANAGER_NAME, isCommandKeyHeld } from '@renderer/shared/utils/commandKey';
