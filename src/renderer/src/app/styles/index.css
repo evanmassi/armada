@@ -33,9 +33,11 @@
   --color-fg: #d7dbe2;
   --color-muted: #7f8794;
   --color-accent: #8fd3e8;
-  --color-alert: #f0b35b;
-  --color-added: #6fbf73;
-  --color-removed: #d97a7a;
+  --color-warning: #f0b35b;
+  --color-danger: #d97a7a;
+  --color-success: #6fbf73;
+  --color-added: var(--color-success);
+  --color-removed: var(--color-danger);
   --font-mono: 'Cascadia Code', Consolas, Menlo, monospace;
   --font-ui: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
 }
@@ -693,13 +695,29 @@ button[data-pressed] {
   --hud-line: var(--tile-accent);
 }
 
-.hud-button[data-tone='alert'],
-.hud-glyph[data-tone='alert'] {
-  --hud-line: var(--color-alert);
+[data-tone='info'] {
+  --tone: var(--color-accent);
 }
 
-.hud-glyph[data-tone='neutral'] {
-  --hud-line: var(--color-fg);
+[data-tone='warning'] {
+  --tone: var(--color-warning);
+}
+
+[data-tone='danger'] {
+  --tone: var(--color-danger);
+}
+
+[data-tone='success'] {
+  --tone: var(--color-success);
+}
+
+[data-tone='neutral'] {
+  --tone: var(--color-fg);
+}
+
+.hud-button[data-tone],
+.hud-glyph[data-tone] {
+  --hud-line: var(--tone);
 }
 
 .hud-tab {
@@ -942,6 +960,91 @@ button[data-pressed] {
     click-ring-flicker var(--click-echo-clock) steps(1, end) calc(var(--click-echo-lag) + var(--click-flicker-offset)) both;
 }
 
+.tone-text {
+  color: var(--tone);
+}
+
+.tone-icon {
+  display: inline-grid;
+  flex: none;
+  color: var(--tone);
+  mask-image: repeating-linear-gradient(#000 0 1px, rgba(0, 0, 0, 0.38) 1px 2px);
+}
+
+.status-banner {
+  border-color: color-mix(in srgb, var(--tone) 60%, transparent);
+}
+
+.tone-plate {
+  border: 1px solid color-mix(in srgb, var(--tone) 50%, transparent);
+  background:
+    var(--scanline-ground),
+    color-mix(in srgb, var(--tone) 5%, var(--color-ink));
+  box-shadow:
+    inset 2px 0 0 var(--tone),
+    0 0 20px rgba(0, 0, 0, 0.7),
+    0 0 12px color-mix(in srgb, var(--tone) 22%, transparent);
+}
+
+.notice-plate,
+.confirmation-dialog {
+  animation: crt-on 260ms cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+.notice-plate[data-leaving],
+.confirmation-dialog[data-leaving] {
+  animation: crt-off var(--notice-exit) cubic-bezier(0.5, 0, 0.75, 0) both;
+}
+
+@keyframes crt-on {
+  0% { transform: scale(0, 0.04); filter: brightness(2.5); opacity: 0.6; }
+  45% { transform: scale(1, 0.04); filter: brightness(2.2); opacity: 1; }
+  100% { transform: scale(1, 1); filter: brightness(1); }
+}
+
+@keyframes crt-off {
+  0% { transform: scale(1, 1); filter: brightness(1); }
+  55% { transform: scale(1, 0.04); filter: brightness(2.2); }
+  100% { transform: scale(0, 0.04); filter: brightness(2.5); opacity: 0; }
+}
+
+.notice-life {
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  background: var(--tone);
+  box-shadow: 0 0 6px var(--tone);
+  opacity: 0.8;
+  transform-origin: left;
+  animation: notice-drain var(--notice-lifetime) linear both;
+}
+
+@keyframes notice-drain {
+  0% { scale: 1 1; }
+  100% { scale: 0 1; }
+}
+
+.confirmation-dialog {
+  margin: auto;
+  width: min(380px, calc(100vw - 32px));
+  padding: 0;
+  color: var(--color-fg);
+}
+
+.confirmation-dialog::backdrop {
+  background: rgba(4, 6, 9, 0.62);
+  animation: fade-in 180ms ease both;
+}
+
+.confirmation-dialog[data-leaving]::backdrop {
+  animation: fade-in var(--notice-exit) ease reverse both;
+}
+
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
 .app-tooltip {
   --tooltip-line: var(--color-accent);
   position: fixed;
@@ -1042,6 +1145,13 @@ button[data-pressed] {
   .activity-glint::after,
   .meter-segment.is-tip,
   .app-tooltip,
+  .notice-plate,
+  .notice-plate[data-leaving],
+  .confirmation-dialog,
+  .confirmation-dialog[data-leaving],
+  .notice-life,
+  .confirmation-dialog::backdrop,
+  .confirmation-dialog[data-leaving]::backdrop,
   button[data-pressed] {
     animation: none;
   }
@@ -1087,7 +1197,7 @@ button[data-pressed] {
     text-shadow 500ms ease;
 }
 
-.tile-status[data-tone='alert'] {
+.tile-status[data-tone='warning'] {
   text-shadow: 0 0 8px color-mix(in srgb, currentColor 60%, transparent);
 }
 

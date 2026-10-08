@@ -1,5 +1,6 @@
 import { useState, type DragEvent } from 'react';
 import type { Board, Tile } from '@shared/workspace/workspaceSchemas';
+import { confirmDestructiveAction } from '@renderer/app/stores/confirmationStore';
 import { useProjectAccents, useProjectNames } from '@renderer/domains/conversations';
 import { DragSplitter } from '@renderer/shared/ui/components/DragSplitter';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
@@ -94,9 +95,15 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
     if (draggedId && draggedId !== tile.id && isSameLane) editor.swapTiles(board.id, draggedId, tile.id);
   };
 
-  const confirmCloseLane = (lane: Lane): void => {
-    if (lane.tiles.length > 1 && !window.confirm(`Close ${laneName(lane)} lane and its ${lane.tiles.length} tiles?`)) return;
-    editor.removeTiles(board.id, lane.tiles.map((tile) => tile.id));
+  const confirmCloseLane = async (lane: Lane): Promise<void> => {
+    const isConfirmed =
+      lane.tiles.length <= 1 ||
+      (await confirmDestructiveAction({
+        title: 'Close lane',
+        message: `Close the ${laneName(lane)} lane and its ${lane.tiles.length} tiles? Their sessions stop; the conversations stay in the sidebar.`,
+        actionLabel: 'Close lane',
+      }));
+    if (isConfirmed) editor.removeTiles(board.id, lane.tiles.map((tile) => tile.id));
   };
 
   const handleLaneDragOver =(lane: Lane, event: DragEvent<HTMLElement>): void => {
@@ -141,7 +148,7 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
               onToggleCollapsed={() => editor.toggleLaneCollapsed(board.id, lane.key)}
               onStartSession={() => onStartSession(lane.key)}
               onAddNotes={() => editor.addTile(board.id, { kind: 'notes', text: '', cwd: lane.key })}
-              onClose={() => confirmCloseLane(lane)}
+              onClose={() => void confirmCloseLane(lane)}
               onDragOver={(event) => handleLaneDragOver(lane, event)}
               onDragLeave={() => setDropTargetLaneKey((current) => (current === lane.key ? undefined : current))}
               onDrop={(event) => handleLaneDrop(lane, event)}

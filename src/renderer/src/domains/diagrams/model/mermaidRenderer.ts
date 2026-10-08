@@ -33,7 +33,7 @@ const armadaThemeVariables = () => {
     edgeLabelBackground: panel,
     noteBkgColor: panel,
     noteTextColor: fg,
-    noteBorderColor: readDesignToken('--color-alert'),
+    noteBorderColor: readDesignToken('--color-warning'),
     actorBkg: field,
     actorBorder: accent,
     actorTextColor: fg,

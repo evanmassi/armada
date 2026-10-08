@@ -11,6 +11,7 @@ import { AppUpdateBanner, AppVersionIndicator } from '@renderer/domains/updates'
 import { UsageIndicator } from '@renderer/domains/usage';
 import { adjustTerminalFontSize, resetTerminalFontSize, useWorkspaceEditor, useWorkspaceQuery } from '@renderer/domains/workspace';
 import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
+import { ConfirmationDialog } from '@renderer/shared/ui/components/ConfirmationDialog';
 import { NotificationBar } from '@renderer/shared/ui/components/NotificationBar';
 import { getErrorMessage } from '@renderer/shared/utils/getErrorMessage';
 
@@ -152,7 +153,7 @@ export function App() {
         </BoardSwitcherBar>
         <div ref={boardAreaRef} className="surface-field relative min-h-0 flex-1">
           {isPending && <p className="p-6 text-muted">Loading workspace…</p>}
-          {isError && <p className="p-6 text-alert">{getErrorMessage(error)}</p>}
+          {isError && <p className="p-6 text-danger">{getErrorMessage(error)}</p>}
           {boards.map((board) => (
             <BoardPanel
               key={board.id}
@@ -166,6 +167,7 @@ export function App() {
         </div>
       </main>
       <NotificationBar />
+      <ConfirmationDialog />
     </div>
   );
 }

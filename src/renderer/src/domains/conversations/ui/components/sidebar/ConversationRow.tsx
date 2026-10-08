@@ -24,9 +24,9 @@ export function ConversationRow({ conversation, activity, isPinned, isArchived, 
   const pinButton = (
     <button
       type="button"
-      className={isPinned ? 'hud-glyph px-1 text-[11px] text-alert' : ACTION_CLASS}
+      className={isPinned ? 'hud-glyph px-1 text-[11px] text-warning' : ACTION_CLASS}
       data-glyph={isPinned ? '★' : '☆'}
-      data-tone={isPinned ? 'alert' : undefined}
+      data-tone={isPinned ? 'warning' : undefined}
       onClick={() => onTogglePin(conversation.sessionId)}
       aria-label={isPinned ? 'Unpin' : 'Pin'}
       aria-pressed={isPinned}

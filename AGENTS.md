@@ -259,11 +259,16 @@ Every error toast goes through `notifyError` in `app/stores/notificationStore.ts
 `queryClient.ts` calls it for every failed mutation. A failed query stays silent and the component renders its own
 error state from `isError`. A mutation hook's own `onError` never toasts; it does cache reactions only. The only
 other callers are the terminal model's fire-and-forget IPC calls, which live outside React: session open, link open,
-and saving a clipboard image.
+and saving a clipboard image. Notices are toned plates in the corner (`NotificationBar`) that drain away; an error is
+`danger`. A destructive action asks through `confirmDestructiveAction` in `app/stores/confirmationStore.ts`, which
+opens the one `ConfirmationDialog`; never `window.confirm`.
 
 **Design tokens**: colors and fonts live once, in `app/styles/index.css` under `@theme static`. Code that needs a
 literal value (the xterm theme, the drag ghost) reads the CSS variable; `static` keeps every token emitted even when
-no utility class uses it. Rajdhani is declared there too, with ascent and descent overrides that center its capitals in
+no utility class uses it. Colors carry meaning: `danger` (red) for a failure or an action that cannot be undone,
+`warning` (amber) for something that needs the user while nothing broke (approval, a pin, the setup banner), the
+accent as `info`, and `success` (green) for done; `data-tone` on any element sets `--tone` to one of them, and
+`ToneIcon` draws its scanlined icon. Rajdhani is declared there too, with ascent and descent overrides that center its capitals in
 their line box, so plain flex centering lines text up with icons and framed buttons.
 
 **Activity states** draw through one component, `ActivityIndicator` in `shared/ui`, wherever they appear (tile status,
@@ -278,7 +283,7 @@ own focus mark. Text inputs keep their own focus styles.
 
 **Control styles** (Strand OS, from `overload/refs/ui_design_ideas`) are CSS classes in the same file, not components,
 so the click feedback and every existing button keep working unchanged. Four tiers, all tinted by `--hud-line`
-(accent by default, `data-tone="alert"`, `"neutral"` on glyphs, the project color inside tile and lane title bars):
+(accent by default, a `data-tone`, `"neutral"` on glyphs, the project color inside tile and lane title bars):
 - `hud-button` for framed actions (+ folder, + board, auto/free, Fix): offset plate, corner brackets that lock on at
   hover, squeeze on hold, a lit left bar when `aria-checked`, dimmed when disabled. `hud-button-compact` for lane
   headers.

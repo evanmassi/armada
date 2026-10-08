@@ -12,7 +12,7 @@ export function useIntegrationRepair() {
     mutationFn: () => armadaClient.integration.repair(),
     onSuccess: (status) => {
       queryClient.setQueryData(queryKeys.integration, status);
-      if (status.gaps.length === 0) notify(REPAIRED_NOTICE);
+      if (status.gaps.length === 0) notify(REPAIRED_NOTICE, 'success');
     },
   });
   return { repair: () => mutate(), isRepairing: isPending };

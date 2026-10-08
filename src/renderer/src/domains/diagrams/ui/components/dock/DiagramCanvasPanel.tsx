@@ -77,7 +77,7 @@ function StaticDiagramCanvasPanel({ tileId, diagram }: DiagramCanvasPanelProps) 
       data-tooltip="Scroll to zoom, drag to pan, double-click to reset"
     >
       {isPending && <p className="readout p-3 text-[11px] text-muted">drawing…</p>}
-      {isError && <p className="readout p-3 text-[11px] text-alert">{getErrorMessage(error)}</p>}
+      {isError && <p className="readout p-3 text-[11px] text-danger">{getErrorMessage(error)}</p>}
       {svg !== undefined && (
         <div
           className="diagram-canvas-content flex h-full w-full items-center justify-center p-3"

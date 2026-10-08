@@ -1,11 +1,5 @@
 import { useState } from 'react';
-
-type StatusBannerTone = 'accent' | 'alert';
-
-const TONE_CLASSES: Record<StatusBannerTone, { edge: string; text: string }> = {
-  accent: { edge: 'border-accent/60', text: 'text-accent' },
-  alert: { edge: 'border-alert/60', text: 'text-alert' },
-};
+import { ToneIcon, type Tone } from './ToneIcon';
 
 interface StatusBannerAction {
   label: string;
@@ -14,7 +8,7 @@ interface StatusBannerAction {
 }
 
 interface StatusBannerProps {
-  tone: StatusBannerTone;
+  tone: Tone;
   message: string;
   note: string;
   action?: StatusBannerAction;
@@ -24,14 +18,14 @@ export function StatusBanner({ tone, message, note, action }: StatusBannerProps)
   const [isDismissed, setIsDismissed] = useState(false);
 
   if (isDismissed) return null;
-  const { edge, text } = TONE_CLASSES[tone];
 
   return (
-    <div role="status" className={`flex items-center gap-3 border-b bg-panel px-3 py-1.5 text-fg ${edge}`}>
+    <div role="status" className="status-banner flex items-center gap-3 border-b bg-panel px-3 py-1.5 text-fg" data-tone={tone}>
+      <ToneIcon tone={tone} />
       <span className="min-w-0">{message}</span>
       <span className="text-muted">{note}</span>
       {action && (
-        <button type="button" className={`readout hud-button disabled:opacity-50 ${text}`} data-tone={tone} onClick={action.onSelect} disabled={action.isActing}>
+        <button type="button" className="readout hud-button tone-text disabled:opacity-50" data-tone={tone} onClick={action.onSelect} disabled={action.isActing}>
           {action.label}
         </button>
       )}

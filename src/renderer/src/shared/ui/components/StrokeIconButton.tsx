@@ -1,6 +1,6 @@
 import { CLICK_ORIGIN_PROPS } from '@renderer/app/clickFeedback';
 
-export type StrokeIcon = 'claude' | 'folder' | 'editor' | 'shell' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'save' | 'fullView' | 'diagram' | 'notes' | 'branch';
+export type StrokeIcon = 'claude' | 'folder' | 'editor' | 'shell' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'save' | 'fullView' | 'diagram' | 'notes' | 'branch' | 'info' | 'warning' | 'danger' | 'success';
 
 const ICON_DRAWINGS: Record<StrokeIcon, { viewBox: string; strokes: string }> = {
   claude: { viewBox: '0 0 16 16', strokes: 'M8.21 6.51L8.88 1.76M8.92 6.82L10.83 4.38M9.39 7.44L13.28 5.86M9.49 8.21L12.16 8.58M9.18 8.92L12.81 11.76M8.56 9.39L9.84 12.54M7.79 9.49L7.11 14.34M7.08 9.18L5.29 11.47M6.61 8.56L2.90 10.06M6.51 7.79L3.25 7.33M6.82 7.08L3.27 4.31M7.44 6.61L6.39 4.01' },
@@ -14,6 +14,10 @@ const ICON_DRAWINGS: Record<StrokeIcon, { viewBox: string; strokes: string }> = 
   fullView: { viewBox: '0 0 16 16', strokes: 'M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10' },
   diagram: { viewBox: '0 0 16 16', strokes: 'M5.5 1.5h5v4h-5zM1.5 10.5h5v4h-5zM9.5 10.5h5v4h-5zM8 5.5V8M4 10.5V8h8v2.5' },
   notes: { viewBox: '0 0 16 16', strokes: 'M3.5 1.5h9v13h-9zM6 5.5h4M6 8h4M6 10.5h2.5' },
+  info: { viewBox: '0 0 16 16', strokes: 'M8 1.75a6.25 6.25 0 1 0 0 12.5a6.25 6.25 0 1 0 0-12.5zM8 7.3v4.2M8 4.9v.01' },
+  warning: { viewBox: '0 0 16 16', strokes: 'M8 1.8 14.6 13.6H1.4zM8 6.2v3.4M8 11.6v.01' },
+  danger: { viewBox: '0 0 16 16', strokes: 'M5.5 1.5h5l4 4v5l-4 4h-5l-4-4v-5zM6 6l4 4M10 6l-4 4' },
+  success: { viewBox: '0 0 16 16', strokes: 'M8 1.75a6.25 6.25 0 1 0 0 12.5a6.25 6.25 0 1 0 0-12.5zM5.2 8.2l1.9 1.9 3.7-3.9' },
   branch: { viewBox: '0 0 16 16', strokes: 'M4.5 4.5v7M11.5 6.5c0 3-7 2-7 5M3 3a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0-3 0M3 13a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0-3 0M10 5a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0-3 0' },
 };
 

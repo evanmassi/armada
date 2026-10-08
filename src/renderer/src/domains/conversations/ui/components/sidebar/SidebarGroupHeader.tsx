@@ -1,5 +1,6 @@
 import { useState, type DragEvent } from 'react';
 import { ROW_ORIGIN_CLICK_PROPS } from '@renderer/app/clickFeedback';
+import { confirmDestructiveAction } from '@renderer/app/stores/confirmationStore';
 import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
 import { InlineRenameInput } from '@renderer/shared/ui/components/InlineRenameInput';
 import { applyDragGhost, placementFromPointer, PLACEMENT_LINE_CLASS, type DropPlacement } from '@renderer/shared/utils/dragGhost';
@@ -71,8 +72,11 @@ export function SidebarGroupHeader({
     else if (draggedGroupId && draggedGroupId !== groupId) onDropGroup?.(draggedGroupId, placementFromPointer(event));
   };
 
-  const confirmRemove = (): void => {
-    if (projectCount === 0 || window.confirm(`Remove group "${name}"? Its ${projectCount} projects move back to Other.`)) onRemove?.();
+  const confirmRemove = async (): Promise<void> => {
+    const isConfirmed =
+      projectCount === 0 ||
+      (await confirmDestructiveAction({ title: 'Remove group', message: `Remove "${name}"? Its ${projectCount} projects move back to Other.`, actionLabel: 'Remove' }));
+    if (isConfirmed) onRemove?.();
   };
 
   const isProjectTarget = hover?.kind === 'project';
@@ -124,7 +128,7 @@ export function SidebarGroupHeader({
         </button>
       )}
       {onRemove && (
-        <button type="button" className="hud-glyph px-1 text-muted" data-glyph="×" data-tone="neutral" onClick={confirmRemove} aria-label="Remove group">
+        <button type="button" className="hud-glyph px-1 text-muted" data-glyph="×" data-tone="neutral" onClick={() => void confirmRemove()} aria-label="Remove group">
           ×
         </button>
       )}

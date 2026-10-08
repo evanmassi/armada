@@ -204,7 +204,7 @@ export function ConversationSidebarPanel({ footer, onOpenConversation, onOpenPro
         />
         <div className="min-h-0 flex-1 overflow-y-auto">
           {isPending && <p className="px-3 py-2 text-muted">Reading conversations…</p>}
-          {isError && <p className="px-3 py-2 text-alert">{getErrorMessage(error)}</p>}
+          {isError && <p className="px-3 py-2 text-danger">{getErrorMessage(error)}</p>}
           {!isSearching && pinnedConversations.length > 0 && (
             <section className="sidebar-group border-b border-edge pb-1">
               <h2 className="readout rule-label px-3 py-1.5 text-[12px] text-fg">Pinned</h2>

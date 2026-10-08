@@ -2,6 +2,7 @@ import { useState, type CSSProperties, type DragEvent, type ReactNode } from 're
 import { useShallow } from 'zustand/react/shallow';
 import type { Board, Tile } from '@shared/workspace/workspaceSchemas';
 import { CLICK_ORIGIN_PROPS, ROW_ORIGIN_CLICK_PROPS } from '@renderer/app/clickFeedback';
+import { confirmDestructiveAction } from '@renderer/app/stores/confirmationStore';
 import { useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
 import { useProjectColors } from '@renderer/domains/conversations';
 import { ActivityIndicator } from '@renderer/shared/ui/components/ActivityIndicator';
@@ -39,10 +40,15 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
   const approvalTileIds = useSessionActivityStore(useShallow((state) => Object.keys(state.byTileId).filter((tileId) => state.byTileId[tileId]?.state === 'approval')));
   const activeBoard = boards.find((board) => board.id === activeBoardId);
 
-  const confirmRemove = (board: Board): void => {
-    if (board.tiles.length === 0 || window.confirm(`Remove board "${board.name}" and its ${board.tiles.length} tiles?`)) {
-      onRemove(board.id);
-    }
+  const confirmRemove = async (board: Board): Promise<void> => {
+    const isConfirmed =
+      board.tiles.length === 0 ||
+      (await confirmDestructiveAction({
+        title: 'Remove board',
+        message: `Remove "${board.name}" and its ${board.tiles.length} tiles? Their sessions stop; the conversations stay in the sidebar.`,
+        actionLabel: 'Remove',
+      }));
+    if (isConfirmed) onRemove(board.id);
   };
 
   const dropZoneProps = (target: string, onTilesDropped: (fromBoard: Board, tiles: Tile[]) => void) => ({
@@ -109,7 +115,7 @@ export function BoardSwitcherBar({ boards, activeBoardId, onSelect, onCreate, on
               className={`hud-glyph mr-1 text-muted ${isActive ? '' : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'}`}
               data-glyph="×"
               data-tone="neutral"
-              onClick={() => confirmRemove(board)}
+              onClick={() => void confirmRemove(board)}
               aria-label={`Remove board ${board.name}`}
             >
               ×

@@ -11,7 +11,7 @@ export function AppUpdateBanner() {
   if (status.installMethod === 'download') {
     return (
       <StatusBanner
-        tone="accent"
+        tone="info"
         message={`Armada ${status.readyVersion} is out.`}
         note="Open the disk image and drag Armada into Applications to replace this copy"
         action={{ label: 'Download', isActing: isInstalling, onSelect: install }}
@@ -21,7 +21,7 @@ export function AppUpdateBanner() {
 
   return (
     <StatusBanner
-      tone="accent"
+      tone="info"
       message={`Armada ${status.readyVersion} is ready. It installs when you quit.`}
       note="Restarting resumes your sessions"
       action={{ label: 'Restart now', isActing: isInstalling, onSelect: install }}

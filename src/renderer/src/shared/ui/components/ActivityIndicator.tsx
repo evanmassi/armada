@@ -7,7 +7,7 @@ interface ActivityIndicatorProps {
 const ACTIVITY_STYLES: Record<ActivityState, { className: string; label: string }> = {
   working: { className: 'activity-star text-accent', label: 'Claude is working' },
   waiting: { className: 'activity-target text-fg', label: 'Waiting for you' },
-  approval: { className: 'activity-beacon text-alert', label: 'Needs your approval' },
+  approval: { className: 'activity-beacon text-warning', label: 'Needs your approval' },
   idle: { className: 'activity-dot bg-muted', label: 'Open' },
   exited: { className: 'activity-dot border border-muted', label: 'Session exited' },
 };

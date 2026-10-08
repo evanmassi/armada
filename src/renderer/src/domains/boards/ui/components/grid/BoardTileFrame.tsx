@@ -21,7 +21,7 @@ export const TILE_DRAG_HANDLE_CLASS = 'tile-drag-handle';
 
 export type ArrowDirection = 'left' | 'right' | 'up' | 'down';
 
-const STATUS_TONES: Record<ActivityState, string> = { working: 'text-accent', waiting: 'text-fg', approval: 'text-alert', idle: 'text-muted', exited: 'text-muted' };
+const STATUS_TONES: Record<ActivityState, string> = { working: 'text-accent', waiting: 'text-fg', approval: 'text-warning', idle: 'text-muted', exited: 'text-muted' };
 
 const STATES_WITH_ICON = new Set<ActivityState>(['working', 'waiting', 'approval']);
 
@@ -83,7 +83,7 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
   const status = (
     <span
       className={`tile-status readout ml-auto inline-flex shrink-0 items-baseline gap-1.5 text-[11px] ${activity ? STATUS_TONES[activity] : 'text-muted'}`}
-      data-tone={activity === 'approval' ? 'alert' : undefined}
+      data-tone={activity === 'approval' ? 'warning' : undefined}
       data-tooltip={tile.cwd}
     >
       {activity && STATES_WITH_ICON.has(activity) && <ActivityIndicator state={activity} />}
