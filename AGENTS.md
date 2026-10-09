@@ -220,7 +220,7 @@ or it is saved. Pan and zoom apply to Mermaid and SVG; an
   remounts the tile never restarts the process. `App` disposes terminals whose tile has left the workspace. It owns
   the activity tracker (`model/activityTracker.ts`) and lets global shortcuts (`app/keyboardShortcuts.ts`) bubble
   past xterm. Every Ctrl shortcut is Cmd on a Mac (`shared/utils/commandKey.ts`, which also names the file manager), and
-  Option is Meta in the terminal. Links (`model/terminalLinks.ts`) open on Ctrl+click from three sources: embedded hyperlinks Claude Code
+  Option is Meta in the terminal. Ctrl+Tab and Ctrl+Shift+Tab move to the next or previous open tile on the board, in the order the board draws them, and into its body; F6 moves between a tile's body and its title bar. The terminal passes both through, and Ctrl+Tab stays Ctrl on a Mac, where Cmd+Tab belongs to the system. Links (`model/terminalLinks.ts`) open on Ctrl+click from three sources: embedded hyperlinks Claude Code
   emits because the pty sets `FORCE_HYPERLINK`, bare URLs, and file paths (`model/pathLinkMatcher.ts`), joined back
   across a row break Claude Code drew itself. The renderer sends the raw target and the folders a relative path may sit in, the
   session's current folder before the tile's own, since a `cd` in the session moves it; main's `LinkOpener` opens the

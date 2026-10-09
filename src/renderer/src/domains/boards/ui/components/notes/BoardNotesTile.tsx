@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { NotesTile } from '@shared/workspace/workspaceSchemas';
-import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
+import { selectBodyFocusRequest, useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useProjectNames } from '@renderer/domains/conversations';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
 
@@ -17,10 +17,16 @@ export function BoardNotesTile({ boardId, tile }: BoardNotesTileProps) {
   const [draft, setDraft] = useState(tile.text);
   const saveTimer = useRef<number | undefined>(undefined);
   const flushRef = useRef<() => void>(() => undefined);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const bodyFocusRequest = useBoardSelectionStore(selectBodyFocusRequest(tile.id));
   const nameOf = useProjectNames();
   const scopeLabel = tile.cwd ? `Notes for ${nameOf(tile.cwd)}` : 'Notes for this board';
 
   useEffect(() => () => flushRef.current(), []);
+
+  useEffect(() => {
+    if (bodyFocusRequest !== undefined) textAreaRef.current?.focus();
+  }, [bodyFocusRequest]);
 
   const handleChange = (text: string): void => {
     setDraft(text);
@@ -36,6 +42,7 @@ export function BoardNotesTile({ boardId, tile }: BoardNotesTileProps) {
 
   return (
     <textarea
+      ref={textAreaRef}
       className="h-full w-full resize-none bg-tile p-3 font-ui text-[14px] text-fg placeholder:text-muted focus:outline-none"
       placeholder={`${scopeLabel}…`}
       value={draft}

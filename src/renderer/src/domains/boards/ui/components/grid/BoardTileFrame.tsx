@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type DragEvent, type KeyboardEvent } from 'react';
 import type { Tile } from '@shared/workspace/workspaceSchemas';
+import { tileFocusMoveOf } from '@renderer/app/keyboardShortcuts';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useSessionActivityStore, type ActivityState } from '@renderer/app/stores/sessionActivityStore';
 import { TRUNCATED_TOOLTIP_PROPS } from '@renderer/app/tooltips';
@@ -61,8 +62,10 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
   const isFocused = useBoardSelectionStore((state) => state.focusedTileId === tile.id);
   const isDimmed = useBoardSelectionStore((state) => state.focusedTileId !== undefined && state.focusedTileId !== tile.id);
   const setFocusedTile = useBoardSelectionStore((state) => state.setFocusedTile);
+  const focusTileBody = useBoardSelectionStore((state) => state.focusTileBody);
   const activity = useSessionActivityStore((state) => state.byTileId[tile.id]?.state);
   const tileFrameRef = useRef<HTMLDivElement>(null);
+  const titleBarRef = useRef<HTMLDivElement>(null);
   const [launchCount, setLaunchCount] = useState(0);
   const [moveMenu, setMoveMenu] = useState<ContextMenuOpening>();
   const editor = useBoardsEditor();
@@ -107,6 +110,13 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
     </span>
   );
 
+  const moveFocusWithinTile = (event: KeyboardEvent<HTMLDivElement>): void => {
+    if (tileFocusMoveOf(event) !== 'withinTile') return;
+    event.preventDefault();
+    if (!titleBarRef.current?.contains(event.target as Node)) titleBarRef.current?.focus();
+    else if (!isCollapsed) focusTileBody(tile.id);
+  };
+
   const handleHeaderKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const direction = ARROW_KEYS[event.key];
     if (!direction) return;
@@ -119,9 +129,12 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
       ref={tileFrameRef}
       className={`tile-frame relative flex h-full flex-col overflow-hidden bg-tile transition-[opacity,box-shadow,border-color] duration-200 ${isDimmed ? 'opacity-70' : ''} ${isFocused ? 'tile-focused' : ''}`}
       style={{ '--tile-accent': accentColor } as CSSProperties}
+      data-tile-id={tile.id}
       onPointerDown={() => setFocusedTile(isCollapsed ? undefined : tile.id)}
+      onKeyDown={moveFocusWithinTile}
     >
       <div
+        ref={titleBarRef}
         className={`${TILE_DRAG_HANDLE_CLASS} tile-titlebar relative z-20 flex cursor-move flex-col gap-0.5 px-2 py-1 text-[11px] ${isCollapsed ? '' : 'border-b border-edge'}`}
         tabIndex={0}
         role="group"
@@ -162,7 +175,7 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
           </div>
         )}
       </div>
-      <div className={isCollapsed ? 'hidden' : 'flex min-h-0 flex-1 flex-col'}>
+      <div className={isCollapsed ? 'hidden' : 'flex min-h-0 flex-1 flex-col'} data-tile-body={tile.id}>
         <div className="min-h-0 flex-1">
           <TileBody key={launchCount} boardId={boardId} tile={tile} shouldMountTerminal={shouldMountTerminal} />
         </div>

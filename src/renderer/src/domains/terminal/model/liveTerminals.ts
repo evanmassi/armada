@@ -2,7 +2,7 @@ import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import type { Unsubscribe } from '@shared/armadaApi';
 import type { ClaudeHookEvent, OpenSessionRequest, SessionLaunch } from '@shared/sessions/sessionSchemas';
-import { isGlobalShortcut } from '@renderer/app/keyboardShortcuts';
+import { isGlobalShortcut, tileFocusMoveOf } from '@renderer/app/keyboardShortcuts';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { notifyError } from '@renderer/app/stores/notificationStore';
 import { useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
@@ -81,7 +81,9 @@ class LiveTerminalEntry implements LiveTerminal {
   ) {
     this.terminal = new Terminal({ ...terminalAppearance(), fontSize, cursorBlink: true, macOptionIsMeta: true });
     this.terminal.loadAddon(this.fit);
-    this.terminal.attachCustomKeyEventHandler((event) => !isGlobalShortcut(event) && !handleClipboardKey(this.terminal, event));
+    this.terminal.attachCustomKeyEventHandler(
+      (event) => !isGlobalShortcut(event) && tileFocusMoveOf(event) === undefined && !handleClipboardKey(this.terminal, event),
+    );
   }
 
   attach(container: HTMLElement, onSessionRebound: SessionReboundHandler): void {

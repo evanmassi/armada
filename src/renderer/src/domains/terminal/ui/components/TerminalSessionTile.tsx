@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { SessionLaunch } from '@shared/sessions/sessionSchemas';
-import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
+import { selectBodyFocusRequest, useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useTerminalSession } from '../../hooks/useTerminalSession';
 
 interface TerminalSessionTileProps {
@@ -12,12 +12,12 @@ interface TerminalSessionTileProps {
 export function TerminalSessionTile({ tileId, launch, onSessionRebound }: TerminalSessionTileProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const focusTerminal = useTerminalSession(containerRef, { tileId, launch, onSessionRebound });
-  const isFocusRequested = useBoardSelectionStore((state) => state.focusedTileId === tileId);
+  const bodyFocusRequest = useBoardSelectionStore(selectBodyFocusRequest(tileId));
 
   useEffect(() => {
     // PITFALL: entering a diagram page also makes its tile current, and pulling focus to the terminal then would take the keys away from the page.
-    if (isFocusRequested && !(document.activeElement instanceof HTMLIFrameElement)) focusTerminal();
-  }, [isFocusRequested, focusTerminal]);
+    if (bodyFocusRequest !== undefined && !(document.activeElement instanceof HTMLIFrameElement)) focusTerminal();
+  }, [bodyFocusRequest, focusTerminal]);
 
   return <div ref={containerRef} className="h-full w-full" />;
 }
