@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type DragEvent, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type DragEvent, type KeyboardEvent } from 'react';
 import type { Tile } from '@shared/workspace/workspaceSchemas';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { useSessionActivityStore, type ActivityState } from '@renderer/app/stores/sessionActivityStore';
@@ -62,6 +62,7 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
   const isDimmed = useBoardSelectionStore((state) => state.focusedTileId !== undefined && state.focusedTileId !== tile.id);
   const setFocusedTile = useBoardSelectionStore((state) => state.setFocusedTile);
   const activity = useSessionActivityStore((state) => state.byTileId[tile.id]?.state);
+  const tileFrameRef = useRef<HTMLDivElement>(null);
   const [launchCount, setLaunchCount] = useState(0);
   const [moveMenu, setMoveMenu] = useState<ContextMenuOpening>();
   const editor = useBoardsEditor();
@@ -74,6 +75,15 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
     disposeLiveTerminal(tile.id);
     setLaunchCount((count) => count + 1);
   };
+
+  useEffect(() => {
+    // PITFALL: a press inside a diagram page never reaches the app; the window only blurs as focus moves into the page's frame.
+    const focusOnPageEntered = (): void => {
+      if (tileFrameRef.current?.contains(document.activeElement)) setFocusedTile(tile.id);
+    };
+    window.addEventListener('blur', focusOnPageEntered);
+    return () => window.removeEventListener('blur', focusOnPageEntered);
+  }, [tile.id, setFocusedTile]);
 
   const toggleCollapsed = (): void => {
     if (!isCollapsed) setFocusedTile(undefined);
@@ -106,8 +116,10 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
 
   return (
     <div
+      ref={tileFrameRef}
       className={`tile-frame relative flex h-full flex-col overflow-hidden bg-tile transition-[opacity,box-shadow,border-color] duration-200 ${isDimmed ? 'opacity-70' : ''} ${isFocused ? 'tile-focused' : ''}`}
       style={{ '--tile-accent': accentColor } as CSSProperties}
+      onPointerDown={() => setFocusedTile(isCollapsed ? undefined : tile.id)}
     >
       <div
         className={`${TILE_DRAG_HANDLE_CLASS} tile-titlebar relative z-20 flex cursor-move flex-col gap-0.5 px-2 py-1 text-[11px] ${isCollapsed ? '' : 'border-b border-edge'}`}
@@ -117,7 +129,6 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
         draggable={onDragStart !== undefined}
         onDragStart={onDragStart}
         onKeyDown={handleHeaderKeyDown}
-        onMouseDown={() => setFocusedTile(isCollapsed ? undefined : tile.id)}
         onContextMenu={(event) => setMoveMenu(contextMenuOpeningOf(event))}
       >
         {moveMenu && <BoardTileMoveMenu boardId={boardId} tiles={[tile]} {...moveMenu} onClose={() => setMoveMenu(undefined)} />}

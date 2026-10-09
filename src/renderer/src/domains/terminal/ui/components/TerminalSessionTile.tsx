@@ -15,7 +15,8 @@ export function TerminalSessionTile({ tileId, launch, onSessionRebound }: Termin
   const isFocusRequested = useBoardSelectionStore((state) => state.focusedTileId === tileId);
 
   useEffect(() => {
-    if (isFocusRequested) focusTerminal();
+    // PITFALL: entering a diagram page also makes its tile current, and pulling focus to the terminal then would take the keys away from the page.
+    if (isFocusRequested && !(document.activeElement instanceof HTMLIFrameElement)) focusTerminal();
   }, [isFocusRequested, focusTerminal]);
 
   return <div ref={containerRef} className="h-full w-full" />;

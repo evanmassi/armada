@@ -1,5 +1,6 @@
-import { useState, type DragEvent } from 'react';
+import { useEffect, useRef, useState, type DragEvent } from 'react';
 import type { Board, Tile } from '@shared/workspace/workspaceSchemas';
+import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { confirmDestructiveAction } from '@renderer/app/stores/confirmationStore';
 import { useProjectAccents, useProjectNames } from '@renderer/domains/conversations';
 import { DragSplitter } from '@renderer/shared/ui/components/DragSplitter';
@@ -32,6 +33,15 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
   const [draftLaneWeights, setDraftLaneWeights] = useState<Record<string, number>>({});
   const [dropTargetTileId, setDropTargetTileId] = useState<string>();
   const [dropTargetLaneKey, setDropTargetLaneKey] = useState<string>();
+
+  const focusedTileId = useBoardSelectionStore((state) => state.focusedTileId);
+  const setFocusedTile = useBoardSelectionStore((state) => state.setFocusedTile);
+  const lastFocusedTileByLane = useRef<Record<string, string>>({});
+
+  const focusedLaneKey = board.tiles.find((tile) => tile.id === focusedTileId)?.cwd;
+  useEffect(() => {
+    if (focusedLaneKey !== undefined && focusedTileId !== undefined) lastFocusedTileByLane.current[focusedLaneKey] = focusedTileId;
+  }, [focusedLaneKey, focusedTileId]);
 
   const lanes = computeLanes(board);
   const laneName = (lane: Lane): string => nameOf(lane.key);
@@ -75,7 +85,15 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
     if (neighbor) editor.swapTiles(board.id, tile.id, neighbor.id);
   };
 
-  const handleTileDragStart = (tile: Tile, event: DragEvent<HTMLDivElement>): void => {
+  const focusLane = (lane: Lane): void => {
+    const currentTileId = useBoardSelectionStore.getState().focusedTileId;
+    if (lane.isCollapsed || lane.tiles.some((tile) => tile.id === currentTileId)) return;
+    const openTiles = lane.tiles.filter((tile) => !tile.isCollapsed);
+    const target = openTiles.find((tile) => tile.id === lastFocusedTileByLane.current[lane.key]) ?? openTiles[0];
+    if (target) setFocusedTile(target.id);
+  };
+
+  const handleTileDragStart =(tile: Tile, event: DragEvent<HTMLDivElement>): void => {
     event.dataTransfer.setData(TILE_DRAG_MIME, tile.id);
     event.dataTransfer.effectAllowed = 'move';
   };
@@ -138,6 +156,7 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
               flexBasis: lane.isCollapsed ? undefined : 0,
               borderColor: `color-mix(in srgb, ${laneAccent(lane)} 30%, transparent)`,
             }}
+            onPointerDown={() => focusLane(lane)}
           >
             <BoardLaneHeader
               boardId={board.id}
