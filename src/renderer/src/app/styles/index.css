@@ -100,13 +100,13 @@ body,
 .surface-field {
   background-color: var(--color-field);
   background-image:
-    linear-gradient(rgba(190, 210, 230, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(190, 210, 230, 0.035) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--color-edge) 27%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--color-edge) 27%, transparent) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
 .surface-hatched {
-  background-image: repeating-linear-gradient(135deg, rgba(190, 210, 230, 0.05) 0 2px, transparent 2px 8px);
+  background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-edge) 38%, transparent) 0 2px, transparent 2px 8px);
 }
 
 .readout {
@@ -198,6 +198,16 @@ body,
 :root {
   --focus-line: var(--color-accent);
   --scanline-ground: repeating-linear-gradient(rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px);
+  --hud-scanlines: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 3px);
+  --ease-settle: cubic-bezier(0.2, 0.75, 0.25, 1);
+  --ease-emit: cubic-bezier(0.18, 0.72, 0.3, 1);
+  --ease-snap: cubic-bezier(0.2, 0.9, 0.25, 1);
+  --click-clock: 520ms;
+  --click-echo-clock: 580ms;
+  --click-glow-clock: 620ms;
+  --click-echo-lag: 55ms;
+  --click-flicker-offset: 35ms;
+  --click-press: 322ms;
 }
 
 .tile-frame {
@@ -524,19 +534,6 @@ body,
   filter: drop-shadow(0 0 calc(2px + 3px * var(--pace-warning)) var(--pace-color));
 }
 
-:root {
-  --hud-scanlines: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 3px);
-  --ease-settle: cubic-bezier(0.2, 0.75, 0.25, 1);
-  --ease-emit: cubic-bezier(0.18, 0.72, 0.3, 1);
-  --ease-snap: cubic-bezier(0.2, 0.9, 0.25, 1);
-  --click-clock: 520ms;
-  --click-echo-clock: 580ms;
-  --click-glow-clock: 620ms;
-  --click-echo-lag: 55ms;
-  --click-flicker-offset: 35ms;
-  --click-press: 322ms;
-}
-
 button[data-pressed] {
   animation: click-press var(--click-press) var(--ease-settle) both;
 }
@@ -618,6 +615,10 @@ button[data-pressed] {
   inset: -3px;
   opacity: 0.95;
   animation: none;
+}
+
+.hud-button:disabled {
+  opacity: 0.5;
 }
 
 .hud-button[aria-checked='true'] {
@@ -937,17 +938,14 @@ button[data-pressed] {
   scale: 0.1;
 }
 
-.click-burst-halo::before {
-  border-width: 2px;
-  box-shadow: 0 0 22px var(--burst-color);
-  filter: blur(7px);
-}
-
 .click-burst-halo {
   animation: click-ring-fade var(--click-glow-clock) linear both;
 }
 
 .click-burst-halo::before {
+  border-width: 2px;
+  box-shadow: 0 0 22px var(--burst-color);
+  filter: blur(7px);
   animation:
     click-ring-grow var(--click-glow-clock) var(--ease-emit) both,
     click-ring-flicker var(--click-glow-clock) steps(1, end) var(--click-flicker-offset) both;

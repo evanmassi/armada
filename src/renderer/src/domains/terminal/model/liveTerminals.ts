@@ -39,8 +39,6 @@ const terminalAppearance = () => {
   };
 };
 
-const exitBanner = (exitCode: number): string => `\r\n[exited with code ${exitCode}]\r\n`;
-
 const SESSION_ROTATION_SOURCES = new Set<string>(['clear', 'resume', 'fork']);
 
 // PITFALL: a claude started by Claude inside the tile inherits the tile id and reports its own session; only a rotation of the tile's own session rebinds.
@@ -193,7 +191,7 @@ class LiveTerminalEntry implements LiveTerminal {
           }),
           armadaClient.sessions.onExit((event) => {
             if (event.terminalId !== terminalId) return;
-            terminal.write(exitBanner(event.exitCode));
+            terminal.write(`\r\n[exited with code ${event.exitCode}]\r\n`);
             activity.recordExit();
             clearStatus(tileId);
           }),

@@ -1,4 +1,4 @@
-import type { CSSProperties, Ref } from 'react';
+import type { CSSProperties, KeyboardEvent, Ref } from 'react';
 
 export interface ActionMenuItem {
   label: string;
@@ -19,14 +19,33 @@ interface ActionMenuListProps {
   style?: CSSProperties;
   listRef?: Ref<HTMLDivElement>;
   onChosen(): void;
+  onDismiss(): void;
 }
 
 const MENU_ITEM_CLASS = 'hud-row flex w-full items-center gap-1 px-3 py-1 text-left whitespace-nowrap focus:outline-none';
 const MENU_SURFACE_CLASS = 'flex min-w-28 flex-col border border-edge-strong bg-panel/95 py-1 shadow-lg backdrop-blur';
 
+const MENU_ITEM_SELECTOR = '[role="menuitem"]';
+
 const isSubmenu = (entry: ActionMenuEntry): entry is ActionMenuSubmenu => typeof entry !== 'string' && 'items' in entry;
 
-export function ActionMenuList({ entries, className, style, listRef, onChosen }: ActionMenuListProps) {
+export const focusFirstMenuItem = (list: HTMLElement | null): void => list?.querySelector<HTMLElement>(MENU_ITEM_SELECTOR)?.focus();
+
+export function ActionMenuList({ entries, className, style, listRef, onChosen, onDismiss }: ActionMenuListProps) {
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
+    event.stopPropagation();
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      onDismiss();
+      return;
+    }
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    event.preventDefault();
+    const items = [...event.currentTarget.querySelectorAll<HTMLElement>(MENU_ITEM_SELECTOR)];
+    const current = items.indexOf(document.activeElement as HTMLElement);
+    items[(current + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length]?.focus();
+  };
+
   const renderItem = (item: ActionMenuItem, index: number) => (
     <button
       key={`${index} ${item.label} ${item.emphasis ?? ''}`}
@@ -60,7 +79,7 @@ export function ActionMenuList({ entries, className, style, listRef, onChosen }:
   };
 
   return (
-    <div ref={listRef} role="menu" tabIndex={-1} className={`${className} ${MENU_SURFACE_CLASS}`} style={style}>
+    <div ref={listRef} role="menu" tabIndex={-1} className={`${className} ${MENU_SURFACE_CLASS}`} style={style} onKeyDown={handleKeyDown}>
       {entries.map(renderEntry)}
     </div>
   );

@@ -25,11 +25,11 @@ export function StatusBanner({ tone, message, note, action }: StatusBannerProps)
       <span className="min-w-0">{message}</span>
       <span className="text-muted">{note}</span>
       {action && (
-        <button type="button" className="readout hud-button tone-text disabled:opacity-50" data-tone={tone} onClick={action.onSelect} disabled={action.isActing}>
+        <button type="button" className="readout hud-button tone-text" data-tone={tone} onClick={action.onSelect} disabled={action.isActing}>
           {action.label}
         </button>
       )}
-      <button type="button" className="hud-glyph ml-auto text-muted" data-glyph="×" onClick={() => setIsDismissed(true)} aria-label="Dismiss until next launch">
+      <button type="button" className="hud-glyph ml-auto text-muted" data-tone="neutral" data-glyph="×" onClick={() => setIsDismissed(true)} aria-label="Dismiss until next launch">
         ×
       </button>
     </div>

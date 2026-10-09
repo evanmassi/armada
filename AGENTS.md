@@ -262,8 +262,8 @@ verbatim through the single resolver `getErrorMessage` in `shared/utils/getError
 Every error toast goes through `notifyError` in `app/stores/notificationStore.ts`. `MutationCache.onError` in
 `queryClient.ts` calls it for every failed mutation. A failed query stays silent and the component renders its own
 error state from `isError`. A mutation hook's own `onError` never toasts; it does cache reactions only. The only
-other callers are fire-and-forget IPC calls outside a mutation: the terminal model's session open, link open, and saving
-a clipboard image, and opening a web link clicked in a diagram page. Notices are toned plates in the corner (`NotificationBar`) that drain away; an error is
+other callers are fire-and-forget IPC calls outside a mutation: the terminal model's session open, link open, copy, paste,
+and saving a clipboard image, picking a folder to start a session in, and opening a web link clicked in a diagram page. Notices are toned plates in the corner (`NotificationBar`) that drain away; an error is
 `danger`. A destructive action asks through `confirmDestructiveAction` in `app/stores/confirmationStore.ts`, which
 opens the one `ConfirmationDialog`; never `window.confirm`.
 

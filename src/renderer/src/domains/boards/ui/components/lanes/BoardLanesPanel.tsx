@@ -86,6 +86,7 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
   };
 
   const focusLane = (lane: Lane): void => {
+    // PITFALL: the tile's own press already moved focus earlier in this same event, which only the store's live value has seen yet.
     const currentTileId = useBoardSelectionStore.getState().focusedTileId;
     if (lane.isCollapsed || lane.tiles.some((tile) => tile.id === currentTileId)) return;
     const openTiles = lane.tiles.filter((tile) => !tile.isCollapsed);
@@ -93,7 +94,7 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
     if (target) setFocusedTile(target.id);
   };
 
-  const handleTileDragStart =(tile: Tile, event: DragEvent<HTMLDivElement>): void => {
+  const handleTileDragStart = (tile: Tile, event: DragEvent<HTMLDivElement>): void => {
     event.dataTransfer.setData(TILE_DRAG_MIME, tile.id);
     event.dataTransfer.effectAllowed = 'move';
   };
@@ -124,7 +125,7 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
     if (isConfirmed) editor.removeTiles(board.id, lane.tiles.map((tile) => tile.id));
   };
 
-  const handleLaneDragOver =(lane: Lane, event: DragEvent<HTMLElement>): void => {
+  const handleLaneDragOver = (lane: Lane, event: DragEvent<HTMLElement>): void => {
     if (!event.dataTransfer.types.includes(LANE_DRAG_MIME)) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';

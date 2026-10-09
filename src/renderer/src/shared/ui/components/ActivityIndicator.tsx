@@ -15,7 +15,7 @@ const ACTIVITY_STYLES: Record<ActivityState, { className: string; label: string 
 export function ActivityIndicator({ state }: ActivityIndicatorProps) {
   const { className, label } = ACTIVITY_STYLES[state];
   return (
-    <span className="activity-indicator" data-tooltip={label} aria-label={label}>
+    <span className="activity-indicator" role="img" data-tooltip={label} aria-label={label}>
       <span className={className} />
     </span>
   );

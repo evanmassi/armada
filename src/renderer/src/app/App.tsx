@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
 import { GLOBAL_SHORTCUTS, isGlobalShortcut } from '@renderer/app/keyboardShortcuts';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
+import { notifyError } from '@renderer/app/stores/notificationStore';
 import { BoardLayoutModeControls, BoardPanel, BoardSwitcherBar, findClaudeTile, useBoardsEditor } from '@renderer/domains/boards';
 import { ConversationSidebarPanel, useProjectColors, useProjectNames } from '@renderer/domains/conversations';
 import { useTileDiagramArrivals } from '@renderer/domains/diagrams';
@@ -105,7 +106,7 @@ export function App() {
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (!isGlobalShortcut(event)) return;
       event.preventDefault();
-      if (event.key === GLOBAL_SHORTCUTS.newSession) void startSessionNearFocus();
+      if (event.key === GLOBAL_SHORTCUTS.newSession) startSessionNearFocus().catch(notifyError);
       else if (event.key === GLOBAL_SHORTCUTS.fontSmaller) edit((current) => adjustTerminalFontSize(current, -1));
       else if (event.key === GLOBAL_SHORTCUTS.fontReset) edit(resetTerminalFontSize);
       else edit((current) => adjustTerminalFontSize(current, 1));

@@ -142,7 +142,7 @@ export const moveTiles = (workspace: Workspace, fromBoardId: string, tileIds: st
   return updateBoard(removed, toBoardId, (board) => moving.reduce(placeTile, board));
 };
 
-export const rebindClaudeTile =(workspace: Workspace, boardId: string, tileId: string, sessionId: string): Workspace => {
+export const rebindClaudeTile = (workspace: Workspace, boardId: string, tileId: string, sessionId: string): Workspace => {
   const tile = findTile(workspace, boardId, tileId);
   if (tile?.kind !== 'claude' || tile.sessionId === sessionId) return workspace;
   return updateTile(workspace, boardId, tileId, (current) => ({ ...current, sessionId }));
@@ -150,7 +150,7 @@ export const rebindClaudeTile =(workspace: Workspace, boardId: string, tileId: s
 
 export const updateDiagramDock = (workspace: Workspace, tileId: string, change: Partial<DiagramDock>): Workspace => {
   const board = workspace.boards.find((candidate) => candidate.tiles.some((tile) => tile.id === tileId));
-  const tile = board && findTile(workspace, board.id, tileId);
+  const tile = board?.tiles.find((candidate) => candidate.id === tileId);
   if (!board || tile?.kind !== 'claude') return workspace;
   const current = tile.diagramDock ?? DEFAULT_DIAGRAM_DOCK;
   const next = { ...current, ...change };

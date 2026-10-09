@@ -1,8 +1,9 @@
-import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent as ReactMouseEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { ActionMenuList, type ActionMenuEntry } from './ActionMenuList';
+import { useOutsidePress } from '../hooks/useOutsidePress';
+import { ActionMenuList, focusFirstMenuItem, type ActionMenuEntry } from './ActionMenuList';
 
-export interface MenuPoint {
+interface MenuPoint {
   x: number;
   y: number;
 }
@@ -38,40 +39,31 @@ export function ActionContextMenu({ point, isOpenedByKeyboard, entries, onClose 
       x: Math.max(WINDOW_MARGIN_PX, Math.min(point.x, window.innerWidth - list.offsetWidth - WINDOW_MARGIN_PX)),
       y: Math.max(WINDOW_MARGIN_PX, Math.min(point.y, window.innerHeight - list.offsetHeight - WINDOW_MARGIN_PX)),
     });
-    (isOpenedByKeyboard ? list.querySelector<HTMLElement>('[role="menuitem"]') : list)?.focus();
+    if (isOpenedByKeyboard) focusFirstMenuItem(list);
+    else list.focus();
   }, [point, isOpenedByKeyboard]);
 
+  useOutsidePress(listRef, onClose);
+
   useEffect(() => {
-    const closeOnOutsideClick = (event: MouseEvent): void => {
-      if (!listRef.current?.contains(event.target as Node)) onClose();
-    };
-    document.addEventListener('mousedown', closeOnOutsideClick);
     window.addEventListener('blur', onClose);
-    return () => {
-      document.removeEventListener('mousedown', closeOnOutsideClick);
-      window.removeEventListener('blur', onClose);
-    };
+    return () => window.removeEventListener('blur', onClose);
   }, [onClose]);
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-    event.stopPropagation();
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      onClose();
-      if (opener instanceof HTMLElement) opener.focus();
-      return;
-    }
-    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-    event.preventDefault();
-    const items = [...(listRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])];
-    const current = items.indexOf(document.activeElement as HTMLElement);
-    items[(current + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length]?.focus();
+  const dismiss = (): void => {
+    onClose();
+    if (opener instanceof HTMLElement) opener.focus();
   };
 
   return createPortal(
-    <div onKeyDown={handleKeyDown}>
-      <ActionMenuList entries={entries} className="fixed z-50" style={{ left: position.x, top: position.y }} listRef={listRef} onChosen={onClose} />
-    </div>,
+    <ActionMenuList
+      entries={entries}
+      className="fixed z-50"
+      style={{ left: position.x, top: position.y }}
+      listRef={listRef}
+      onChosen={onClose}
+      onDismiss={dismiss}
+    />,
     document.body,
   );
 }

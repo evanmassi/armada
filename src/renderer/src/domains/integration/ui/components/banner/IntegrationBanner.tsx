@@ -18,7 +18,7 @@ export function IntegrationBanner() {
     return (
       <StatusBanner
         tone="warning"
-        message="Node.js is not installed, and Claude Code runs Armada's hooks with it: tiles cannot show what Claude is doing and the usage readout will not update."
+        message={`Node.js is not installed, and Claude Code runs Armada's hooks with it: ${Object.values(CONSEQUENCE_BY_GAP).join(' and ')}.`}
         note="Install Node.js 22 or newer from nodejs.org, then restart Armada"
       />
     );

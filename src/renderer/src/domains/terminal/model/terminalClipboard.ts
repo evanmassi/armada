@@ -7,24 +7,23 @@ import { quotePathForInput } from './terminalPathInput';
 
 const copySelection = (terminal: Terminal): boolean => {
   if (!terminal.hasSelection()) return false;
-  void navigator.clipboard.writeText(cleanCopiedText(terminal.getSelection()));
+  navigator.clipboard.writeText(cleanCopiedText(terminal.getSelection())).catch(notifyError);
   terminal.clearSelection();
   return true;
 };
 
 const pasteFromClipboard = (terminal: Terminal): void => {
-  void navigator.clipboard.readText().then((text) => {
-    if (text) {
-      terminal.paste(text);
-      return;
-    }
-    armadaClient.files
-      .saveClipboardImage()
-      .then((imagePath) => {
-        if (imagePath) terminal.paste(quotePathForInput(imagePath));
-      })
-      .catch(notifyError);
-  });
+  navigator.clipboard
+    .readText()
+    .then(async (text) => {
+      if (text) {
+        terminal.paste(text);
+        return;
+      }
+      const imagePath = await armadaClient.files.saveClipboardImage();
+      if (imagePath) terminal.paste(quotePathForInput(imagePath));
+    })
+    .catch(notifyError);
 };
 
 // PITFALL: Ctrl+C is the interrupt everywhere but a Mac, so off a Mac it copies only with Shift or a selection.
