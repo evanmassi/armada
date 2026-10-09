@@ -1,4 +1,6 @@
-import type { PointerEvent } from 'react';
+import type { KeyboardEvent, PointerEvent } from 'react';
+
+const KEYBOARD_STEP_PX = 24;
 
 interface DragSplitterProps {
   orientation: 'vertical' | 'horizontal';
@@ -9,6 +11,7 @@ interface DragSplitterProps {
 
 export function DragSplitter({ orientation, onDragStart, onDragMove, onDragEnd }: DragSplitterProps) {
   const isVertical = orientation === 'vertical';
+  const [backKey, forwardKey] = isVertical ? ['ArrowLeft', 'ArrowRight'] : ['ArrowUp', 'ArrowDown'];
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>): void => {
     event.preventDefault();
@@ -27,12 +30,24 @@ export function DragSplitter({ orientation, onDragStart, onDragMove, onDragEnd }
     window.addEventListener('pointerup', handleUp);
   };
 
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
+    const direction = event.key === forwardKey ? 1 : event.key === backKey ? -1 : 0;
+    if (direction === 0) return;
+    event.preventDefault();
+    onDragStart();
+    onDragMove(direction * KEYBOARD_STEP_PX);
+    onDragEnd();
+  };
+
   return (
     <div
       role="separator"
+      tabIndex={0}
       aria-orientation={isVertical ? 'vertical' : 'horizontal'}
-      className={`shrink-0 rounded bg-edge transition-colors hover:bg-muted ${isVertical ? 'w-1.5 cursor-col-resize' : 'h-1.5 cursor-row-resize'}`}
+      aria-label={isVertical ? 'Resize, left and right arrow keys' : 'Resize, up and down arrow keys'}
+      className={`shrink-0 rounded bg-edge transition-colors hover:bg-muted focus-visible:bg-muted ${isVertical ? 'w-1.5 cursor-col-resize' : 'h-1.5 cursor-row-resize'}`}
       onPointerDown={handlePointerDown}
+      onKeyDown={handleKeyDown}
     />
   );
 }
