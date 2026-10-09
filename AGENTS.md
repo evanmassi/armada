@@ -144,7 +144,7 @@ src/renderer/src/
 │   ├── terminal/      # xterm tile bound to one pty session
 │   ├── diagrams/      # Dock under a Claude tile: Mermaid, SVG, and sandboxed interactive pages
 │   ├── integration/   # Banner that checks and repairs Armada's entries in Claude Code's settings
-│   ├── usage/         # 5 hour, weekly, and per-model limit readout in the sidebar footer
+│   ├── usage/         # 5 hour, weekly, and per-model limit readout in the sidebar footer: reset times, a caret for time gone that warms to amber as usage runs ahead
 │   └── updates/       # Update-ready banner with Restart now, and the running version under the usage readout
 ├── shared/           # Cross-cutting
 │   ├── ui/

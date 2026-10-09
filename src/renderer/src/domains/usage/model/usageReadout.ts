@@ -1,9 +1,25 @@
 const STALE_AFTER_MS = 5 * 60_000;
 const EXHAUSTED_COLOR = 'rgb(220, 100, 100)';
+const FULL_WARNING_LEAD_PERCENTAGE = 25;
+
+export const FIVE_HOUR_WINDOW_SECONDS = 5 * 3600;
+export const WEEK_WINDOW_SECONDS = 7 * 86400;
 
 type Rgb = readonly [number, number, number];
 
+interface UsagePace {
+  elapsedFraction: number;
+  warningStrength: number;
+}
+
 export const isStaleReport = (reportedAt: number, now: number): boolean => now - reportedAt > STALE_AFTER_MS;
+
+export function usagePace(usedPercentage: number, resetsAtSeconds: number, windowSeconds: number, now: number): UsagePace {
+  const clampToUnit = (value: number): number => Math.min(1, Math.max(0, value));
+  const elapsedFraction = clampToUnit(1 - (resetsAtSeconds - now / 1000) / windowSeconds);
+  const leadPercentage = usedPercentage - elapsedFraction * 100;
+  return { elapsedFraction, warningStrength: clampToUnit(leadPercentage / FULL_WARNING_LEAD_PERCENTAGE) };
+}
 
 export function formatResetTime(resetsAtSeconds: number, now: number): string {
   const resetsAt = new Date(Math.round(resetsAtSeconds / 60) * 60_000);

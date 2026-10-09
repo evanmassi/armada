@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatResetTime, headroomColor, isStaleReport } from './usageReadout';
+import { formatResetTime, headroomColor, isStaleReport, usagePace } from './usageReadout';
 
 const NOW = 1_800_000_000_000;
 
@@ -27,6 +27,31 @@ describe('formatResetTime', () => {
 
   it('marks a reset on the same weekday next week', () => {
     expect(formatResetTime(seconds(at(15, 9)), thursdayAfternoon)).toBe(`next ${weekday(at(15, 9))} ${hourOnly(at(15, 9))}`);
+  });
+});
+
+describe('usagePace', () => {
+  const hour = 3600;
+  const fiveHours = 5 * hour;
+  const resetsIn = (seconds: number): number => NOW / 1000 + seconds;
+
+  it('places the mark at the share of the window that has passed', () => {
+    expect(usagePace(0, resetsIn(4 * hour), fiveHours, NOW).elapsedFraction).toBeCloseTo(0.2);
+  });
+
+  it('stays white while usage is at or behind the clock', () => {
+    expect(usagePace(20, resetsIn(4 * hour), fiveHours, NOW).warningStrength).toBeCloseTo(0);
+    expect(usagePace(5, resetsIn(4 * hour), fiveHours, NOW).warningStrength).toBe(0);
+  });
+
+  it('warms toward full warning as usage runs ahead of the clock', () => {
+    expect(usagePace(32.5, resetsIn(4 * hour), fiveHours, NOW).warningStrength).toBeCloseTo(0.5);
+    expect(usagePace(90, resetsIn(4 * hour), fiveHours, NOW).warningStrength).toBe(1);
+  });
+
+  it('holds the mark inside the window when the reset time is stale or far off', () => {
+    expect(usagePace(50, resetsIn(-hour), fiveHours, NOW).elapsedFraction).toBe(1);
+    expect(usagePace(50, resetsIn(10 * hour), fiveHours, NOW).elapsedFraction).toBe(0);
   });
 });
 
