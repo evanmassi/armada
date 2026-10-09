@@ -1,8 +1,9 @@
-import type { CSSProperties } from 'react';
+import { Fragment, type CSSProperties } from 'react';
 import { NOTICE_EXIT_MS, NOTICE_LIFETIME_MS, useNotificationStore } from '@renderer/app/stores/notificationStore';
 import { ToneIcon, type Tone } from './ToneIcon';
 
 const TONE_LABELS: Record<Tone, string> = { danger: 'Error', warning: 'Warning', info: 'Notice', success: 'Done' };
+const AFTER_PATH_SEPARATOR = /(?<=[\\/])/;
 
 export function NotificationBar() {
   const notices = useNotificationStore((state) => state.notices);
@@ -20,7 +21,14 @@ export function NotificationBar() {
         >
           <ToneIcon tone={notice.tone} />
           <span className="readout tone-text pt-px">{TONE_LABELS[notice.tone]}</span>
-          <span className="min-w-0 flex-1">{notice.message}</span>
+          <span className="min-w-0 flex-1 wrap-break-word">
+            {notice.message.split(AFTER_PATH_SEPARATOR).map((part, index) => (
+              <Fragment key={index}>
+                {index > 0 && <wbr />}
+                {part}
+              </Fragment>
+            ))}
+          </span>
           <button type="button" className="hud-glyph text-muted" data-glyph="×" data-tone="neutral" onClick={() => dismiss(notice.id)} aria-label="Dismiss">
             ×
           </button>

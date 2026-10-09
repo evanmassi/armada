@@ -4,6 +4,8 @@ export const DIAGRAM_PAGE_SCHEME = 'armada-diagram';
 
 export const DIAGRAM_PAGE_ESCAPE_MESSAGE = 'armada-diagram:escape';
 
+export const DIAGRAM_PAGE_LINK_MESSAGE_PREFIX = 'armada-diagram:link ';
+
 const diagramFileNameSchema = z.string().regex(/^[\w-][\w.-]*\.(mmd|svg|html)$/i);
 
 export const tileDiagramsRequestSchema = z.object({

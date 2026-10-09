@@ -71,7 +71,8 @@ and the renderer opens the newest in a dock under that tile. On launch it delete
 workspace and files untouched for 14 days, and deletes nothing when the workspace cannot be read. An `.html` diagram
 is served from the `armada-diagram:` scheme into an iframe sandboxed to scripts only, under its own policy: no network
 but script and style tags from three CDN hosts. A subframe may never navigate anywhere else. The served page gets a
-one-line relay that posts Escape to the app, since keys inside the frame never reach it, and the app's scrollbar style,
+one-line relay that posts Escape to the app, since keys inside the frame never reach it, another that hands a clicked
+web link to the app, which opens it in the browser only while the click's activation lasts, and the app's scrollbar style,
 which the app stylesheet cannot reach; a test holds its colors to the design tokens.
 
 ---
@@ -219,8 +220,9 @@ or it is saved. Pan and zoom apply to Mermaid and SVG; an
   past xterm. Every Ctrl shortcut is Cmd on a Mac (`shared/utils/commandKey.ts`, which also names the file manager), and
   Option is Meta in the terminal. Links (`model/terminalLinks.ts`) open on Ctrl+click from three sources: embedded hyperlinks Claude Code
   emits because the pty sets `FORCE_HYPERLINK`, bare URLs, and file paths (`model/pathLinkMatcher.ts`), joined back
-  across a row break Claude Code drew itself. The renderer sends the raw target and the tile's cwd; main's `LinkOpener`
-  is the only judge of what opens and where: folders and binary files (a zero byte in the first 8000, the check git
+  across a row break Claude Code drew itself. The renderer sends the raw target and the folders a relative path may sit in, the
+  session's current folder before the tile's own, since a `cd` in the session moves it; main's `LinkOpener` opens the
+  first that exists and is the only judge of what opens and where: folders and binary files (a zero byte in the first 8000, the check git
   uses) in Explorer or Finder, `.html` pages in the browser unless the link carries a line number, other text files of any
   extension in VS Code (on PATH, or on a Mac the CLI inside its app bundle; shown in the file manager when VS Code is
   missing), never run. A Ctrl+click
@@ -258,8 +260,8 @@ verbatim through the single resolver `getErrorMessage` in `shared/utils/getError
 Every error toast goes through `notifyError` in `app/stores/notificationStore.ts`. `MutationCache.onError` in
 `queryClient.ts` calls it for every failed mutation. A failed query stays silent and the component renders its own
 error state from `isError`. A mutation hook's own `onError` never toasts; it does cache reactions only. The only
-other callers are the terminal model's fire-and-forget IPC calls, which live outside React: session open, link open,
-and saving a clipboard image. Notices are toned plates in the corner (`NotificationBar`) that drain away; an error is
+other callers are fire-and-forget IPC calls outside a mutation: the terminal model's session open, link open, and saving
+a clipboard image, and opening a web link clicked in a diagram page. Notices are toned plates in the corner (`NotificationBar`) that drain away; an error is
 `danger`. A destructive action asks through `confirmDestructiveAction` in `app/stores/confirmationStore.ts`, which
 opens the one `ConfirmationDialog`; never `window.confirm`.
 

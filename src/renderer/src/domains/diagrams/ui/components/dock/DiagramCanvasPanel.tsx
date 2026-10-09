@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
 import { DIAGRAM_PAGE_SCHEME, type DiagramSummary } from '@shared/diagrams/diagramSchemas';
 import { getErrorMessage } from '@renderer/shared/utils/getErrorMessage';
+import { useDiagramPageLinks } from '../../../hooks/useDiagramPageLinks';
 import { useRenderedDiagramQuery } from '../../../hooks/useRenderedDiagramQuery';
 import { svgImageSource } from '../../../model/diagramSvg';
 
@@ -19,8 +20,15 @@ const diagramPageUrl = (tileId: string, { fileName, updatedAt }: DiagramSummary)
 
 export function DiagramCanvasPanel({ tileId, diagram }: DiagramCanvasPanelProps) {
   if (diagram.format !== 'html') return <StaticDiagramCanvasPanel tileId={tileId} diagram={diagram} />;
+  return <InteractiveDiagramCanvasPanel tileId={tileId} diagram={diagram} />;
+}
+
+function InteractiveDiagramCanvasPanel({ tileId, diagram }: DiagramCanvasPanelProps) {
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  useDiagramPageLinks(frameRef);
   return (
     <iframe
+      ref={frameRef}
       className="diagram-page h-full w-full border-0"
       sandbox="allow-scripts"
       src={diagramPageUrl(tileId, diagram)}

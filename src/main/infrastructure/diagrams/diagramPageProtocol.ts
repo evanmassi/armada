@@ -1,5 +1,5 @@
 import { protocol } from 'electron';
-import { DIAGRAM_PAGE_ESCAPE_MESSAGE, DIAGRAM_PAGE_SCHEME, diagramRefSchema } from '@shared/diagrams/diagramSchemas';
+import { DIAGRAM_PAGE_ESCAPE_MESSAGE, DIAGRAM_PAGE_LINK_MESSAGE_PREFIX, DIAGRAM_PAGE_SCHEME, diagramRefSchema } from '@shared/diagrams/diagramSchemas';
 import { DIAGRAM_PAGE_SCROLLBAR_STYLE } from './diagramPageScrollbarStyle';
 import { diagramFormatOf, type TileDiagramFiles } from './TileDiagramFiles';
 
@@ -16,6 +16,8 @@ const DIAGRAM_PAGE_POLICY = [
 
 // PITFALL: keys pressed inside the sandboxed page never reach the app, so the page reports an Escape it left unhandled; it goes first and listens in capture so the page cannot swallow it.
 const ESCAPE_RELAY = `<script>addEventListener('keydown', (event) => { if (event.key === 'Escape') setTimeout(() => { if (!event.defaultPrevented) parent.postMessage('${DIAGRAM_PAGE_ESCAPE_MESSAGE}', '*'); }); }, true);</script>`;
+// PITFALL: a sandboxed page can neither open a window nor leave its frame, so a clicked web link the page left unhandled is handed to the app to open in the browser.
+const LINK_RELAY = `<script>addEventListener('click', (event) => { const link = event.target instanceof Element ? event.target.closest('a[href]') : null; if (event.defaultPrevented || !(link instanceof HTMLAnchorElement) || !/^https?:/i.test(link.href)) return; event.preventDefault(); parent.postMessage('${DIAGRAM_PAGE_LINK_MESSAGE_PREFIX}' + link.href, '*'); });</script>`;
 const LEADING_DOCTYPE = /^\s*(<!doctype[^>]*>)?/i;
 
 const notFound = (): Response => new Response(null, { status: 404 });
@@ -30,7 +32,7 @@ export const serveDiagramPages = (tileDiagramFiles: TileDiagramFiles): void =>
     if (!ref.success || diagramFormatOf(ref.data.fileName) !== 'html') return notFound();
     const page = await tileDiagramFiles.read(ref.data).catch(() => undefined);
     if (page === undefined) return notFound();
-    return new Response(page.replace(LEADING_DOCTYPE, (doctype) => doctype + DIAGRAM_PAGE_SCROLLBAR_STYLE + ESCAPE_RELAY), {
+    return new Response(page.replace(LEADING_DOCTYPE, (doctype) => doctype + DIAGRAM_PAGE_SCROLLBAR_STYLE + ESCAPE_RELAY + LINK_RELAY), {
       headers: { 'content-type': 'text/html; charset=utf-8', 'content-security-policy': DIAGRAM_PAGE_POLICY },
     });
   });

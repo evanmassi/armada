@@ -135,9 +135,9 @@ class LiveTerminalEntry implements LiveTerminal {
   private openTerminal(container: HTMLElement): void {
     this.terminal.open(container);
     enableTerminalLinks(this.terminal, (target) => {
-      armadaClient.links
-        .open({ target, cwd: this.launch.cwd })
-        .catch(notifyError);
+      const sessionFolder = useSessionStatusStore.getState().byTileId[this.tileId]?.cwd;
+      const baseFolders = sessionFolder ? [sessionFolder, this.launch.cwd] : [this.launch.cwd];
+      armadaClient.links.open({ target, baseFolders }).catch(notifyError);
     });
   }
 
