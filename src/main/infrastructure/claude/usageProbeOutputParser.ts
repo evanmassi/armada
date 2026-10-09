@@ -40,7 +40,7 @@ const toUsageWindow = (probed: ProbedWindow | null | undefined): UsageWindow | u
   return resetsAt === undefined ? { usedPercentage: probed.utilization } : { usedPercentage: probed.utilization, resetsAt };
 };
 
-export type UsageProbeAnswer = { hasLimits: false } | { hasLimits: true; usage: ClaudeUsage };
+type UsageProbeAnswer = { hasLimits: false } | { hasLimits: true; usage: ClaudeUsage };
 
 export function parseUsageProbeOutput(stdout: string, reportedAt: number): UsageProbeAnswer | undefined {
   for (const line of stdout.split('\n')) {

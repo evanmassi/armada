@@ -7,7 +7,7 @@ import type {
   TileDiagramsRequest,
 } from './diagrams/diagramSchemas';
 import type { ClaudeIntegrationStatus } from './integration/integrationTypes';
-import type { OpenLinkRequest } from './links/linkSchemas';
+import type { OpenLinkRequest, OpenWebLinkRequest } from './links/linkSchemas';
 import type { FolderRequest } from './projects/projectSchemas';
 import type {
   ClaudeHookEvent,
@@ -36,6 +36,7 @@ export interface ArmadaApi {
   };
   links: {
     open(request: OpenLinkRequest): Promise<void>;
+    openWeb(request: OpenWebLinkRequest): Promise<void>;
   };
   files: {
     getDroppedPath(file: File): string;

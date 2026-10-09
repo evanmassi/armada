@@ -3,7 +3,7 @@ import { stat } from 'node:fs/promises';
 import { extname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { shell } from 'electron';
-import type { OpenLinkRequest } from '@shared/links/linkSchemas';
+import type { OpenLinkRequest, OpenWebLinkRequest } from '@shared/links/linkSchemas';
 import type { FolderOpener } from '@main/infrastructure/folders/FolderOpener';
 import type { FileLogger } from '@main/infrastructure/logging/FileLogger';
 import { getHomeDir } from '@main/infrastructure/paths';
@@ -35,6 +35,13 @@ export class LinkOpener {
     else if (link.position === undefined && WEB_PAGE_EXTENSIONS.has(extname(path).toLowerCase())) await shell.openExternal(pathToFileURL(path).href);
     else if ((await isBinaryFile(path)) || !this.deps.folderOpener.isEditorInstalled()) shell.showItemInFolder(path);
     else this.deps.folderOpener.openInEditor(path, link.position);
+  }
+
+  async openWeb({ url }: OpenWebLinkRequest): Promise<void> {
+    const link = parseLinkTarget(url, { baseFolders: [], homeDir: getHomeDir() });
+    this.deps.logger.info('link.opened', { target: url, link });
+    if (link.kind !== 'web') throw new Error(`Unsupported link: ${url}`);
+    await shell.openExternal(link.url);
   }
 }
 

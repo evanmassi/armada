@@ -72,7 +72,7 @@ workspace and files untouched for 14 days, and deletes nothing when the workspac
 is served from the `armada-diagram:` scheme into an iframe sandboxed to scripts only, under its own policy: no network
 but script and style tags from three CDN hosts. A subframe may never navigate anywhere else. The served page gets a
 one-line relay that posts Escape to the app, since keys inside the frame never reach it, another that hands a clicked
-web link to the app, which opens it in the browser only while the click's activation lasts, and the app's scrollbar style,
+web link to the app, which opens it in the browser through a request main accepts only for http and https, and only while the click's activation lasts, and the app's scrollbar style,
 which the app stylesheet cannot reach; a test holds its colors to the design tokens.
 
 ---

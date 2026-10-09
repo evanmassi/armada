@@ -19,6 +19,7 @@ const armadaApi: ArmadaApi = {
   },
   links: {
     open: (request) => ipcRenderer.invoke(IPC_CHANNELS.linksOpen, request),
+    openWeb: (request) => ipcRenderer.invoke(IPC_CHANNELS.linksOpenWeb, request),
   },
   files: {
     getDroppedPath: (file) => webUtils.getPathForFile(file),

@@ -10,7 +10,7 @@ export function useDiagramPageLinks(frameRef: RefObject<HTMLIFrameElement | null
       if (!isFromPage || typeof event.data !== 'string' || !event.data.startsWith(DIAGRAM_PAGE_LINK_MESSAGE_PREFIX)) return;
       // PITFALL: the page can post this message without a click, so only a click the user just made inside the frame, which activates this window too, opens anything.
       if (!navigator.userActivation.isActive) return;
-      armadaClient.links.open({ target: event.data.slice(DIAGRAM_PAGE_LINK_MESSAGE_PREFIX.length), baseFolders: [] }).catch(notifyError);
+      armadaClient.links.openWeb({ url: event.data.slice(DIAGRAM_PAGE_LINK_MESSAGE_PREFIX.length) }).catch(notifyError);
     };
     window.addEventListener('message', openClickedLink);
     return () => window.removeEventListener('message', openClickedLink);

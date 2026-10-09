@@ -4,6 +4,7 @@ export const IPC_CHANNELS = {
   projectsReveal: 'projects:reveal',
   projectsOpenInEditor: 'projects:openInEditor',
   linksOpen: 'links:open',
+  linksOpenWeb: 'links:openWeb',
   filesSaveClipboardImage: 'files:saveClipboardImage',
   workspaceLoad: 'workspace:load',
   workspaceSave: 'workspace:save',

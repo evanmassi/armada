@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import { stat } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { shell } from 'electron';
 import { resolveOnPath } from '@main/infrastructure/launchChecks';
@@ -35,8 +36,11 @@ interface FolderOpenerDeps {
 export class FolderOpener {
   constructor(private deps: FolderOpenerDeps) {}
 
-  async revealInFileManager(cwd: string): Promise<void> {
-    const failure = await shell.openPath(cwd);
+  async revealInFileManager(folder: string): Promise<void> {
+    // PITFALL: shell.openPath runs a file instead of showing it, so anything but a folder is refused before it gets there.
+    const stats = await stat(folder).catch(() => undefined);
+    if (!stats?.isDirectory()) throw new Error(`Folder not found: ${folder}`);
+    const failure = await shell.openPath(folder);
     if (failure) throw new Error(`Could not open folder: ${failure}`);
   }
 
