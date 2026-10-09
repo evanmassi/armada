@@ -1,18 +1,32 @@
 import { describe, expect, it } from 'vitest';
-import { formatCountdown, headroomColor, isStaleReport } from './usageReadout';
+import { formatResetTime, headroomColor, isStaleReport } from './usageReadout';
 
 const NOW = 1_800_000_000_000;
-const secondsFromNow = (seconds: number): number => NOW / 1000 + seconds;
 
-describe('formatCountdown', () => {
-  it('drops to the two largest units', () => {
-    expect(formatCountdown(secondsFromNow(3 * 86400 + 4 * 3600 + 120), NOW)).toBe('3d 4h');
-    expect(formatCountdown(secondsFromNow(2 * 3600 + 10 * 60), NOW)).toBe('2h 10m');
-    expect(formatCountdown(secondsFromNow(12 * 60 + 59), NOW)).toBe('12m');
+describe('formatResetTime', () => {
+  const thursdayAfternoon = new Date(2026, 9, 8, 14, 47).getTime();
+  const at = (day: number, hour: number, minute = 0, second = 0): Date => new Date(2026, 9, day, hour, minute, second);
+  const seconds = (date: Date): number => date.getTime() / 1000;
+  const hourOnly = (date: Date): string => date.toLocaleTimeString(undefined, { hour: 'numeric' });
+  const weekday = (date: Date): string => date.toLocaleDateString(undefined, { weekday: 'short' });
+
+  it('shows only the time for a reset later today', () => {
+    expect(formatResetTime(seconds(at(8, 17)), thursdayAfternoon)).toBe(hourOnly(at(8, 17)));
   });
 
-  it('holds at zero once the reset has passed', () => {
-    expect(formatCountdown(secondsFromNow(-500), NOW)).toBe('0m');
+  it('rounds to the minute and shows minutes only off the hour', () => {
+    expect(formatResetTime(seconds(at(8, 16, 59, 59)), thursdayAfternoon)).toBe(hourOnly(at(8, 17)));
+    expect(formatResetTime(seconds(at(8, 17, 30)), thursdayAfternoon)).toBe(
+      at(8, 17, 30).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
+    );
+  });
+
+  it('names the weekday for a reset on another day', () => {
+    expect(formatResetTime(seconds(at(11, 19)), thursdayAfternoon)).toBe(`${weekday(at(11, 19))} ${hourOnly(at(11, 19))}`);
+  });
+
+  it('marks a reset on the same weekday next week', () => {
+    expect(formatResetTime(seconds(at(15, 9)), thursdayAfternoon)).toBe(`next ${weekday(at(15, 9))} ${hourOnly(at(15, 9))}`);
   });
 });
 

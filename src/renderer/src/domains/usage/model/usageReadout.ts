@@ -5,14 +5,14 @@ type Rgb = readonly [number, number, number];
 
 export const isStaleReport = (reportedAt: number, now: number): boolean => now - reportedAt > STALE_AFTER_MS;
 
-export function formatCountdown(resetsAtSeconds: number, now: number): string {
-  const totalMinutes = Math.max(0, Math.floor((resetsAtSeconds * 1000 - now) / 60_000));
-  const days = Math.floor(totalMinutes / 1440);
-  const hours = Math.floor((totalMinutes % 1440) / 60);
-  const minutes = totalMinutes % 60;
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m`;
+export function formatResetTime(resetsAtSeconds: number, now: number): string {
+  const resetsAt = new Date(Math.round(resetsAtSeconds / 60) * 60_000);
+  const today = new Date(now);
+  const time = resetsAt.toLocaleTimeString(undefined, { hour: 'numeric', minute: resetsAt.getMinutes() === 0 ? undefined : '2-digit' });
+  if (resetsAt.toDateString() === today.toDateString()) return time;
+  const weekday = resetsAt.toLocaleDateString(undefined, { weekday: 'short' });
+  const isNextWeek = resetsAt.getDay() === today.getDay();
+  return `${isNextWeek ? 'next ' : ''}${weekday} ${time}`;
 }
 
 export function headroomColor(usedPercentage: number): string {

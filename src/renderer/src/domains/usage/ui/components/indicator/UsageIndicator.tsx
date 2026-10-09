@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import type { UsageWindow } from '@shared/usage/usageSchemas';
 import { useClaudeUsageQuery } from '../../../hooks/useClaudeUsageQuery';
-import { formatCountdown, headroomColor, isStaleReport } from '../../../model/usageReadout';
+import { formatResetTime, headroomColor, isStaleReport } from '../../../model/usageReadout';
 
 const CLOCK_TICK_MS = 30_000;
 const METER_SEGMENTS = 20;
@@ -36,7 +36,9 @@ function UsageWindowReadout({ label, usageWindow, now }: UsageWindowReadoutProps
         {usedPercentage}%
       </span>
       {usageWindow.resetsAt !== undefined && (
-        <span className="col-start-2 col-end-4 -mt-0.5 text-muted">resets in {formatCountdown(usageWindow.resetsAt, now)}</span>
+        <span className="col-start-2 col-end-4 -mt-0.5 text-muted">
+          resets <span className="text-fg">{formatResetTime(usageWindow.resetsAt, now)}</span>
+        </span>
       )}
     </>
   );
@@ -57,7 +59,7 @@ export function UsageIndicator() {
   return (
     <footer
       className={`readout grid grid-cols-[auto_1fr_auto] items-baseline gap-x-2.5 gap-y-1 border-t border-edge bg-panel/80 px-3 py-2 transition-opacity ${isStale ? 'opacity-50' : ''}`}
-      data-tooltip={isStale ? 'Usage as last reported; it refreshes when a session is active' : 'Claude usage: 5 hour, weekly, and per-model limits, with time until reset'}
+      data-tooltip={isStale ? 'Usage as last reported; it refreshes when a session is active' : 'Claude usage: 5 hour, weekly, and per-model limits, and when each resets'}
     >
       {usage.fiveHour && <UsageWindowReadout label="5h" usageWindow={usage.fiveHour} now={now} />}
       {usage.sevenDay && <UsageWindowReadout label="week" usageWindow={usage.sevenDay} now={now} />}
