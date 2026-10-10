@@ -57,9 +57,15 @@ same files and never repoint them at each other; each tile's environment says wh
 The app is the only installer. `claudeSettingsIntegration.ts` holds the pure edit (`integrateArmada`) and derives the
 status from it: a part of the settings is a gap when integrating would change it, so check and repair cannot disagree.
 Armada's entries are recognized by script name, not full command, which is what lets a moved repo folder get repointed
-instead of stacked. `ClaudeSettingsFile` checks on launch and writes only from the banner's Fix button; a settings file
+instead of stacked. `ClaudeSettingsFile` checks on launch and writes only from the banner's Fix button and the settings
+panel, one edit at a time; a settings file
 it cannot parse is an error shown to the user, never overwritten. The settings schema is passthrough at every level
 because the file belongs to the user and any key dropped on parse would be lost on save.
+The settings panel (the gear in the sidebar header) toggles the Claude Code settings listed in `CLAUDE_SETTINGS`
+(`claudeSettings/claudeSettingSchemas`), on four pages. Each entry names its options, and main accepts only a listed
+key set to one of its options, or removed to hand it back to Claude Code's default. Entries Claude Code reads but does
+not document are marked unofficial. Claude Code reads user settings before its older global config, and watches the
+file, so running sessions pick up most changes.
 The same check reports whether `node`, which Claude Code runs the relays with, is on PATH; without it the banner asks
 for Node.js instead of offering Fix, since every hook and the status line would fail.
 
@@ -144,6 +150,7 @@ src/renderer/src/
 │   ├── terminal/      # xterm tile bound to one pty session
 │   ├── diagrams/      # Dock under a Claude tile: Mermaid, SVG, and sandboxed interactive pages
 │   ├── integration/   # Banner that checks and repairs Armada's entries in Claude Code's settings
+│   ├── settings/      # Gear in the sidebar header: a dialog of Claude Code settings on four pages, each row on, off, or default
 │   ├── usage/         # 5 hour, weekly, and per-model limit readout in the sidebar footer: reset times, a caret for time gone that warms to amber as usage runs ahead
 │   └── updates/       # Update-ready banner with Restart now, and the running version under the usage readout
 ├── shared/           # Cross-cutting
@@ -315,7 +322,7 @@ Never define a boundary type inline in main or renderer.
   TypeScript type with `z.infer`. A schema nothing calls `.parse()` on is dead.
 - **Plain type** for main-to-renderer results and events. Validating in-process output is theater.
 
-**Modules**: `workspace/workspaceSchemas`, `sessions/sessionSchemas`, `links/linkSchemas`, `projects/projectSchemas`, `projects/folderName` (the one project display name both sides sort and show by), `diagrams/diagramSchemas`, `usage/usageSchemas`, `updates/updateTypes`, `integration/integrationTypes`, `conversations/conversationTypes`, `ipcChannels`,
+**Modules**: `workspace/workspaceSchemas`, `sessions/sessionSchemas`, `links/linkSchemas`, `projects/projectSchemas`, `projects/folderName` (the one project display name both sides sort and show by), `diagrams/diagramSchemas`, `usage/usageSchemas`, `updates/updateTypes`, `integration/integrationTypes`, `claudeSettings/claudeSettingSchemas`, `conversations/conversationTypes`, `ipcChannels`,
 `armadaApi` (the preload contract both sides implement against)
 
 ---

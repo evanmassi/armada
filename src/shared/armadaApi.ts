@@ -1,3 +1,4 @@
+import type { ChangeClaudeSettingRequest, ClaudeSettingValues } from './claudeSettings/claudeSettingSchemas';
 import type { Project } from './conversations/conversationTypes';
 import type {
   DiagramRef,
@@ -59,6 +60,10 @@ export interface ArmadaApi {
   integration: {
     check(): Promise<ClaudeIntegrationStatus>;
     repair(): Promise<ClaudeIntegrationStatus>;
+  };
+  claudeSettings: {
+    read(): Promise<ClaudeSettingValues>;
+    change(request: ChangeClaudeSettingRequest): Promise<ClaudeSettingValues>;
   };
   diagrams: {
     list(request: TileDiagramsRequest): Promise<DiagramSummary[]>;

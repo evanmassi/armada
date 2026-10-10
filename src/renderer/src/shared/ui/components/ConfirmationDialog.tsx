@@ -34,7 +34,7 @@ export function ConfirmationDialog() {
   return (
     <dialog
       ref={dialogRef}
-      className="confirmation-dialog tone-plate"
+      className="hud-dialog confirmation-dialog tone-plate"
       style={{ '--notice-exit': `${DIALOG_EXIT_MS}ms` } as CSSProperties}
       data-tone="danger"
       data-leaving={isLeaving || undefined}

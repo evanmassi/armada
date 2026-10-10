@@ -43,6 +43,10 @@ const armadaApi: ArmadaApi = {
     check: () => ipcRenderer.invoke(IPC_CHANNELS.integrationCheck),
     repair: () => ipcRenderer.invoke(IPC_CHANNELS.integrationRepair),
   },
+  claudeSettings: {
+    read: () => ipcRenderer.invoke(IPC_CHANNELS.claudeSettingsRead),
+    change: (request) => ipcRenderer.invoke(IPC_CHANNELS.claudeSettingsChange, request),
+  },
   diagrams: {
     list: (request) => ipcRenderer.invoke(IPC_CHANNELS.diagramsList, request),
     read: (ref) => ipcRenderer.invoke(IPC_CHANNELS.diagramsRead, ref),

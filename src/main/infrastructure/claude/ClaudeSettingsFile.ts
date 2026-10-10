@@ -1,5 +1,11 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import {
+  CLAUDE_SETTINGS,
+  type ChangeClaudeSettingRequest,
+  type ClaudeSettingValue,
+  type ClaudeSettingValues,
+} from '@shared/claudeSettings/claudeSettingSchemas';
 import type { ClaudeIntegrationGap, ClaudeIntegrationStatus } from '@shared/integration/integrationTypes';
 import { isMissingPath } from '@main/infrastructure/fileErrors';
 import { resolveOnPath } from '@main/infrastructure/launchChecks';
@@ -13,25 +19,59 @@ interface ClaudeSettingsFileDeps {
   logger: FileLogger;
 }
 
+const isSettingValue = (value: unknown): value is ClaudeSettingValue => ['boolean', 'string', 'number'].includes(typeof value);
+
+const settingValuesOf = (settings: ClaudeSettings): ClaudeSettingValues =>
+  Object.fromEntries(CLAUDE_SETTINGS.map(({ key }) => [key, settings[key]]).filter(([, value]) => isSettingValue(value)));
+
 export class ClaudeSettingsFile {
+  private pendingEdit: Promise<unknown> = Promise.resolve();
+
   constructor(private deps: ClaudeSettingsFileDeps) {}
 
   async checkIntegration(): Promise<ClaudeIntegrationStatus> {
     return this.status(findIntegrationGaps(await this.read(), this.deps.scriptsDir));
   }
 
-  async repairIntegration(): Promise<ClaudeIntegrationStatus> {
-    const { settingsPath, scriptsDir, logger } = this.deps;
-    const settings = await this.read();
-    const gaps = findIntegrationGaps(settings, scriptsDir);
-    if (gaps.length === 0) return this.status(gaps);
-    const integrated = integrateArmada(settings, scriptsDir);
+  repairIntegration(): Promise<ClaudeIntegrationStatus> {
+    return this.oneEditAtATime(async () => {
+      const { settingsPath, scriptsDir, logger } = this.deps;
+      const settings = await this.read();
+      const gaps = findIntegrationGaps(settings, scriptsDir);
+      if (gaps.length === 0) return this.status(gaps);
+      const integrated = integrateArmada(settings, scriptsDir);
+      await this.write(integrated);
+      logger.info('integration.repaired', { settingsPath, gaps });
+      return this.status(findIntegrationGaps(integrated, scriptsDir));
+    });
+  }
+
+  async readSettingValues(): Promise<ClaudeSettingValues> {
+    return settingValuesOf(await this.read());
+  }
+
+  changeSetting({ key, value }: ChangeClaudeSettingRequest): Promise<ClaudeSettingValues> {
+    return this.oneEditAtATime(async () => {
+      const changed: ClaudeSettings = { ...(await this.read()), [key]: value };
+      if (value === undefined) delete changed[key];
+      await this.write(changed);
+      this.deps.logger.info('settings.changed', { key, value });
+      return settingValuesOf(changed);
+    });
+  }
+
+  private oneEditAtATime<T>(edit: () => Promise<T>): Promise<T> {
+    const result = this.pendingEdit.then(edit);
+    this.pendingEdit = result.catch(() => undefined);
+    return result;
+  }
+
+  private async write(settings: ClaudeSettings): Promise<void> {
+    const { settingsPath } = this.deps;
     await mkdir(dirname(settingsPath), { recursive: true });
     const draftPath = `${settingsPath}.armada.tmp`;
-    await writeFile(draftPath, `${JSON.stringify(integrated, null, 2)}\n`, 'utf8');
+    await writeFile(draftPath, `${JSON.stringify(settings, null, 2)}\n`, 'utf8');
     await rename(draftPath, settingsPath);
-    logger.info('integration.repaired', { settingsPath, gaps });
-    return this.status(findIntegrationGaps(integrated, scriptsDir));
   }
 
   private status(gaps: ClaudeIntegrationGap[]): ClaudeIntegrationStatus {

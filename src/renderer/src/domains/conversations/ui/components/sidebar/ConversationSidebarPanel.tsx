@@ -25,13 +25,14 @@ import { SidebarGroupHeader } from './SidebarGroupHeader';
 const DEFAULT_GROUP_NAME = 'Group';
 
 interface ConversationSidebarPanelProps {
+  headerControls: ReactNode;
   footer: ReactNode;
   onOpenConversation(conversation: Conversation, keepOnCurrentBoard: boolean): void;
   onOpenProjectBoard(project: Project): void;
   onStartSession(cwd: string, keepOnCurrentBoard: boolean): void;
 }
 
-export function ConversationSidebarPanel({ footer, onOpenConversation, onOpenProjectBoard, onStartSession }: ConversationSidebarPanelProps) {
+export function ConversationSidebarPanel({ headerControls, footer, onOpenConversation, onOpenProjectBoard, onStartSession }: ConversationSidebarPanelProps) {
   const { data: projects = [], isPending, isError, error } = useProjectsQuery();
   const workspace = useWorkspaceQuery().data;
   const sidebar = workspace?.sidebar;
@@ -193,6 +194,7 @@ export function ConversationSidebarPanel({ footer, onOpenConversation, onOpenPro
           <button type="button" className="readout hud-button ml-1.5 text-muted" onClick={createGroup} data-tooltip="New group">
             + group
           </button>
+          {headerControls}
           <ActionMenu label="Sort projects" entries={sortMenuItems} />
         </header>
         <input

@@ -9,6 +9,7 @@ import { useTileDiagramArrivals } from '@renderer/domains/diagrams';
 import { IntegrationBanner } from '@renderer/domains/integration';
 import { disposeLiveTerminalsExcept } from '@renderer/domains/terminal';
 import { AppUpdateBanner, AppVersionIndicator } from '@renderer/domains/updates';
+import { ClaudeSettingsButton } from '@renderer/domains/settings';
 import { UsageIndicator } from '@renderer/domains/usage';
 import { adjustTerminalFontSize, resetTerminalFontSize, useWorkspaceEditor, useWorkspaceQuery } from '@renderer/domains/workspace';
 import { armadaClient } from '@renderer/infrastructure/ipc/armadaClient';
@@ -118,6 +119,7 @@ export function App() {
   return (
     <div className="flex h-full">
       <ConversationSidebarPanel
+        headerControls={<ClaudeSettingsButton />}
         footer={
           <>
             <UsageIndicator />

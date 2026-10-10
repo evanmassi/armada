@@ -1,6 +1,6 @@
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FileLogger } from '@main/infrastructure/logging/FileLogger';
 import { ClaudeSettingsFile } from './ClaudeSettingsFile';
@@ -13,6 +13,7 @@ describe('ClaudeSettingsFile', () => {
   beforeEach(async () => {
     home = await mkdtemp(join(tmpdir(), 'armada-settings-'));
     settingsPath = join(home, '.claude', 'settings.json');
+    await mkdir(dirname(settingsPath));
     settingsFile = new ClaudeSettingsFile({ settingsPath, scriptsDir: join(home, 'scripts'), relayRuntime: process.execPath, logger: new FileLogger({ filePath: join(home, 'armada.log') }) });
   });
 
@@ -35,6 +36,31 @@ describe('ClaudeSettingsFile', () => {
     await writeFile(settingsPath, compact, 'utf8');
     await settingsFile.repairIntegration();
     expect(await readFile(settingsPath, 'utf8')).toBe(compact);
+  });
+
+  it('changes one setting and keeps every other entry in place', async () => {
+    const original = { model: 'opus', idleCompaction: true, permissions: { allow: ['Read'] }, verbose: 'loud' };
+    await writeFile(settingsPath, JSON.stringify(original), 'utf8');
+    expect(await settingsFile.readSettingValues()).toEqual({ idleCompaction: true, verbose: 'loud' });
+    expect(await settingsFile.changeSetting({ key: 'idleCompaction', value: false })).toEqual({ idleCompaction: false, verbose: 'loud' });
+    expect(Object.entries(JSON.parse(await readFile(settingsPath, 'utf8')))).toEqual(Object.entries({ ...original, idleCompaction: false }));
+  });
+
+  it('removes a setting handed back to the default', async () => {
+    await writeFile(settingsPath, JSON.stringify({ model: 'opus', fastMode: true }), 'utf8');
+    await settingsFile.changeSetting({ key: 'fastMode', value: undefined });
+    expect(JSON.parse(await readFile(settingsPath, 'utf8'))).toEqual({ model: 'opus' });
+  });
+
+  it('applies changes made at the same moment one after another', async () => {
+    await Promise.all([
+      settingsFile.changeSetting({ key: 'verbose', value: true }),
+      settingsFile.changeSetting({ key: 'fastMode', value: true }),
+      settingsFile.repairIntegration(),
+    ]);
+    const settings = JSON.parse(await readFile(settingsPath, 'utf8'));
+    expect(settings).toMatchObject({ verbose: true, fastMode: true });
+    expect((await settingsFile.checkIntegration()).gaps).toEqual([]);
   });
 
   it('refuses to touch settings it cannot parse', async () => {

@@ -6,6 +6,7 @@ import { registerDiagramPageScheme, serveDiagramPages } from '@main/infrastructu
 import { adoptLoginShellPath } from '@main/infrastructure/loginShellPath';
 import { separateDevDataFolder } from '@main/infrastructure/paths';
 import { registerDiagramHandlers } from '@main/ipc/registerDiagramHandlers';
+import { registerClaudeSettingHandlers } from '@main/ipc/registerClaudeSettingHandlers';
 import { registerConversationHandlers } from '@main/ipc/registerConversationHandlers';
 import { registerFileHandlers } from '@main/ipc/registerFileHandlers';
 import { registerIntegrationHandlers } from '@main/ipc/registerIntegrationHandlers';
@@ -83,6 +84,7 @@ app.whenReady().then(() => {
 
   registerConversationHandlers(container);
   registerIntegrationHandlers(container);
+  registerClaudeSettingHandlers(container);
   registerProjectHandlers(container, mainWindow);
   registerLinkHandlers(container);
   registerFileHandlers(container);

@@ -18,6 +18,8 @@ export const IPC_CHANNELS = {
   sessionsStatus: 'sessions:status',
   integrationCheck: 'integration:check',
   integrationRepair: 'integration:repair',
+  claudeSettingsRead: 'claudeSettings:read',
+  claudeSettingsChange: 'claudeSettings:change',
   diagramsList: 'diagrams:list',
   diagramsRead: 'diagrams:read',
   diagramsSave: 'diagrams:save',
