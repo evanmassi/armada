@@ -22,7 +22,7 @@ export function AppUpdateBanner() {
   return (
     <StatusBanner
       tone="info"
-      message={`Armada ${status.readyVersion} is ready. It installs when you quit.`}
+      message={`Armada ${status.readyVersion} is ready.`}
       note="Restarting resumes your sessions"
       action={{ label: 'Restart now', isActing: isInstalling, onSelect: install }}
     />
