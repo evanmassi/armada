@@ -1,4 +1,6 @@
+import { useRef } from 'react';
 import type { ActivityState } from '@renderer/app/stores/sessionActivityStore';
+import { usePageClockAnimations } from '../hooks/usePageClockAnimations';
 
 interface ActivityIndicatorProps {
   state: ActivityState;
@@ -13,10 +15,13 @@ const ACTIVITY_STYLES: Record<ActivityState, { className: string; label: string 
 };
 
 export function ActivityIndicator({ state }: ActivityIndicatorProps) {
+  const glyphRef = useRef<HTMLSpanElement>(null);
   const { className, label } = ACTIVITY_STYLES[state];
+  usePageClockAnimations(glyphRef, state);
+
   return (
     <span className="activity-indicator" role="img" data-tooltip={label} aria-label={label}>
-      <span className={className} />
+      <span ref={glyphRef} className={className} />
     </span>
   );
 }

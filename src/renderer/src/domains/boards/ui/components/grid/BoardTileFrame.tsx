@@ -17,6 +17,7 @@ import { useTilePresentation } from '../../../hooks/useTilePresentation';
 import { BoardNotesTile } from '../notes/BoardNotesTile';
 import { BoardTileMoveMenu } from './BoardTileMoveMenu';
 import { BoardTileSessionIndicator } from './BoardTileSessionIndicator';
+import { BoardTileWorkingIndicator } from './BoardTileWorkingIndicator';
 
 export const TILE_DRAG_HANDLE_CLASS = 'tile-drag-handle';
 
@@ -100,13 +101,7 @@ export function BoardTileFrame({ boardId, tile, shouldMountTerminal, isCollapsib
       data-tooltip={tile.cwd}
     >
       {activity && STATES_WITH_ICON.has(activity) && <ActivityIndicator state={activity} />}
-      {activity === 'working' ? (
-        <span className="activity-glint" data-text={activity}>
-          {activity}
-        </span>
-      ) : (
-        (activity ?? 'idle')
-      )}
+      {activity === 'working' ? <BoardTileWorkingIndicator word={activity} /> : (activity ?? 'idle')}
     </span>
   );
 

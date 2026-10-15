@@ -151,6 +151,17 @@ Audit every file against them:
   Confirm liveness by grepping the JSX render site (`<Name`) and every import site across the tree, not just "is it
   exported."
 
+### 7. Shape
+
+Read each feature whole, not line by line, and ask whether it could be built from fewer ideas. Report a finding only
+when you can name the simpler shape and what it would delete. These are examples of what to look for, not a
+checklist:
+- A flag, mode, or layer that an idea already in the code covers.
+- Stored state that could be computed from other stored state.
+- Several booleans or optional fields that are really one "state is one of these" value.
+- Special cases that a different data shape would remove.
+- Several passes where one would do, or code that reads in a different order than the problem.
+
 ## Output Format
 
 For each file, respond with:

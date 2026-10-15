@@ -151,7 +151,7 @@ src/renderer/src/
 │   ├── diagrams/      # Dock under a Claude tile: Mermaid, SVG, and sandboxed interactive pages
 │   ├── integration/   # Banner that checks and repairs Armada's entries in Claude Code's settings
 │   ├── settings/      # Gear in the sidebar header: a dialog of Claude Code settings on four pages, each row on, off, or default
-│   ├── usage/         # 5 hour, weekly, and per-model limit readout in the sidebar footer: reset times, a caret for time gone that warms to amber as usage runs ahead
+│   ├── usage/         # 5 hour, weekly, and per-model limit readout in the sidebar footer: reset times, a caret for time gone that warms to amber as usage runs ahead, segments that power on as usage rises; per-model rows show only when they near their limit or run ahead of pace, and a right-click hides or shows any row (saved in `preferences`), a hidden one returning when it needs attention
 │   └── updates/       # Update-ready banner with Restart now, and the running version under the usage readout
 ├── shared/           # Cross-cutting
 │   ├── ui/
@@ -284,8 +284,9 @@ their line box, so plain flex centering lines text up with icons and framed butt
 
 **Activity states** draw through one component, `ActivityIndicator` in `shared/ui`, wherever they appear (tile status,
 lane headers, sidebar rows, board tabs): a stepping star for working, a white target for waiting, a hollow-and-solid
-amber beacon for approval, a grey dot for idle, a ring for exited. The working word in a tile also carries a glint
-that passes back and forth.
+amber beacon for approval, a grey dot for idle, a ring for exited. Every star and beacon runs on the page clock, so
+they step together (`shared/ui/hooks/usePageClockAnimations.ts`). The working word in a tile shimmers: every second
+turn of the star, as it blooms, a lighter tint passes through its letters, one per star step.
 
 **Keyboard focus** is one rule at the end of the stylesheet: a halo (a line plus an outer glow in the accent, or the
 project color in a tile title bar) that stutters on like a tube when focus lands. Rows, board tabs, and tile title

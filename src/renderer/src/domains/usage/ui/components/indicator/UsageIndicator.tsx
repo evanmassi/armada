@@ -1,29 +1,33 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import type { UsageWindow } from '@shared/usage/usageSchemas';
+import { useWorkspaceEditor, useWorkspaceQuery } from '@renderer/domains/workspace';
+import { ActionContextMenu, contextMenuOpeningOf, type ContextMenuOpening } from '@renderer/shared/ui/components/ActionContextMenu';
 import { useClaudeUsageQuery } from '../../../hooks/useClaudeUsageQuery';
+import { formatResetTime, headroomColor, isStaleReport, usagePace } from '../../../model/usageReadout';
 import {
-  FIVE_HOUR_WINDOW_SECONDS,
-  WEEK_WINDOW_SECONDS,
-  formatResetTime,
-  headroomColor,
-  isStaleReport,
-  usagePace,
-} from '../../../model/usageReadout';
+  isPreferredVisible,
+  needsAttention,
+  roundedUsedPercentage,
+  setUsageRowPreference,
+  usageRowsOf,
+  type UsageRow,
+} from '../../../model/usageRows';
 
 const CLOCK_TICK_MS = 30_000;
 const METER_SEGMENTS = 20;
 
 interface UsageWindowReadoutProps {
-  label: string;
-  usageWindow: UsageWindow;
-  windowSeconds: number;
+  row: UsageRow;
   now: number;
 }
 
-function UsageWindowReadout({ label, usageWindow, windowSeconds, now }: UsageWindowReadoutProps) {
-  const usedPercentage = Math.min(100, Math.max(0, Math.round(usageWindow.usedPercentage)));
+function UsageWindowReadout({ row: { label, usageWindow, windowSeconds }, now }: UsageWindowReadoutProps) {
+  const usedPercentage = roundedUsedPercentage(usageWindow);
   const litSegments = Math.round((usedPercentage / 100) * METER_SEGMENTS);
-  const meterStyle = { '--meter-color': headroomColor(usedPercentage), color: headroomColor(usedPercentage) } as CSSProperties;
+  const [powerUp, setPowerUp] = useState({ from: litSegments, to: litSegments });
+  if (litSegments !== powerUp.to) setPowerUp({ from: Math.min(powerUp.to, litSegments), to: litSegments });
+  const isPowering = (index: number): boolean => index >= powerUp.from && index < powerUp.to;
+  const meterColor = headroomColor(usedPercentage);
+  const meterStyle = { '--meter-color': meterColor, color: meterColor } as CSSProperties;
   const pace = usageWindow.resetsAt === undefined ? undefined : usagePace(usedPercentage, usageWindow.resetsAt, windowSeconds, now);
   return (
     <>
@@ -38,7 +42,10 @@ function UsageWindowReadout({ label, usageWindow, windowSeconds, now }: UsageWin
         aria-valuenow={usedPercentage}
       >
         {Array.from({ length: METER_SEGMENTS }, (_, index) => (
-          <span key={index} className={`meter-segment ${index < litSegments ? 'is-lit' : ''} ${index === litSegments - 1 ? 'is-tip' : ''}`} />
+          <span
+            key={index}
+            className={`meter-segment ${index < litSegments ? 'is-lit' : ''} ${index === litSegments - 1 ? 'is-tip' : ''} ${isPowering(index) ? 'is-powering' : ''}`}
+          />
         ))}
         {pace && (
           <span
@@ -61,32 +68,45 @@ function UsageWindowReadout({ label, usageWindow, windowSeconds, now }: UsageWin
 
 export function UsageIndicator() {
   const { data: usage } = useClaudeUsageQuery();
+  const visibilityPreferences = useWorkspaceQuery().data?.preferences.usageRowVisibility ?? {};
+  const { edit } = useWorkspaceEditor();
   const [now, setNow] = useState(() => Date.now());
+  const [rowMenu, setRowMenu] = useState<ContextMenuOpening>();
 
   useEffect(() => {
     const clock = setInterval(() => setNow(Date.now()), CLOCK_TICK_MS);
     return () => clearInterval(clock);
   }, []);
 
-  if (!usage || (!usage.fiveHour && !usage.sevenDay && !usage.modelScoped?.length)) return null;
+  if (!usage) return null;
+  const rows = usageRowsOf(usage);
+  if (rows.length === 0) return null;
   const isStale = isStaleReport(usage.reportedAt, now);
+  const isChosen = (row: UsageRow): boolean => isPreferredVisible(row, visibilityPreferences[row.label]);
+  const visibleRows = rows.filter((row) => isChosen(row) || needsAttention(row, now));
 
   return (
     <footer
+      tabIndex={0}
       className={`readout grid grid-cols-[auto_1fr_auto] items-baseline gap-x-2.5 gap-y-1 border-t border-edge bg-panel/80 px-3 py-2 transition-opacity ${isStale ? 'opacity-50' : ''}`}
-      data-tooltip={isStale ? 'Usage as last reported; it refreshes when a session is active' : 'Claude usage: 5 hour, weekly, and per-model limits, and when each resets. The caret marks how much of the window has passed and turns amber as usage runs ahead of it'}
+      data-tooltip={`${isStale ? 'Usage as last reported; it refreshes when a session is active' : 'Claude usage: 5 hour, weekly, and per-model limits, and when each resets. The caret marks how much of the window has passed and turns amber as usage runs ahead of it'}. Right-click to choose which limits show; a hidden one returns when it nears its limit`}
+      onContextMenu={(event) => setRowMenu(contextMenuOpeningOf(event))}
     >
-      {usage.fiveHour && <UsageWindowReadout label="5h" usageWindow={usage.fiveHour} windowSeconds={FIVE_HOUR_WINDOW_SECONDS} now={now} />}
-      {usage.sevenDay && <UsageWindowReadout label="week" usageWindow={usage.sevenDay} windowSeconds={WEEK_WINDOW_SECONDS} now={now} />}
-      {usage.modelScoped?.map((modelWindow) => (
-        <UsageWindowReadout
-          key={modelWindow.displayName}
-          label={modelWindow.displayName}
-          usageWindow={modelWindow}
-          windowSeconds={WEEK_WINDOW_SECONDS}
-          now={now}
-        />
+      {visibleRows.map((row) => (
+        <UsageWindowReadout key={row.label} row={row} now={now} />
       ))}
+      {visibleRows.length === 0 && <span className="col-span-3 text-muted">usage hidden</span>}
+      {rowMenu && (
+        <ActionContextMenu
+          {...rowMenu}
+          entries={rows.map((row) => ({
+            label: isChosen(row) ? 'Hide' : 'Show',
+            emphasis: row.label,
+            onSelect: () => edit((workspace) => setUsageRowPreference(workspace, row, !isChosen(row))),
+          }))}
+          onClose={() => setRowMenu(undefined)}
+        />
+      )}
     </footer>
   );
 }

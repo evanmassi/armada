@@ -105,8 +105,11 @@ const boardSchema = z.object({
   tiles: z.array(tileSchema),
 });
 
+const usageRowVisibilitySchema = z.enum(['shown', 'hidden']);
+
 const preferencesSchema = z.object({
   terminalFontSize: z.number().int().min(MIN_TERMINAL_FONT_SIZE).max(MAX_TERMINAL_FONT_SIZE).default(DEFAULT_TERMINAL_FONT_SIZE),
+  usageRowVisibility: z.record(z.string().min(1), usageRowVisibilitySchema).optional(),
 });
 
 const sidebarGroupSchema = z.object({
@@ -144,4 +147,5 @@ export type LaneState = z.infer<typeof laneStateSchema>;
 export type Board = z.infer<typeof boardSchema>;
 export type SidebarGroup = z.infer<typeof sidebarGroupSchema>;
 export type Sidebar = z.infer<typeof sidebarSchema>;
+export type UsageRowVisibility = z.infer<typeof usageRowVisibilitySchema>;
 export type Workspace = z.infer<typeof workspaceSchema>;

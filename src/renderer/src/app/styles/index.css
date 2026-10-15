@@ -38,8 +38,12 @@
   --color-success: #6fbf73;
   --color-added: var(--color-success);
   --color-removed: var(--color-danger);
+  --color-diagram-node: #141920;
+  --color-diagram-node-edge: #262d37;
+  --color-diagram-line: #59616d;
   --font-mono: 'Cascadia Code', Consolas, Menlo, monospace;
   --font-ui: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
+  --font-diagram: 'Segoe UI', system-ui, sans-serif;
 }
 
 html,
@@ -190,12 +194,8 @@ body,
   100% { opacity: 0.5; }
 }
 
-@keyframes hud-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.25; }
-}
-
 :root {
+  --star-step: 120ms;
   --focus-line: var(--color-accent);
   --scanline-ground: repeating-linear-gradient(rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px);
   --hud-scanlines: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 3px);
@@ -277,7 +277,7 @@ body,
 
 .activity-star::before {
   content: '·';
-  animation: activity-star 1200ms steps(1, end) infinite;
+  animation: activity-star calc(var(--star-step) * 10) steps(1, end) infinite;
 }
 
 @keyframes activity-star {
@@ -307,29 +307,19 @@ body,
   50% { content: '◇'; }
 }
 
-.activity-glint {
-  position: relative;
+.shimmer-letter {
+  animation: working-shimmer calc(var(--star-step) * 20) linear infinite;
+  animation-delay: calc(var(--star-step) * (5 + var(--letter-index)));
 }
 
-.activity-glint::after {
-  --glint-band: linear-gradient(90deg, transparent 0 41%, #000 50%, transparent 59% 100%);
-  content: attr(data-text);
-  position: absolute;
-  inset: -8px -10px;
-  padding: 8px 10px;
-  color: color-mix(in srgb, var(--color-accent) 30%, #ffffff);
-  text-shadow:
-    0 0 4px color-mix(in srgb, var(--color-accent) 85%, transparent),
-    0 0 9px color-mix(in srgb, var(--color-accent) 45%, transparent);
-  mask-image: var(--glint-band);
-  mask-size: 300% 100%;
-  mask-repeat: no-repeat;
-  animation: activity-glint 2800ms ease-in-out infinite alternate;
+@keyframes working-shimmer {
+  0%, 13%, 100% { color: var(--color-accent); }
+  4% { color: color-mix(in srgb, var(--color-accent) 60%, #ffffff); }
 }
 
-@keyframes activity-glint {
-  from { mask-position: 100% 0; }
-  to { mask-position: 0% 0; }
+.working-ellipsis {
+  margin-left: -0.1em;
+  letter-spacing: 0.02em;
 }
 
 .armada-wordmark {
@@ -515,7 +505,16 @@ body,
 
 .meter-segment.is-tip {
   opacity: 0.75;
-  animation: hud-blink 900ms steps(1, end) infinite;
+}
+
+.meter-segment.is-powering {
+  animation: meter-power-on 560ms var(--ease-settle) both;
+}
+
+@keyframes meter-power-on {
+  0% { transform: scaleY(0.12); filter: brightness(2.4); }
+  40% { transform: scaleY(1); filter: brightness(1.9); }
+  100% { transform: scaleY(1); filter: none; }
 }
 
 .meter-value {
@@ -1161,8 +1160,8 @@ button[data-pressed] {
   :root :focus-visible:not(input, textarea),
   .activity-star::before,
   .activity-beacon::before,
-  .activity-glint::after,
-  .meter-segment.is-tip,
+  .shimmer-letter,
+  .meter-segment.is-powering,
   .app-tooltip,
   .notice-plate,
   .notice-plate[data-leaving],
@@ -1173,10 +1172,6 @@ button[data-pressed] {
   .hud-dialog[data-leaving]::backdrop,
   button[data-pressed] {
     animation: none;
-  }
-
-  .meter-segment.is-tip {
-    opacity: 1;
   }
 
   .click-burst {
