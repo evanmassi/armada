@@ -71,7 +71,10 @@ for Node.js instead of offering Fix, since every hook and the status line would 
 
 Claude tiles draw diagrams. Every Claude launch creates the tile's own folder, `userData/diagrams/<tileId>` (keyed by
 tile, so a `/clear` keeps them), grants it with `--add-dir` so writing there never prompts, and names it in
-`diagramInstructions` through `--append-system-prompt`; a test holds the instruction's colors to the design tokens. Claude writes `.mmd`
+`diagramInstructions` through `--append-system-prompt`; a test holds the instruction's colors to the design tokens.
+Every launch also passes `--system-prompt-snapshot off` when that Claude Code's help lists it, since Claude Code
+otherwise resends the prompt recorded on a conversation's first request and a resumed tile would never see current
+instructions; one too old to know the option refuses to start with it. Claude writes `.mmd`
 (Mermaid), `.svg`, or `.html` (interactive) there; `TileDiagramFiles` watches the folder and pushes the tile's list,
 and the renderer opens the newest in a dock under that tile. On launch it deletes folders of tiles no longer in the
 workspace and files untouched for 14 days, and deletes nothing when the workspace cannot be read. An `.html` diagram

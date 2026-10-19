@@ -8,6 +8,7 @@ interface SessionServiceDeps {
   conversationRepository: ConversationRepository;
   terminalHost: TerminalHost;
   prepareDiagramFolder(tileId: string): Promise<string>;
+  isClaudeOptionSupported(option: string): Promise<boolean>;
 }
 
 interface Launch {
@@ -18,6 +19,8 @@ interface Launch {
 // PITFALL: zsh reads ~/.zprofile, where Homebrew and installers put PATH, only as a login shell, which is how a Mac terminal starts one.
 const SHELL_LAUNCH: Launch =
   process.platform === 'win32' ? { command: 'pwsh.exe', args: [] } : { command: process.env['SHELL'] ?? 'bash', args: ['-l'] };
+
+const PROMPT_SNAPSHOT_OPTION = '--system-prompt-snapshot';
 
 export class SessionService {
   constructor(private deps: SessionServiceDeps) {}
@@ -30,12 +33,17 @@ export class SessionService {
   }
 
   private async claudeLaunch(sessionId: string, tileId: string): Promise<Launch> {
-    const isExistingConversation = await this.deps.conversationRepository.hasConversation(sessionId);
-    const diagramFolder = await this.deps.prepareDiagramFolder(tileId);
+    const [isExistingConversation, diagramFolder, hasPromptSnapshot] = await Promise.all([
+      this.deps.conversationRepository.hasConversation(sessionId),
+      this.deps.prepareDiagramFolder(tileId),
+      this.deps.isClaudeOptionSupported(PROMPT_SNAPSHOT_OPTION),
+    ]);
     const sessionArgs = isExistingConversation ? ['--resume', sessionId] : ['--session-id', sessionId];
+    // PITFALL: Claude Code otherwise resends the prompt recorded on the conversation's first request and drops a changed --append-system-prompt, and one too old to know the option refuses to start.
+    const snapshotArgs = hasPromptSnapshot ? [PROMPT_SNAPSHOT_OPTION, 'off'] : [];
     return {
       command: CLAUDE_COMMAND,
-      args: [...sessionArgs, '--append-system-prompt', diagramInstructions(diagramFolder), '--add-dir', diagramFolder],
+      args: [...sessionArgs, ...snapshotArgs, '--append-system-prompt', diagramInstructions(diagramFolder), '--add-dir', diagramFolder],
     };
   }
 }

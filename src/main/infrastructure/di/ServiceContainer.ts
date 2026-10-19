@@ -11,6 +11,7 @@ import { ClaudeSettingsFile } from '@main/infrastructure/claude/ClaudeSettingsFi
 import { RELAY_RUNTIME_EXECUTABLE } from '@main/infrastructure/claude/claudeSettingsIntegration';
 import { ClaudeUsageFile } from '@main/infrastructure/claude/ClaudeUsageFile';
 import { ClaudeUsageProbe } from '@main/infrastructure/claude/ClaudeUsageProbe';
+import { isClaudeOptionSupported } from '@main/infrastructure/claude/claudeOptionSupport';
 import { ClipboardImageSaver } from '@main/infrastructure/clipboard/ClipboardImageSaver';
 import { TileDiagramFiles } from '@main/infrastructure/diagrams/TileDiagramFiles';
 import { FolderOpener } from '@main/infrastructure/folders/FolderOpener';
@@ -69,7 +70,12 @@ export function createServiceContainer(): ServiceContainer {
   const tileDiagramFiles = new TileDiagramFiles({ diagramsDir: getDiagramsDir(), workspaceRepository, logger });
   return {
     conversationCatalogService: new ConversationCatalogService({ conversationRepository }),
-    sessionService: new SessionService({ conversationRepository, terminalHost, prepareDiagramFolder: (tileId) => tileDiagramFiles.prepareFolder(tileId) }),
+    sessionService: new SessionService({
+      conversationRepository,
+      terminalHost,
+      prepareDiagramFolder: (tileId) => tileDiagramFiles.prepareFolder(tileId),
+      isClaudeOptionSupported,
+    }),
     workspaceRepository,
     terminalHost,
     claudeHookInbox: new ClaudeHookInbox({ inboxDir: hookInboxDir, logger }),
