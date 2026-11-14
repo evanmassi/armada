@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Board, Tile } from '@shared/workspace/workspaceSchemas';
-import { collapsedTiles, columnsFor, computeTiling, tilingToCells } from './tiling';
+import { collapsedTiles, columnsFor, computeTiling, tilingSections, tilingToCells } from './tiling';
 
 const tile = (id: string, weight = 1, isCollapsed = false): Tile => ({
   kind: 'claude',
@@ -45,6 +45,38 @@ describe('computeTiling', () => {
     const mixed = board([tile('a'), tile('b', 1, true), tile('c'), tile('d', 1, true)]);
     expect(computeTiling(mixed).map((row) => row.tiles.map((item) => item.id))).toEqual([['a', 'c']]);
     expect(collapsedTiles(mixed).map((item) => item.id)).toEqual(['b', 'd']);
+  });
+});
+
+describe('tilingSections', () => {
+  const shell = (id: string): Tile => ({ kind: 'shell', id, cwd: 'C:\\dev', layout: { x: 0, y: 0, w: 1, h: 1 }, weight: 1, isCollapsed: false });
+  const projectNote = (id: string): Tile => ({ kind: 'notes', id, text: '', cwd: 'C:\\dev', layout: { x: 0, y: 0, w: 1, h: 1 }, weight: 1, isCollapsed: false });
+
+  it('puts Claude tiles in the main area and shells and project notes in the helper column, in board order', () => {
+    const sections = tilingSections(board([shell('s'), tile('a'), projectNote('n'), tile('b')]));
+    expect(sections.mainTiles.map((item) => item.id)).toEqual(['a', 'b']);
+    expect(sections.helperTiles.map((item) => item.id)).toEqual(['s', 'n']);
+  });
+
+  it('tiles helpers in the main area when there is no Claude tile', () => {
+    const sections = tilingSections(board([shell('s'), projectNote('n')]));
+    expect(sections.mainTiles.map((item) => item.id)).toEqual(['s', 'n']);
+    expect(sections.helperTiles).toEqual([]);
+  });
+
+  it('keeps a collapsed helper in its column instead of the collapsed stack under the main area', () => {
+    const collapsedShell = { ...shell('s'), isCollapsed: true };
+    expect(collapsedTiles(board([tile('a'), collapsedShell]))).toEqual([]);
+    expect(computeTiling(board([tile('a'), collapsedShell])).map((row) => row.tiles.map((item) => item.id))).toEqual([['a']]);
+  });
+
+  it('gives the helper column its share of the free grid and stacks helpers inside it', () => {
+    const cells = tilingToCells(board([tile('a'), shell('s'), projectNote('n')]), 12, 20);
+    expect(cells).toEqual([
+      { tileId: 'a', x: 0, y: 0, w: 8, h: 20 },
+      { tileId: 's', x: 8, y: 0, w: 4, h: 10 },
+      { tileId: 'n', x: 8, y: 10, w: 4, h: 10 },
+    ]);
   });
 });
 

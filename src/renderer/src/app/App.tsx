@@ -91,8 +91,6 @@ export function App() {
 
   const createBoard = (): void => selectBoard(editor.createBoard({ name: `${DEFAULT_BOARD_NAME} ${boards.length + 1}` }));
 
-  const addNotes = (): void => editor.addTile(ensureActiveBoard(), { kind: 'notes', text: '', cwd: focusedCwd });
-
   const startSessionNearFocus = async (): Promise<void> => {
     const cwd = focusedCwd ?? activeBoard?.tiles.map((tile) => tile.cwd).find(Boolean);
     if (cwd) {
@@ -142,16 +140,11 @@ export function App() {
           onRemove={editor.removeBoard}
         >
           {activeBoard && (
-            <>
-              <button type="button" className="readout hud-button ml-1.5 text-muted" onClick={addNotes}>
-                + notes
-              </button>
-              <BoardLayoutModeControls
-                layoutMode={activeBoard.layoutMode}
-                onChange={(layoutMode) => editor.setLayoutMode(activeBoard.id, layoutMode)}
-                onReflow={() => editor.reflowFreeLayout(activeBoard.id, boardAreaRef.current?.clientHeight ?? 0)}
-              />
-            </>
+            <BoardLayoutModeControls
+              layoutMode={activeBoard.layoutMode}
+              onChange={(layoutMode) => editor.setLayoutMode(activeBoard.id, layoutMode)}
+              onReflow={() => editor.reflowFreeLayout(activeBoard.id, boardAreaRef.current?.clientHeight ?? 0)}
+            />
           )}
         </BoardSwitcherBar>
         <div ref={boardAreaRef} className="surface-field relative min-h-0 flex-1">

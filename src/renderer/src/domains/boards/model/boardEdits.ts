@@ -8,8 +8,8 @@ import {
   type TileLayout,
   type Workspace,
 } from '@shared/workspace/workspaceSchemas';
-import { lanedTiles } from './lanes';
-import { tilingToCells } from './tiling';
+import { laneStateOf } from './lanes';
+import { tilingSections, tilingToCells } from './tiling';
 
 export const GRID_COLUMNS = 12;
 export const GRID_ROW_HEIGHT_PX = 24;
@@ -175,11 +175,11 @@ export const swapTiles = (workspace: Workspace, boardId: string, tileIdA: string
     return { ...board, tiles };
   });
 
-// PITFALL: neighbors come from the tiles laid out beside this one, so a board-wide note in the strip is never the swap partner, and neither is a collapsed tile for an expanded one.
+// PITFALL: neighbors come from the main tiling area, so a board-wide note or a helper column tile is never the swap partner, and neither is a collapsed tile for an expanded one.
 export const moveTile = (workspace: Workspace, boardId: string, tileId: string, step: -1 | 1): Workspace => {
   const board = findBoard(workspace, boardId);
   const moved = board?.tiles.find((tile) => tile.id === tileId);
-  const peers = board && moved ? lanedTiles(board).filter((tile) => tile.isCollapsed === moved.isCollapsed) : [];
+  const peers = board && moved ? tilingSections(board).mainTiles.filter((tile) => tile.isCollapsed === moved.isCollapsed) : [];
   const neighbor = peers[peers.findIndex((tile) => tile.id === tileId) + step];
   return neighbor ? swapTiles(workspace, boardId, tileId, neighbor.id) : workspace;
 };
@@ -198,7 +198,7 @@ export const scaleTileWeight = (workspace: Workspace, boardId: string, tileId: s
 
 const updateLane = (board: Board, key: string, transform: (lane: LaneState) => LaneState): Board => ({
   ...board,
-  lanes: { ...board.lanes, [key]: transform(board.lanes[key] ?? { weight: 1, isCollapsed: false }) },
+  lanes: { ...board.lanes, [key]: transform(laneStateOf(board, key)) },
 });
 
 export const setLaneWeights = (workspace: Workspace, boardId: string, weights: Record<string, number>): Workspace =>

@@ -196,14 +196,17 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   discriminated union in the schema; files written before kinds existed default to `claude`. A Claude tile references
   a session by id and nothing else; it asks `conversations` for its title and accent. New tiles insert after the
   last tile from the same project. Two layout modes per board: `auto` and `free`. In `auto`, a
-  single-project board tiles by count (`model/tiling.ts`, rows of 1/2/3 columns, drag-to-swap, splitters adjust
-  weights); a board spanning more than one project renders lanes (`model/lanes.ts`), one column per project keyed
-  by cwd with tiles stacked inside, lane order, width, and collapse saved on the board; the lane header's × closes every tile in it, asking first when there is more than one. A notes tile with a cwd lives in
-  that project's lane; one without is board-wide and renders in a collapsible strip on the right, outside any layout. `free` is a scrolling grid
+  single-project board sits under that project's lane header (no collapse) and tiles its Claude tiles by count (`model/tiling.ts`, rows of 1/2/3 columns, drag-to-swap, splitters adjust
+  weights) and stacks its shells and project notes in a helper column on the right, sized against the tiling and
+  collapsible, its state saved under the `<helpers>` key in the board's lanes; with no Claude tile, everything tiles. Weights
+  become flex shares that sum to 1 (`model/flexGrowShares.ts`), so a lone open tile fills its space at any weight. A board spanning more than one project renders lanes (`model/lanes.ts`), one column per project keyed
+  by cwd with tiles stacked inside, lane order, width, and collapse saved on the board; the lane header's + session and + notes add to that project, and its × closes every tile in it, asking first when there is more than one. A notes tile with a cwd lives in
+  that project's lane; one without is board-wide and renders in a collapsible strip on the right, outside any layout. Nothing creates
+  board-wide notes anymore; the strip keeps showing the ones already saved. `free` is a scrolling grid
   with explicit x/y/w/h (`react-grid-layout`); reflow rewrites its positions from the tiling. In `auto`, a tile's title
   bar chevron collapses it to its first title row (`isCollapsed` on the tile); the body is hidden, not unmounted, so the
   session keeps running. A collapsed tile stays in place in a lane and gives its height to the rest; on a
-  single-project board it leaves the tiling and stacks under it. `free` ignores the flag. A Claude tile's title bar puts its
+  single-project board a collapsed Claude tile leaves the tiling and stacks under it, and a collapsed helper stays in its column. `free` ignores the flag. A Claude tile's title bar puts its
   spark icon and title on the first row and, on a second, model, context size, and effort, context left before
   auto-compact (also a draining bar), the session's folder only when it has left the project folder, and the lines the
   session added and removed with its run time, then the current git branch (a short commit id when detached), with the

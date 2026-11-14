@@ -52,7 +52,7 @@ export function BoardPanel({ board, isActive, shouldMountTerminals, onOpenShell,
         ) : hasMultipleLanes(board) ? (
           <BoardLanesPanel board={board} shouldMountTerminals={shouldMountTerminals} onOpenShell={onOpenShell} onStartSession={onStartSession} />
         ) : (
-          <BoardTilingPanel board={board} shouldMountTerminals={shouldMountTerminals} onOpenShell={onOpenShell} />
+          <BoardTilingPanel board={board} shouldMountTerminals={shouldMountTerminals} onOpenShell={onOpenShell} onStartSession={onStartSession} />
         )}
       </div>
       {notes.length > 0 && <BoardNotesStrip board={board} notes={notes} />}

@@ -22,6 +22,7 @@ import {
   toggleTileCollapsed,
   updateDiagramDock,
 } from './boardEdits';
+import { HELPER_COLUMN_KEY } from './lanes';
 
 const tile = (id: string, x: number, y: number, w: number, h: number, weight = 1, cwd = 'C:\\dev'): Tile => ({
   kind: 'claude',
@@ -180,6 +181,21 @@ describe('lanes', () => {
     expect(weighted.boards[0]!.lanes).toEqual({ 'C:\\dev': { weight: 2.5, isCollapsed: false }, 'C:\\x': { weight: 0.25, isCollapsed: false } });
     expect(toggleLaneCollapsed(weighted, 'board', 'C:\\dev').boards[0]!.lanes['C:\\dev']).toEqual({ weight: 2.5, isCollapsed: true });
     expect(setLaneOrder(start, 'board', ['C:\\x', 'C:\\dev']).boards[0]!.laneOrder).toEqual(['C:\\x', 'C:\\dev']);
+  });
+
+  it('keeps the helper column at its narrower default width when it is first collapsed', () => {
+    const collapsed = toggleLaneCollapsed(workspaceWith(tile('a', 0, 0, 4, 6)), 'board', HELPER_COLUMN_KEY);
+    expect(collapsed.boards[0]!.lanes[HELPER_COLUMN_KEY]).toEqual({ weight: 0.5, isCollapsed: true });
+  });
+});
+
+describe('moveTile beside a helper column', () => {
+  it('steps past shells, which live in the helper column', () => {
+    const withShell = addTile(workspaceWith(tile('a', 0, 0, 4, 6)), 'board', { kind: 'shell', cwd: 'C:\\dev' }, 'a');
+    const shellId = withShell.boards[0]!.tiles[1]!.id;
+    const withSecond = addTile(withShell, 'board', { kind: 'claude', sessionId: 'b', cwd: 'C:\\dev' });
+    const secondId = withSecond.boards[0]!.tiles[2]!.id;
+    expect(tileIds(moveTile(withSecond, 'board', 'a', 1))).toEqual([secondId, shellId, 'a']);
   });
 });
 

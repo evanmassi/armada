@@ -1,10 +1,11 @@
 import type { Board, NotesTile } from '@shared/workspace/workspaceSchemas';
-import { CollapseToggleButton } from '@renderer/shared/ui/components/CollapseToggleButton';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
-import { NOTES_STRIP_KEY } from '../../../model/lanes';
+import { laneStateOf, NOTES_STRIP_KEY } from '../../../model/lanes';
 import { BoardTileFrame } from '../grid/BoardTileFrame';
+import { BoardSideStrip } from '../strip/BoardSideStrip';
 
 const KEYBOARD_HINT = 'Up and down reorder notes.';
+const EXPANDED_STYLE = { width: '18rem', flexShrink: 0 };
 
 interface BoardNotesStripProps {
   board: Board;
@@ -13,16 +14,16 @@ interface BoardNotesStripProps {
 
 export function BoardNotesStrip({ board, notes }: BoardNotesStripProps) {
   const editor = useBoardsEditor();
-  const isCollapsed = board.lanes[NOTES_STRIP_KEY]?.isCollapsed ?? false;
 
   return (
-    <aside className={`flex shrink-0 flex-col border-l border-edge ${isCollapsed ? 'w-8' : 'w-72'}`}>
-      <header className={`readout flex items-center gap-2 border-b border-edge px-2 py-1 text-[11px] text-muted ${isCollapsed ? 'h-full flex-col border-b-0 px-1 py-2' : ''}`}>
-        <CollapseToggleButton isCollapsed={isCollapsed} target="notes" collapsesToward="right" onToggle={() => editor.toggleLaneCollapsed(board.id, NOTES_STRIP_KEY)} />
-        <span className={isCollapsed ? '[writing-mode:vertical-rl]' : 'flex-1'}>notes</span>
-        {!isCollapsed && <span className="text-edge-strong">{notes.length}</span>}
-      </header>
-      <div className={`flex min-h-0 flex-1 flex-col gap-1 p-1 ${isCollapsed ? 'hidden' : ''}`}>
+    <BoardSideStrip
+      label="notes"
+      count={notes.length}
+      isCollapsed={laneStateOf(board, NOTES_STRIP_KEY).isCollapsed}
+      expandedStyle={EXPANDED_STYLE}
+      onToggle={() => editor.toggleLaneCollapsed(board.id, NOTES_STRIP_KEY)}
+    >
+      <div className="flex min-h-0 flex-1 flex-col gap-1 p-1">
         {notes.map((note, index) => (
           <div key={note.id} className="min-h-0 flex-1">
             <BoardTileFrame
@@ -39,6 +40,6 @@ export function BoardNotesStrip({ board, notes }: BoardNotesStripProps) {
           </div>
         ))}
       </div>
-    </aside>
+    </BoardSideStrip>
   );
 }

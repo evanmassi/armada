@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react';
-import type { Board, Tile } from '@shared/workspace/workspaceSchemas';
+import type { Board } from '@shared/workspace/workspaceSchemas';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
-import { confirmDestructiveAction } from '@renderer/app/stores/confirmationStore';
 import { useProjectAccents, useProjectNames } from '@renderer/domains/conversations';
 import { DragSplitter } from '@renderer/shared/ui/components/DragSplitter';
 import { useBoardsEditor } from '../../../hooks/useBoardsEditor';
 import { useElementRegistry } from '../../../hooks/useElementRegistry';
 import { useSeamDrag } from '../../../hooks/useSeamDrag';
-import { LANE_DRAG_MIME, TILE_DRAG_MIME } from '../../../model/boardDragTypes';
+import { LANE_DRAG_MIME } from '../../../model/boardDragTypes';
 import { WEIGHT_STEP } from '../../../model/boardEdits';
+import { flexGrowShares } from '../../../model/flexGrowShares';
 import { computeLanes, type Lane } from '../../../model/lanes';
-import { BoardTileFrame, type ArrowDirection } from '../grid/BoardTileFrame';
+import { BoardStackedTileList } from '../stack/BoardStackedTileList';
 import { BoardLaneHeader } from './BoardLaneHeader';
 
 const KEYBOARD_HINT = 'Up and down reorder within the lane. Shift with up or down resizes the tile, shift with left or right resizes the lane.';
@@ -27,11 +27,8 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
   const accentFor = useProjectAccents();
   const editor = useBoardsEditor();
   const seam = useSeamDrag();
-  const tileElements = useElementRegistry<string>();
   const laneElements = useElementRegistry<string>();
-  const [draftTileWeights, setDraftTileWeights] = useState<Record<string, number>>({});
   const [draftLaneWeights, setDraftLaneWeights] = useState<Record<string, number>>({});
-  const [dropTargetTileId, setDropTargetTileId] = useState<string>();
   const [dropTargetLaneKey, setDropTargetLaneKey] = useState<string>();
 
   const focusedTileId = useBoardSelectionStore((state) => state.focusedTileId);
@@ -44,25 +41,14 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
   }, [focusedLaneKey, focusedTileId]);
 
   const lanes = computeLanes(board);
-  const laneName = (lane: Lane): string => nameOf(lane.key);
   const laneAccent = (lane: Lane): string => accentFor(lane.key);
-  const tileWeightOf = (tile: Tile): number => draftTileWeights[tile.id] ?? tile.weight;
   const laneWeightOf = (lane: Lane): number => draftLaneWeights[lane.key] ?? lane.weight;
+  const laneShares = flexGrowShares(lanes.map((lane) => (lane.isCollapsed ? 0 : laneWeightOf(lane))));
 
   const endSeam = (): void => {
     seam.end();
-    setDraftTileWeights({});
     setDraftLaneWeights({});
   };
-
-  const beginTileSeam = (first: Tile, second: Tile): void =>
-    seam.begin({
-      firstPx: tileElements.elementOf(first.id)?.offsetHeight ?? 1,
-      secondPx: tileElements.elementOf(second.id)?.offsetHeight ?? 1,
-      totalWeight: tileWeightOf(first) + tileWeightOf(second),
-      apply: (firstWeight, secondWeight) => setDraftTileWeights({ [first.id]: firstWeight, [second.id]: secondWeight }),
-      commit: (firstWeight, secondWeight) => editor.setTileWeights(board.id, { [first.id]: firstWeight, [second.id]: secondWeight }),
-    });
 
   const beginLaneSeam = (first: Lane, second: Lane): void =>
     seam.begin({
@@ -73,18 +59,6 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
       commit: (firstWeight, secondWeight) => editor.setLaneWeights(board.id, { [first.key]: firstWeight, [second.key]: secondWeight }),
     });
 
-  const handleArrow = (lane: Lane, tile: Tile, direction: ArrowDirection, isShift: boolean): void => {
-    if (isShift) {
-      if (direction === 'up' || direction === 'down') editor.scaleTileWeight(board.id, tile.id, direction === 'up' ? 1 / WEIGHT_STEP : WEIGHT_STEP);
-      else editor.scaleLaneWeight(board.id, lane.key, direction === 'left' ? 1 / WEIGHT_STEP : WEIGHT_STEP);
-      return;
-    }
-    if (direction === 'left' || direction === 'right') return;
-    const index = lane.tiles.findIndex((candidate) => candidate.id === tile.id);
-    const neighbor = lane.tiles[index + (direction === 'up' ? -1 : 1)];
-    if (neighbor) editor.swapTiles(board.id, tile.id, neighbor.id);
-  };
-
   const focusLane = (lane: Lane): void => {
     // PITFALL: the tile's own press already moved focus earlier in this same event, which only the store's live value has seen yet.
     const currentTileId = useBoardSelectionStore.getState().focusedTileId;
@@ -92,37 +66,6 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
     const openTiles = lane.tiles.filter((tile) => !tile.isCollapsed);
     const target = openTiles.find((tile) => tile.id === lastFocusedTileByLane.current[lane.key]) ?? openTiles[0];
     if (target) setFocusedTile(target.id);
-  };
-
-  const handleTileDragStart = (tile: Tile, event: DragEvent<HTMLDivElement>): void => {
-    event.dataTransfer.setData(TILE_DRAG_MIME, tile.id);
-    event.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleTileDragOver = (tile: Tile, event: DragEvent<HTMLDivElement>): void => {
-    if (!event.dataTransfer.types.includes(TILE_DRAG_MIME)) return;
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
-    if (dropTargetTileId !== tile.id) setDropTargetTileId(tile.id);
-  };
-
-  const handleTileDrop = (lane: Lane, tile: Tile, event: DragEvent<HTMLDivElement>): void => {
-    event.preventDefault();
-    const draggedId = event.dataTransfer.getData(TILE_DRAG_MIME);
-    setDropTargetTileId(undefined);
-    const isSameLane = lane.tiles.some((candidate) => candidate.id === draggedId);
-    if (draggedId && draggedId !== tile.id && isSameLane) editor.swapTiles(board.id, draggedId, tile.id);
-  };
-
-  const confirmCloseLane = async (lane: Lane): Promise<void> => {
-    const isConfirmed =
-      lane.tiles.length <= 1 ||
-      (await confirmDestructiveAction({
-        title: 'Close lane',
-        message: `Close the ${laneName(lane)} lane and its ${lane.tiles.length} tiles? Their sessions stop; the conversations stay in the sidebar.`,
-        actionLabel: 'Close lane',
-      }));
-    if (isConfirmed) editor.removeTiles(board.id, lane.tiles.map((tile) => tile.id));
   };
 
   const handleLaneDragOver = (lane: Lane, event: DragEvent<HTMLElement>): void => {
@@ -153,7 +96,7 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
             ref={laneElements.refFor(lane.key)}
             className={`flex min-w-0 flex-col border transition-[flex-grow] duration-200 ${lane.isCollapsed ? 'w-8 shrink-0' : ''}`}
             style={{
-              flexGrow: lane.isCollapsed ? 0 : laneWeightOf(lane),
+              flexGrow: laneShares[laneIndex],
               flexBasis: lane.isCollapsed ? undefined : 0,
               borderColor: `color-mix(in srgb, ${laneAccent(lane)} 30%, transparent)`,
             }}
@@ -162,44 +105,24 @@ export function BoardLanesPanel({ board, shouldMountTerminals, onOpenShell, onSt
             <BoardLaneHeader
               boardId={board.id}
               lane={lane}
-              name={laneName(lane)}
+              name={nameOf(lane.key)}
               accentColor={laneAccent(lane)}
               isDropTarget={dropTargetLaneKey === lane.key}
               onToggleCollapsed={() => editor.toggleLaneCollapsed(board.id, lane.key)}
               onStartSession={() => onStartSession(lane.key)}
-              onAddNotes={() => editor.addTile(board.id, { kind: 'notes', text: '', cwd: lane.key })}
-              onClose={() => void confirmCloseLane(lane)}
               onDragOver={(event) => handleLaneDragOver(lane, event)}
               onDragLeave={() => setDropTargetLaneKey((current) => (current === lane.key ? undefined : current))}
               onDrop={(event) => handleLaneDrop(lane, event)}
             />
-            <div className={`flex min-h-0 flex-1 flex-col gap-1 p-1 ${lane.isCollapsed ? 'hidden' : ''}`}>
-              {lane.tiles.map((tile, tileIndex) => (
-                <div key={tile.id} className="contents">
-                  {tileIndex > 0 && !tile.isCollapsed && !lane.tiles[tileIndex - 1]!.isCollapsed && (
-                    <DragSplitter orientation="horizontal" onDragStart={() => beginTileSeam(lane.tiles[tileIndex - 1]!, tile)} onDragMove={seam.move} onDragEnd={endSeam} />
-                  )}
-                  <div
-                    ref={tileElements.refFor(tile.id)}
-                    className={`min-h-0 transition-[flex-grow] duration-200 ${tile.isCollapsed ? 'shrink-0' : ''} ${dropTargetTileId === tile.id ? 'ring-2 ring-accent/70' : ''}`}
-                    style={tile.isCollapsed ? undefined : { flexGrow: tileWeightOf(tile), flexBasis: 0 }}
-                    onDragOver={(event) => handleTileDragOver(tile, event)}
-                    onDragLeave={() => setDropTargetTileId((current) => (current === tile.id ? undefined : current))}
-                    onDrop={(event) => handleTileDrop(lane, tile, event)}
-                  >
-                    <BoardTileFrame
-                      boardId={board.id}
-                      tile={tile}
-                      shouldMountTerminal={shouldMountTerminals}
-                      isCollapsible
-                      keyboardHint={KEYBOARD_HINT}
-                      onOpenShell={onOpenShell}
-                      onArrow={(direction, isShift) => handleArrow(lane, tile, direction, isShift)}
-                      onDragStart={(event) => handleTileDragStart(tile, event)}
-                    />
-                  </div>
-                </div>
-              ))}
+            <div className={lane.isCollapsed ? 'hidden' : 'contents'}>
+              <BoardStackedTileList
+                board={board}
+                tiles={lane.tiles}
+                shouldMountTerminals={shouldMountTerminals}
+                keyboardHint={KEYBOARD_HINT}
+                onOpenShell={onOpenShell}
+                onResizeSideways={(direction) => editor.scaleLaneWeight(board.id, lane.key, direction === 'left' ? 1 / WEIGHT_STEP : WEIGHT_STEP)}
+              />
             </div>
           </div>
         </div>
