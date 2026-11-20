@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Project } from '@shared/conversations/conversationTypes';
 import { folderName } from '@shared/projects/folderName';
-import { filterProjects, findPinnedConversations, isRecentlyActive, splitArchivedConversations } from './conversationSearch';
+import { filterProjects, findPinnedConversations, isRecentlyActive, keepRecentConversations, RECENT_CONVERSATION_COUNT, splitArchivedConversations } from './conversationSearch';
 
 const projects: Project[] = [
   {
@@ -49,5 +49,20 @@ describe('splitArchivedConversations', () => {
     const { active, archived } = splitArchivedConversations(projects[0]!, ['b']);
     expect(active.map((item) => item.sessionId)).toEqual(['a']);
     expect(archived.map((item) => item.sessionId)).toEqual(['b']);
+  });
+});
+
+describe('keepRecentConversations', () => {
+  const conversations = Array.from({ length: RECENT_CONVERSATION_COUNT + 3 }, (_, index) => ({
+    sessionId: `s${index}`,
+    cwd: 'C:\\dev\\armada',
+    title: `Conversation ${index}`,
+    lastActiveAt: '2026-09-01T00:00:00.000Z',
+  }));
+
+  it('keeps the most recent ones and any older one that is live', () => {
+    const lastId = `s${RECENT_CONVERSATION_COUNT + 2}`;
+    const kept = keepRecentConversations(conversations, (sessionId) => sessionId === lastId).map((item) => item.sessionId);
+    expect(kept).toEqual([...conversations.slice(0, RECENT_CONVERSATION_COUNT).map((item) => item.sessionId), lastId]);
   });
 });

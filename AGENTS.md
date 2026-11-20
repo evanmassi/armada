@@ -71,7 +71,11 @@ for Node.js instead of offering Fix, since every hook and the status line would 
 
 Claude tiles draw diagrams. Every Claude launch creates the tile's own folder, `userData/diagrams/<tileId>` (keyed by
 tile, so a `/clear` keeps them), grants it with `--add-dir` so writing there never prompts, and names it in
-`diagramInstructions` through `--append-system-prompt`; a test holds the instruction's colors to the design tokens.
+`diagramInstructions` through `--append-system-prompt`; Claude Code asks to trust every added folder for that session
+only, unless it or a folder above it was trusted at launch, so `ClaudeFolderTrust` reads `~/.claude.json` (never writes
+it, since every running session rewrites it) on launch and after each session start, and while the diagrams folder is
+untrusted the banner's Trust opens a Claude tile there for Claude Code's own trust dialog, which `App` closes once the
+folder reads as trusted or the session exits (a No); a test holds the instruction's colors to the design tokens.
 Every launch also passes `--system-prompt-snapshot off` when that Claude Code's help lists it, since Claude Code
 otherwise resends the prompt recorded on a conversation's first request and a resumed tile would never see current
 instructions; one too old to know the option refuses to start with it. Claude writes `.mmd`
@@ -97,7 +101,7 @@ src/main/
 ├── application/
 │   └── services/     # ConversationCatalogService, SessionService, ClaudeUsageService
 ├── infrastructure/
-│   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser, ClaudeHookInbox, ClaudeUsageFile, ClaudeSessionStatusFiles, ClaudeUsageProbe + usageProbeOutputParser, ClaudeSettingsFile + claudeSettingsIntegration, ClaudeRelayScripts
+│   ├── claude/       # ClaudeProjectsReader + conversationJsonlParser, ClaudeHookInbox, ClaudeUsageFile, ClaudeSessionStatusFiles, ClaudeUsageProbe + usageProbeOutputParser, ClaudeSettingsFile + claudeSettingsIntegration, ClaudeFolderTrust + claudeTrustRecords, ClaudeRelayScripts
 │   ├── diagrams/     # TileDiagramFiles (list, read, watch, prune), diagramPageProtocol (serves .html diagrams)
 │   ├── folders/      # FolderOpener: Explorer or Finder, and VS Code
 │   ├── links/        # LinkOpener + linkTargets + binaryFileCheck: the only judge of what a clicked terminal link opens
@@ -152,7 +156,7 @@ src/renderer/src/
 │   ├── boards/        # Board list, grid layout, tile placement
 │   ├── terminal/      # xterm tile bound to one pty session
 │   ├── diagrams/      # Dock under a Claude tile: Mermaid, SVG, and sandboxed interactive pages
-│   ├── integration/   # Banner that checks and repairs Armada's entries in Claude Code's settings
+│   ├── integration/   # Banner that checks and repairs Armada's entries in Claude Code's settings, and offers to trust the diagrams folder
 │   ├── settings/      # Gear in the sidebar header: a dialog of Claude Code settings on four pages, each row on, off, or default
 │   ├── usage/         # 5 hour, weekly, and per-model limit readout in the sidebar footer: reset times, a caret for time gone that warms to amber as usage runs ahead, segments that power on as usage rises; per-model rows show only when they near their limit or run ahead of pace, and a right-click hides or shows any row (saved in `preferences`), a hidden one returning when it needs attention
 │   └── updates/       # Update-ready banner with Restart now, and the running version under the usage readout
@@ -191,7 +195,8 @@ purpose: a second `@shared` for renderer-local code would collide with the cross
   a suggestion list, and legacy hue names convert at parse time. It does not know about grids. The sidebar reads as a
   tree: groups are spaced apart under capitalized names, and a project's conversations indent under its name beside a
   guide line in the project color, which the open conversation's row lights up. A row's archive and pin buttons take
-  no width until hover or focus slides them in.
+  no width until hover or focus slides them in. A project lists its five most recent conversations plus any open in a
+  tile, with a show more line for the rest; a search lists every match.
 - `boards` owns Tile placement, size, and order. Tiles come in three kinds (`claude`, `shell`, `notes`), a
   discriminated union in the schema; files written before kinds existed default to `claude`. A Claude tile references
   a session by id and nothing else; it asks `conversations` for its title and accent. New tiles insert after the

@@ -1,12 +1,13 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
 import { GLOBAL_SHORTCUTS, isGlobalShortcut } from '@renderer/app/keyboardShortcuts';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
-import { notifyError } from '@renderer/app/stores/notificationStore';
+import { notifyError, useNotificationStore } from '@renderer/app/stores/notificationStore';
+import { useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
 import { BoardLayoutModeControls, BoardPanel, BoardSwitcherBar, findClaudeTile, useBoardsEditor } from '@renderer/domains/boards';
 import { ConversationSidebarPanel, useProjectColors, useProjectNames } from '@renderer/domains/conversations';
 import { useTileDiagramArrivals } from '@renderer/domains/diagrams';
-import { IntegrationBanner } from '@renderer/domains/integration';
+import { IntegrationBanner, useDiagramFolderTrustQuery } from '@renderer/domains/integration';
 import { disposeLiveTerminalsExcept } from '@renderer/domains/terminal';
 import { AppUpdateBanner, AppVersionIndicator } from '@renderer/domains/updates';
 import { ClaudeSettingsButton } from '@renderer/domains/settings';
@@ -19,6 +20,8 @@ import { getErrorMessage } from '@renderer/shared/utils/getErrorMessage';
 
 const DEFAULT_BOARD_NAME = 'Board';
 const PROJECT_BOARD_TILE_COUNT = 3;
+const DIAGRAM_FOLDER_TRUSTED_NOTICE = 'Diagram folder trusted. New tiles will no longer ask.';
+const DIAGRAM_FOLDER_DECLINED_NOTICE = 'Diagram folder not trusted, so Claude Code will keep asking on new tiles.';
 
 export function App() {
   const { data: workspace, isPending, isError, error } = useWorkspaceQuery();
@@ -28,6 +31,9 @@ export function App() {
   const nameOf = useProjectNames();
   const { activeBoardId, openedBoardIds, focusedTileId, selectBoard, focusTile, setFocusedTile } = useBoardSelectionStore();
   const boardAreaRef = useRef<HTMLDivElement>(null);
+  const notify = useNotificationStore((state) => state.notify);
+  const { data: diagramFolderTrust } = useDiagramFolderTrustQuery();
+  const [trustSetupSessionId, setTrustSetupSessionId] = useState<string>();
   useTileDiagramArrivals((tileId, fileName) => editor.updateDiagramDock(tileId, { isOpen: true, selectedFileName: fileName }));
 
   const boards = workspace?.boards ?? [];
@@ -35,6 +41,9 @@ export function App() {
   const resolvedActiveBoardId = activeBoard?.id;
   const focusedTile = activeBoard?.tiles.find((tile) => tile.id === focusedTileId);
   const focusedCwd = focusedTile?.cwd ?? activeBoard?.projectCwd;
+  const trustSetupTile = workspace && trustSetupSessionId ? findClaudeTile(workspace, trustSetupSessionId) : undefined;
+  const trustSetupActivity = useSessionActivityStore((state) => (trustSetupTile ? state.byTileId[trustSetupTile.tile.id]?.state : undefined));
+  const isDiagramFolderTrusted = diagramFolderTrust?.isTrusted === true;
 
   useEffect(() => {
     if (resolvedActiveBoardId && resolvedActiveBoardId !== activeBoardId) selectBoard(resolvedActiveBoardId);
@@ -46,6 +55,13 @@ export function App() {
     disposeLiveTerminalsExcept(tileIds);
     if (focusedTileId !== undefined && !tileIds.has(focusedTileId)) setFocusedTile(undefined);
   }, [workspace, focusedTileId, setFocusedTile]);
+
+  useEffect(() => {
+    if (!trustSetupTile || (!isDiagramFolderTrusted && trustSetupActivity !== 'exited')) return;
+    editor.removeTiles(trustSetupTile.boardId, [trustSetupTile.tile.id]);
+    setTrustSetupSessionId(undefined);
+    notify(isDiagramFolderTrusted ? DIAGRAM_FOLDER_TRUSTED_NOTICE : DIAGRAM_FOLDER_DECLINED_NOTICE, isDiagramFolderTrusted ? 'success' : 'warning');
+  }, [trustSetupTile, isDiagramFolderTrusted, trustSetupActivity, editor, notify]);
 
   const ensureActiveBoard = (): string => resolvedActiveBoardId ?? editor.createBoard({ name: DEFAULT_BOARD_NAME });
 
@@ -68,9 +84,11 @@ export function App() {
     editor.addTile(boardFor(conversation.cwd, keepOnCurrentBoard), { kind: 'claude', sessionId: conversation.sessionId, cwd: conversation.cwd });
   };
 
-  const startSession = (cwd: string, keepOnCurrentBoard = false, afterTileId?: string): void => {
+  const startSession = (cwd: string, keepOnCurrentBoard = false, afterTileId?: string): string => {
+    const sessionId = crypto.randomUUID();
     ensureColor(cwd);
-    editor.addTile(boardFor(cwd, keepOnCurrentBoard), { kind: 'claude', sessionId: crypto.randomUUID(), cwd }, afterTileId);
+    editor.addTile(boardFor(cwd, keepOnCurrentBoard), { kind: 'claude', sessionId, cwd }, afterTileId);
+    return sessionId;
   };
 
   const openShell = (cwd: string, afterTileId: string): void =>
@@ -130,7 +148,7 @@ export function App() {
       />
       <main className="flex min-w-0 flex-1 flex-col">
         <AppUpdateBanner />
-        <IntegrationBanner />
+        <IntegrationBanner onTrustDiagramFolder={(folder) => setTrustSetupSessionId(startSession(folder, true))} />
         <BoardSwitcherBar
           boards={boards}
           activeBoardId={resolvedActiveBoardId}

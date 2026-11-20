@@ -1,6 +1,7 @@
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
 
 const STALE_AFTER_DAYS = 14;
+export const RECENT_CONVERSATION_COUNT = 5;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const matches = (haystack: string, needle: string): boolean => haystack.toLowerCase().includes(needle);
@@ -27,3 +28,6 @@ export const splitArchivedConversations = (project: Project, archivedSessionIds:
   active: project.conversations.filter((conversation) => !archivedSessionIds.includes(conversation.sessionId)),
   archived: project.conversations.filter((conversation) => archivedSessionIds.includes(conversation.sessionId)),
 });
+
+export const keepRecentConversations = (conversations: Conversation[], isLive: (sessionId: string) => boolean): Conversation[] =>
+  conversations.filter((conversation, index) => index < RECENT_CONVERSATION_COUNT || isLive(conversation.sessionId));

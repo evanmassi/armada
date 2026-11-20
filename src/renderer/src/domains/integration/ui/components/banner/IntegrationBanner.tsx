@@ -1,5 +1,6 @@
 import type { ClaudeIntegrationGap } from '@shared/integration/integrationTypes';
 import { StatusBanner } from '@renderer/shared/ui/components/StatusBanner';
+import { useDiagramFolderTrustQuery } from '../../../hooks/useDiagramFolderTrustQuery';
 import { useIntegrationRepair } from '../../../hooks/useIntegrationRepair';
 import { useIntegrationStatusQuery } from '../../../hooks/useIntegrationStatusQuery';
 
@@ -8,8 +9,13 @@ const CONSEQUENCE_BY_GAP: Record<ClaudeIntegrationGap, string> = {
   statusLine: 'the usage readout will not update',
 };
 
-export function IntegrationBanner() {
+interface IntegrationBannerProps {
+  onTrustDiagramFolder(folder: string): void;
+}
+
+export function IntegrationBanner({ onTrustDiagramFolder }: IntegrationBannerProps) {
   const { data: status } = useIntegrationStatusQuery();
+  const { data: diagramFolderTrust } = useDiagramFolderTrustQuery();
   const { repair, isRepairing } = useIntegrationRepair();
 
   if (!status) return null;
@@ -24,10 +30,22 @@ export function IntegrationBanner() {
     );
   }
 
-  if (status.gaps.length === 0) return null;
+  if (status.gaps.length === 0) {
+    if (!diagramFolderTrust || diagramFolderTrust.isTrusted) return null;
+    return (
+      <StatusBanner
+        key="diagramFolderTrust"
+        tone="warning"
+        message={'Claude Code will ask "Adding a new directory" on every new tile until you trust Armada\'s diagram folder once.'}
+        note="Click Trust, then pick Yes in the tile that opens"
+        action={{ label: 'Trust', isActing: false, onSelect: () => onTrustDiagramFolder(diagramFolderTrust.folder) }}
+      />
+    );
+  }
 
   return (
     <StatusBanner
+      key="gaps"
       tone="warning"
       message={`Armada is not fully connected to Claude Code: ${status.gaps.map((gap) => CONSEQUENCE_BY_GAP[gap]).join(', and ')}.`}
       note={`Fixing edits ${status.settingsPath}`}

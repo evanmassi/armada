@@ -10,7 +10,7 @@ import { COMMAND_KEY_LABEL, FILE_MANAGER_NAME, isCommandKeyHeld } from '@rendere
 import { applyDragGhost, placementFromPointer, PLACEMENT_LINE_CLASS, type DropPlacement } from '@renderer/shared/utils/dragGhost';
 import { useFolderActions } from '../../../hooks/useFolderActions';
 import { useProjectAccents, useProjectColors } from '../../../hooks/useProjectColors';
-import { splitArchivedConversations } from '../../../model/conversationSearch';
+import { keepRecentConversations, splitArchivedConversations } from '../../../model/conversationSearch';
 import { PROJECT_DRAG_MIME } from '../../../model/sidebarDragTypes';
 import { selectIsSidebarDragging, useSidebarDragStore } from '../../../stores/sidebarDragStore';
 import { ConversationRow } from './ConversationRow';
@@ -65,6 +65,7 @@ export function ConversationProjectSection({
 }: ConversationProjectSectionProps) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [isShowingArchived, setIsShowingArchived] = useState(false);
+  const [isShowingOlder, setIsShowingOlder] = useState(false);
   const [dropPlacement, setDropPlacement] = useState<DropPlacement>();
   const { colorOf, setColor } = useProjectColors();
   const accentFor = useProjectAccents();
@@ -74,6 +75,9 @@ export function ConversationProjectSection({
   const { beginProjectDrag, endDrag } = useSidebarDragStore.getState();
   const isOpen = !isAnyDragging && (isForcedOpen || isExpanded);
   const { active, archived } = splitArchivedConversations(project, archivedSessionIds);
+  const recent = keepRecentConversations(active, (sessionId) => activityBySession.has(sessionId) || activeBoardSessionIds.has(sessionId));
+  const olderCount = isForcedOpen ? 0 : active.length - recent.length;
+  const shown = olderCount === 0 || isShowingOlder ? active : recent;
 
   const handleDragStart = (event: DragEvent<HTMLElement>): void => {
     event.dataTransfer.setData(PROJECT_DRAG_MIME, project.cwd);
@@ -189,7 +193,18 @@ export function ConversationProjectSection({
       </header>
       {isOpen && (
         <div className="project-conversations flex flex-col pb-1">
-          {active.map((conversation) => renderRow(conversation, false))}
+          {shown.map((conversation) => renderRow(conversation, false))}
+          {olderCount > 0 && (
+            <button
+              type="button"
+              className="px-4 py-0.5 text-left text-[11px] text-muted hover:text-fg"
+              onClick={() => setIsShowingOlder((value) => !value)}
+              aria-expanded={isShowingOlder}
+              {...QUIET_CLICK_PROPS}
+            >
+              {isShowingOlder ? 'show fewer' : `show ${olderCount} more`}
+            </button>
+          )}
           {archived.length > 0 && (
             <button
               type="button"

@@ -3,6 +3,7 @@ export const queryKeys = {
   workspace: ['workspace'] as const,
   usage: ['usage'] as const,
   integration: ['integration'] as const,
+  diagramFolderTrust: ['diagramFolderTrust'] as const,
   claudeSettings: ['claudeSettings'] as const,
   appUpdate: ['appUpdate'] as const,
   tileDiagrams: (tileId: string) => ['tileDiagrams', tileId] as const,

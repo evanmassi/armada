@@ -7,7 +7,7 @@ import type {
   TileDiagramsChangedEvent,
   TileDiagramsRequest,
 } from './diagrams/diagramSchemas';
-import type { ClaudeIntegrationStatus } from './integration/integrationTypes';
+import type { ClaudeIntegrationStatus, DiagramFolderTrust } from './integration/integrationTypes';
 import type { OpenLinkRequest, OpenWebLinkRequest } from './links/linkSchemas';
 import type { FolderRequest } from './projects/projectSchemas';
 import type {
@@ -60,6 +60,8 @@ export interface ArmadaApi {
   integration: {
     check(): Promise<ClaudeIntegrationStatus>;
     repair(): Promise<ClaudeIntegrationStatus>;
+    checkDiagramFolderTrust(): Promise<DiagramFolderTrust>;
+    onDiagramFolderTrustChanged(listener: (trust: DiagramFolderTrust) => void): Unsubscribe;
   };
   claudeSettings: {
     read(): Promise<ClaudeSettingValues>;

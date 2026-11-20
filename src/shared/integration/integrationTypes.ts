@@ -5,3 +5,8 @@ export interface ClaudeIntegrationStatus {
   isNodeAvailable: boolean;
   settingsPath: string;
 }
+
+export interface DiagramFolderTrust {
+  folder: string;
+  isTrusted: boolean;
+}

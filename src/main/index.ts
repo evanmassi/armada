@@ -83,7 +83,7 @@ app.whenReady().then(() => {
   });
 
   registerConversationHandlers(container);
-  registerIntegrationHandlers(container);
+  registerIntegrationHandlers(container, mainWindow.webContents);
   registerClaudeSettingHandlers(container);
   registerProjectHandlers(container, mainWindow);
   registerLinkHandlers(container);

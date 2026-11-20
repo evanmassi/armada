@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { workspaceSchema } from './workspaceSchemas';
+import { MAX_SIDEBAR_WIDTH_PX, MIN_SIDEBAR_WIDTH_PX, workspaceSchema } from './workspaceSchemas';
 
 describe('workspaceSchema', () => {
   it('converts legacy color names to hex and keeps hex as is', () => {
@@ -15,5 +15,12 @@ describe('workspaceSchema', () => {
     const parsed = workspaceSchema.parse({ boards: [], projectColors: {} });
     expect(parsed.sidebar.projectExpansion).toEqual({});
     expect(parsed.preferences.terminalFontSize).toBe(13);
+  });
+
+  it('pulls a saved sidebar width outside the limits back inside them', () => {
+    const widthOf = (width: number) => workspaceSchema.parse({ boards: [], projectColors: {}, sidebar: { width } }).sidebar.width;
+    expect(widthOf(271)).toBe(MIN_SIDEBAR_WIDTH_PX);
+    expect(widthOf(900)).toBe(MAX_SIDEBAR_WIDTH_PX);
+    expect(widthOf(400)).toBe(400);
   });
 });

@@ -28,9 +28,11 @@ export const DEFAULT_TERMINAL_FONT_SIZE = 13;
 export const MIN_TERMINAL_FONT_SIZE = 8;
 export const MAX_TERMINAL_FONT_SIZE = 32;
 
-export const DEFAULT_SIDEBAR_WIDTH_PX = 288;
-export const MIN_SIDEBAR_WIDTH_PX = 200;
+export const DEFAULT_SIDEBAR_WIDTH_PX = 336;
+export const MIN_SIDEBAR_WIDTH_PX = 320;
 export const MAX_SIDEBAR_WIDTH_PX = 640;
+
+export const clampSidebarWidth = (width: number): number => Math.min(MAX_SIDEBAR_WIDTH_PX, Math.max(MIN_SIDEBAR_WIDTH_PX, width));
 
 // PITFALL: workspace files from before free colors store Tailwind hue names; they map to their old hex here.
 const legacyColorNameToHex = (value: unknown): unknown =>
@@ -120,7 +122,7 @@ const sidebarGroupSchema = z.object({
 });
 
 const sidebarSchema = z.object({
-  width: z.number().int().min(MIN_SIDEBAR_WIDTH_PX).max(MAX_SIDEBAR_WIDTH_PX).default(DEFAULT_SIDEBAR_WIDTH_PX),
+  width: z.number().int().transform(clampSidebarWidth).default(DEFAULT_SIDEBAR_WIDTH_PX),
   groups: z.array(sidebarGroupSchema).default([]),
   projectOrder: z.array(z.string().min(1)).default([]),
   archivedProjectCwds: z.array(z.string().min(1)).default([]),

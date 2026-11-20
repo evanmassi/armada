@@ -1,6 +1,6 @@
 import { type ReactNode, useMemo, useRef, useState } from 'react';
 import type { Conversation, Project } from '@shared/conversations/conversationTypes';
-import { DEFAULT_SIDEBAR_WIDTH_PX, MAX_SIDEBAR_WIDTH_PX, MIN_SIDEBAR_WIDTH_PX } from '@shared/workspace/workspaceSchemas';
+import { clampSidebarWidth, DEFAULT_SIDEBAR_WIDTH_PX } from '@shared/workspace/workspaceSchemas';
 import { useBoardSelectionStore } from '@renderer/app/stores/boardSelectionStore';
 import { notifyError } from '@renderer/app/stores/notificationStore';
 import { selectActivityBySession, useSessionActivityStore } from '@renderer/app/stores/sessionActivityStore';
@@ -188,10 +188,10 @@ export function ConversationSidebarPanel({ headerControls, footer, onOpenConvers
         <header className="flex items-center gap-1 border-b border-edge bg-panel/80 px-3 py-2 backdrop-blur">
           <img src={armadaIcon} alt="" className="h-4 w-4" />
           <strong className="readout armada-wordmark flex-1">Armada</strong>
-          <button type="button" className="readout hud-button text-muted" onClick={() => startSessionInPickedFolder().catch(notifyError)} data-tooltip="Start a session in a folder">
+          <button type="button" className="readout hud-button shrink-0 whitespace-nowrap text-muted" onClick={() => startSessionInPickedFolder().catch(notifyError)} data-tooltip="Start a session in a folder">
             + folder
           </button>
-          <button type="button" className="readout hud-button ml-1.5 text-muted" onClick={createGroup} data-tooltip="New group">
+          <button type="button" className="readout hud-button ml-1.5 shrink-0 whitespace-nowrap text-muted" onClick={createGroup} data-tooltip="New group">
             + group
           </button>
           {headerControls}
@@ -237,7 +237,7 @@ export function ConversationSidebarPanel({ headerControls, footer, onOpenConvers
           widthAtDragStart.current = width;
         }}
         onDragMove={(deltaPx) => {
-          liveWidth.current = Math.min(MAX_SIDEBAR_WIDTH_PX, Math.max(MIN_SIDEBAR_WIDTH_PX, widthAtDragStart.current + deltaPx));
+          liveWidth.current = clampSidebarWidth(widthAtDragStart.current + deltaPx);
           setDraftWidth(liveWidth.current);
         }}
         onDragEnd={() => {

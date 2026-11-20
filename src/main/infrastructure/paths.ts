@@ -10,6 +10,8 @@ export const getClaudeProjectsDir = (): string => join(getClaudeDir(), 'projects
 
 export const getClaudeSettingsFilePath = (): string => join(getClaudeDir(), 'settings.json');
 
+export const getClaudeGlobalConfigFilePath = (): string => join(process.env['CLAUDE_CONFIG_DIR'] || getHomeDir(), '.claude.json');
+
 const DEV_DATA_FOLDER = 'armada-dev';
 
 export const separateDevDataFolder = (): void => {

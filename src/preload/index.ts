@@ -42,6 +42,8 @@ const armadaApi: ArmadaApi = {
   integration: {
     check: () => ipcRenderer.invoke(IPC_CHANNELS.integrationCheck),
     repair: () => ipcRenderer.invoke(IPC_CHANNELS.integrationRepair),
+    checkDiagramFolderTrust: () => ipcRenderer.invoke(IPC_CHANNELS.integrationCheckDiagramFolderTrust),
+    onDiagramFolderTrustChanged: (listener) => subscribe(IPC_CHANNELS.integrationDiagramFolderTrustChanged, listener),
   },
   claudeSettings: {
     read: () => ipcRenderer.invoke(IPC_CHANNELS.claudeSettingsRead),
